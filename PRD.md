@@ -411,6 +411,105 @@ No OpenClaw-specific tools. No agent runtime. Just Node.js.
 
 ---
 
+## 8.3 LLM Backend Architecture
+
+Atelier uses a **pluggable LLM backend** — swap between cloud (Inception) and local (OSS) without changing code.
+
+### Backend Options
+
+| Mode | Provider | Use Case | Speed | Quality |
+|------|----------|----------|-------|---------|
+| **Cloud** | Inception API | Production, complex prompts | Fastest | Frontier |
+| **Local** | Ollama/Qwen/Llama | Offline, privacy, low cost | Medium | Good |
+| **Hybrid** | Auto-fallback | Cloud primary, local backup | Varies | Varies |
+
+### Inception API (Primary)
+
+**Inception Labs** — diffusion LLMs (dLLMs) with OpenAI-compatible API.
+
+```javascript
+// config/atelier.json
+{
+  "llm": {
+    "provider": "inception",
+    "apiKey": "${INCEPTION_API_KEY}",
+    "baseUrl": "https://api.inceptionlabs.ai/v1",
+    "model": "inception-001",
+    "temperature": 0.7,
+    "maxTokens": 4096
+  }
+}
+```
+
+**Why Inception:**
+- 5x faster than traditional LLMs
+- OpenAI API compatible (drop-in replacement)
+- Streaming support
+- Good for rapid iteration in Ralph-Wiggum loop
+
+### Local Mode (Lightweight)
+
+Run fully offline with small OSS models via Ollama:
+
+```javascript
+// config/atelier.json
+{
+  "llm": {
+    "provider": "ollama",
+    "baseUrl": "http://localhost:11434",
+    "model": "qwen2.5-coder:7b",
+    "temperature": 0.7
+  }
+}
+```
+
+**Recommended Local Models:**
+| Model | Size | Speed | Use Case |
+|-------|------|-------|----------|
+| Qwen 2.5 Coder | 7B | Fast | Code generation, simple prompts |
+| Llama 3.2 | 3B | Fastest | Quick iterations, testing |
+| CodeLlama | 7B | Medium | Complex p5.js sketches |
+| DeepSeek Coder | 6.7B | Medium | Good balance quality/speed |
+
+### Pluggable Interface
+
+```typescript
+// src/llm/LLMBackend.ts
+interface LLMBackend {
+  generate(prompt: string, context: Context): Promise<LLMResponse>;
+  stream(prompt: string, context: Context): AsyncIterator<LLMChunk>;
+}
+
+// Implementations
+class InceptionBackend implements LLMBackend { /* ... */ }
+class OllamaBackend implements LLMBackend { /* ... */ }
+class OpenAIBackend implements LLMBackend { /* ... */ } // Fallback
+```
+
+### Auto-Detection
+
+```bash
+# Atelier auto-detects available backends:
+$ atelier --prompt "test"
+
+✓ Inception API available (INCEPTION_API_KEY set)
+✓ Ollama detected (qwen2.5-coder:7b)
+⚠ OpenAI key not found
+
+Using: Inception (cloud)
+Override: --local or --provider ollama
+```
+
+### Resonance Integration (Future)
+
+From the Resonance PRD — bring in:
+- **Vibe coding patterns** — emotional/qualitative prompt engineering
+- **Sensory metaphor system** — map creative concepts to sensory language
+- **Mutation operators** — structured variation beyond pure LLM generation
+
+
+---
+
 ## 9. Usage Example
 
 ### 9.1 User Interaction
