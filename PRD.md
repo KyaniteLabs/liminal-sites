@@ -310,6 +310,15 @@ After Kai builds, I verify:
     "timeoutMinutes": 30,
     "completionPromise": "COMPLETE"
   },
+  "llm": {
+    "provider": "inception",
+    "apiKey": "${INCEPTION_API_KEY}",
+    "baseUrl": "https://api.inceptionlabs.ai/v1",
+    "model": "inception-001",
+    "temperature": 0.7,
+    "maxTokens": 4096,
+    "localFallback": true
+  },
   "creative": {
     "defaultFramework": "p5.js",
     "evaluationCriteria": ["aesthetic", "technical", "novelty"],
@@ -325,6 +334,11 @@ After Kai builds, I verify:
   }
 }
 ```
+
+**Environment Variables:**
+- `INCEPTION_API_KEY` — Required for cloud mode
+- `OPENAI_API_KEY` — Optional fallback
+- `OLLAMA_HOST` — Optional (default: localhost:11434)
 
 ### 8.2 Deployment Model (Standalone)
 
