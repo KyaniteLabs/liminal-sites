@@ -10,13 +10,13 @@
  * - Complete workflow from start to finish
  */
 
-import { RalphLoop } from '../../src/core/RalphLoop';
-import { PromiseDetector } from '../../src/core/PromiseDetector';
-import { PromptStore } from '../../src/core/PromptStore';
-import { ContextAccumulation } from '../../src/core/ContextAccumulation';
-import { CreativeEvaluator } from '../../src/core/CreativeEvaluator';
-import { P5Generator } from '../../src/generators/p5/P5Generator';
-import { Gallery } from '../../src/gallery/Gallery';
+import { RalphLoop } from '../../dist/core/RalphLoop.js';
+import { PromiseDetector } from '../../dist/core/PromiseDetector.js';
+import { PromptStore } from '../../dist/core/PromptStore.js';
+import { ContextAccumulation } from '../../dist/core/ContextAccumulation.js';
+import { CreativeEvaluator } from '../../dist/core/CreativeEvaluator.js';
+import { P5Generator } from '../../dist/generators/p5/P5Generator.js';
+import { Gallery } from '../../dist/gallery/Gallery.js';
 import fs from 'fs/promises';
 import path from 'path';
 

@@ -1,4 +1,4 @@
-import { PromiseDetector } from '../../src/core/PromiseDetector';
+import { PromiseDetector } from '../../dist/core/PromiseDetector.js';
 
 describe('PromiseDetector', () => {
   describe('detect()', () => {

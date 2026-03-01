@@ -1,4 +1,4 @@
-import { ParticleSystem } from '../../src/generators/p5/ParticleSystem';
+import { ParticleSystem } from '../../dist/generators/p5/ParticleSystem.js';
 
 describe('ParticleSystem', () => {
   describe('generate()', () => {

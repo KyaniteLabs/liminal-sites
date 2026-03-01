@@ -7,7 +7,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { Exporter } from '../../src/export/Exporter';
+import { Exporter } from '../../dist/export/Exporter.js';
 
 describe('Exporter', () => {
   const TEST_EXPORT_DIR = 'test-export-temp';

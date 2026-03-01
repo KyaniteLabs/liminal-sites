@@ -7,7 +7,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { Gallery } from '../../src/gallery/Gallery';
+import { Gallery } from '../../dist/gallery/Gallery.js';
 
 describe('Gallery', () => {
   const TEST_GALLERY_DIR = 'test-gallery-temp';

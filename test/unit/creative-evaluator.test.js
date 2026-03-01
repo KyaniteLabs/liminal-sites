@@ -1,4 +1,4 @@
-import { CreativeEvaluator } from '../../src/core/CreativeEvaluator';
+import { CreativeEvaluator } from '../../dist/core/CreativeEvaluator.js';
 
 describe('CreativeEvaluator', () => {
   describe('assess()', () => {

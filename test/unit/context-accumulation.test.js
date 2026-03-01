@@ -1,4 +1,4 @@
-import { ContextAccumulation } from '../../src/core/ContextAccumulation';
+import { ContextAccumulation } from '../../dist/core/ContextAccumulation.js';
 
 describe('ContextAccumulation', () => {
   beforeEach(() => {
