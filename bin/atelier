@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { P5GeneratorLLM as P5Generator, PreviewServer } from '../dist/index.js';
+import { P5GeneratorLLM, PreviewServer } from '../dist/index.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -13,14 +13,21 @@ if (cmd === 'generate' || cmd === 'gen' || cmd === 'g') {
     process.exit(1);
   }
   console.log('Generating:', prompt);
-  const code = P5Generator.generate(prompt, {});
-  const outDir = path.join(process.env.HOME, '.atelier', 'output');
-  fs.mkdirSync(outDir, { recursive: true });
-  const file = path.join(outDir, 'sketch-' + Date.now() + '.js');
-  fs.writeFileSync(file, code);
-  console.log('✅ Saved:', file);
-  console.log('\nPreview:');
-  console.log(code.substring(0, 300) + '...');
+  
+  // Create LLM generator instance and generate code
+  const generator = new P5GeneratorLLM();
+  generator.generate(prompt).then(code => {
+    const outDir = path.join(process.env.HOME, '.atelier', 'output');
+    fs.mkdirSync(outDir, { recursive: true });
+    const file = path.join(outDir, 'sketch-' + Date.now() + '.js');
+    fs.writeFileSync(file, code);
+    console.log('✅ Saved:', file);
+    console.log('\nPreview:');
+    console.log(code.substring(0, 500) + '...');
+  }).catch(err => {
+    console.error('❌ Error:', err.message);
+    process.exit(1);
+  });
 } 
 else if (cmd === 'serve' || cmd === 's') {
   const port = arg || 3456;

@@ -9,12 +9,12 @@ export class P5GeneratorLLM {
   private llm: LLMClient;
   private options: P5GeneratorOptions;
 
-  constructor(llmConfig?: Partial<LLMConfig>, options?: P5GeneratorOptions) {
-    this.options = options || {};
+  constructor(llmConfig?: Partial<LLMConfig>, _options?: P5GeneratorOptions) {
+    this.options = _options || {};
     this.llm = new LLMClient(llmConfig);
   }
 
-  async generate(prompt: string, options?: P5GeneratorOptions): Promise<string> {
+  async generate(prompt: string, _options?: P5GeneratorOptions): Promise<string> {
     // If LLM is not configured, fall back to template-based generation
     if (!LLMClient.isConfigured()) {
       return this.generateTemplate(prompt);
