@@ -1,30 +1,73 @@
 /**
- * Placeholder test for Atelier
- * TDD: This file ensures the test infrastructure is working
+ * Tests for Atelier main entry point
+ * Tests the run() and runFromArgs() functions
  */
 
-import { Atelier, ATELIER_VERSION, defaultConfig } from '../../src/index.js';
+import { run, runFromArgs } from '../../src/index.js';
+import fs from 'fs/promises';
+import path from 'path';
 
-describe('Atelier', () => {
-  describe('initialization', () => {
-    it('should create an Atelier instance with default config', () => {
-      const atelier = new Atelier();
-      expect(atelier).toBeInstanceOf(Atelier);
-    });
-
-    it('should return the config', () => {
-      const atelier = new Atelier();
-      const config = atelier.getConfig();
-      expect(config.name).toBe('atelier');
-      expect(config.version).toBe(ATELIER_VERSION);
-    });
-
-    it('should merge custom config with defaults', () => {
-      const atelier = new Atelier({
-        loop: { ...defaultConfig.loop, maxIterations: 50 },
+describe('Atelier Main Entry Point', () => {
+  describe('run()', () => {
+    it('should generate basic p5.js sketch from prompt', async () => {
+      const result = await run('test prompt', {
+        output: './test-output'
       });
-      const config = atelier.getConfig();
-      expect(config.loop.maxIterations).toBe(50);
+
+      expect(result).toBeDefined();
+      expect(result.code).toContain('function setup()');
+      expect(result.code).toContain('function draw()');
+      expect(result.completed).toBe(true);
+      expect(result.iterations).toBe(1);
+    });
+
+    it('should create output files', async () => {
+      const result = await run('test prompt', {
+        output: './test-output',
+        project: 'test-project'
+      });
+
+      expect(result.htmlPath).toBeDefined();
+      expect(result.jsPath).toBeDefined();
+      expect(result.zipPath).toBeDefined();
+
+      // Check files exist
+      const htmlExists = await fs.access(result.htmlPath).then(() => true).catch(() => false);
+      const jsExists = await fs.access(result.jsPath).then(() => true).catch(() => false);
+
+      expect(htmlExists).toBe(true);
+      expect(jsExists).toBe(true);
+    });
+
+    it('should throw error for empty prompt', async () => {
+      await expect(run('')).rejects.toThrow('Prompt is required');
+    });
+
+    it('should throw error for null prompt', async () => {
+      await expect(run(null)).rejects.toThrow('Prompt is required');
+    });
+  });
+
+  describe('runFromArgs()', () => {
+    it('should run with CLI-style arguments', async () => {
+      const result = await runFromArgs({
+        prompt: 'test prompt',
+        maxIterations: 10,
+        output: './test-output',
+        project: 'cli-test'
+      });
+
+      expect(result).toBeDefined();
+      expect(result.project).toBe('cli-test');
+    });
+
+    it('should use default values for missing options', async () => {
+      const result = await runFromArgs({
+        prompt: 'test prompt'
+      });
+
+      expect(result).toBeDefined();
+      expect(result.outputDir).toBe('./output');
     });
   });
 });
