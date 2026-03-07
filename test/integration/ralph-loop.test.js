@@ -313,6 +313,33 @@ describe('RalphLoop Integration Tests', () => {
     });
   });
 
+  describe('Quality gate', () => {
+    test('should break loop when score below minQualityScore', async () => {
+      RalphLoop.reset();
+      // Mock evaluator to return low score so loop exits on quality gate
+      const origAssess = CreativeEvaluator.assess;
+      CreativeEvaluator.assess = () => ({
+        score: 0.5,
+        passed: false,
+        issues: ['low quality'],
+        technicalScore: 0.5,
+        creativeScore: 0.5,
+        metrics: {}
+      });
+      try {
+        const result = await RalphLoop.run('generate bad code', {
+          maxIterations: 5,
+          galleryDir: testGalleryDir,
+          minQualityScore: 1.0
+        });
+        expect(result.reason).toContain('quality threshold');
+        expect(result.iterations).toBeLessThanOrEqual(2);
+      } finally {
+        CreativeEvaluator.assess = origAssess;
+      }
+    });
+  });
+
   describe('Promise Detection', () => {
     test('should detect exact promise string', async () => {
       const prompt = 'Complete this task <promise>COMPLETE</promise>';

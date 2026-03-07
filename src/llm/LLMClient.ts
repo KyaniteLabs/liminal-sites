@@ -1,4 +1,3 @@
-
 export interface LLMConfig {
   provider: 'inception' | 'ollama' | 'openai';
   apiKey?: string;
@@ -74,13 +73,18 @@ ${context ? `\nContext: ${context}` : ''}`;
 
   private async callInception(system: string, user: string): Promise<LLMResponse> {
     const baseUrl = this.config.baseUrl || 'https://api.inceptionlabs.ai/v1';
-    
+
+    // Build headers - Authorization only if API key is provided (for LM Studio compatibility)
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (this.config.apiKey) {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
+
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: this.config.model,
         messages: [
@@ -137,6 +141,6 @@ ${context ? `\nContext: ${context}` : ''}`;
   }
 
   static isConfigured(): boolean {
-    return !!(process.env.INCEPTION_API_KEY || process.env.ATELIER_LLM_API_KEY);
+    return !!(process.env.INCEPTION_API_KEY || process.env.ATELIER_LLM_API_KEY || process.env.ATELIER_LLM_BASE_URL);
   }
 }

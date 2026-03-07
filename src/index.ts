@@ -91,6 +91,9 @@ export async function run(prompt: string, options: {
   project?: string;
   minQualityScore?: number;
   galleryDir?: string;
+  seedCode?: string;
+  seedTemplate?: string;
+  tolerateErrors?: boolean;
 } = {}): Promise<{
   code: string;
   iterations: number;
@@ -114,7 +117,10 @@ export async function run(prompt: string, options: {
     output = './output',
     project = 'default',
     minQualityScore = 0.7,
-    galleryDir = 'gallery'
+    galleryDir = 'gallery',
+    seedCode,
+    seedTemplate,
+    tolerateErrors = false
   } = options;
 
   try {
@@ -132,8 +138,10 @@ export async function run(prompt: string, options: {
       timeoutMinutes,
       galleryDir,
       project,
-      tolerateErrors: false,
-      minQualityScore
+      tolerateErrors,
+      minQualityScore,
+      seedCode,
+      seedTemplate
     });
 
     // Initialize Exporter
@@ -256,6 +264,7 @@ export class Atelier {
     output?: string;
     project?: string;
     minQualityScore?: number;
+    tolerateErrors?: boolean;
   }) {
     return run(prompt, {
       ...options,

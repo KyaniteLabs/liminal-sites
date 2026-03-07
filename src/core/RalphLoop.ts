@@ -26,7 +26,7 @@ import { PromptStore } from './PromptStore.js';
 import { ContextAccumulation } from './ContextAccumulation.js';
 import { CreativeEvaluator } from './CreativeEvaluator.js';
 import { PromiseDetector } from './PromiseDetector.js';
-import { P5Generator } from '../generators/p5/P5Generator.js';
+import { P5GeneratorLLM } from '../generators/p5/P5GeneratorLLM.js';
 import { Gallery } from '../gallery/Gallery.js';
 
 interface LoopOptions {
@@ -36,6 +36,14 @@ interface LoopOptions {
   project?: string;
   tolerateErrors?: boolean;
   minQualityScore?: number;
+  /** Optional seed code for iteration 1: "improve this toward [prompt]" */
+  seedCode?: string;
+  /** Optional seed template name or content for iteration 1 */
+  seedTemplate?: string;
+  /** Max characters of context to inject (truncation). PRD: Context bloat. */
+  maxContextLength?: number;
+  /** Include only last K iterations in context (default: all in history up to maxContextLength) */
+  lastKIterations?: number;
 }
 
 interface LoopResult {
@@ -94,14 +102,18 @@ export class RalphLoop {
         // Load prompt (same every time)
         const loadedPrompt = PromptStore.load(prompt);
 
-        // Build context for injection
-        const contextForInjection = this.buildContextForInjection(iteration);
+        // Build context for injection (includes seed on iteration 1 when provided)
+        const contextForInjection = this.buildContextForInjection(iteration, normalizedOptions, prompt, loadedPrompt);
 
-        // Inject context into prompt if it has placeholders
-        const usedPrompt = PromptStore.injectContext(loadedPrompt, contextForInjection);
+        // Inject context into prompt if it has placeholders; then always append if no placeholder was used
+        let usedPrompt = PromptStore.injectContext(loadedPrompt, contextForInjection);
+        if (usedPrompt === loadedPrompt) {
+          usedPrompt = loadedPrompt + '\n\n---\nContext from previous iterations:\n' + contextForInjection;
+        }
 
         // Generate code
-        currentCode = P5Generator.generate(usedPrompt, contextForInjection);
+        const generator = new P5GeneratorLLM();
+        currentCode = await generator.generate(usedPrompt);
 
         // Evaluate quality
         const evaluation = CreativeEvaluator.assess(currentCode);
@@ -133,6 +145,13 @@ export class RalphLoop {
 
         // Update final score
         finalScore = evaluation.score;
+
+        // Quality gate: break if below threshold
+        if (evaluation.score < normalizedOptions.minQualityScore) {
+          completed = false;
+          reason = 'quality threshold not met';
+          break;
+        }
 
         // Check for promise detection (termination condition)
         if (PromiseDetector.detect(currentCode)) {
@@ -182,14 +201,18 @@ export class RalphLoop {
   /**
    * Normalize options with defaults
    */
-  private static normalizeOptions(options: LoopOptions | null): Required<LoopOptions> {
+  private static normalizeOptions(options: LoopOptions | null): Required<Omit<LoopOptions, 'seedCode' | 'seedTemplate' | 'maxContextLength' | 'lastKIterations'>> & Pick<LoopOptions, 'seedCode' | 'seedTemplate' | 'maxContextLength' | 'lastKIterations'> {
     return {
       maxIterations: options?.maxIterations || RalphLoop.DEFAULT_MAX_ITERATIONS,
       timeoutMinutes: options?.timeoutMinutes || RalphLoop.DEFAULT_TIMEOUT_MINUTES,
       galleryDir: options?.galleryDir || 'gallery',
       project: options?.project || `project-${Date.now()}`,
       tolerateErrors: options?.tolerateErrors ?? false,
-      minQualityScore: options?.minQualityScore ?? RalphLoop.DEFAULT_MIN_QUALITY_SCORE
+      minQualityScore: options?.minQualityScore ?? RalphLoop.DEFAULT_MIN_QUALITY_SCORE,
+      seedCode: options?.seedCode,
+      seedTemplate: options?.seedTemplate,
+      maxContextLength: options?.maxContextLength,
+      lastKIterations: options?.lastKIterations
     };
   }
 
@@ -199,21 +222,25 @@ export class RalphLoop {
    * This context changes each iteration, providing the "world that changes"
    * while the prompt stays the same.
    */
-  private static buildContextForInjection(iteration: number): string {
-    const history = ContextAccumulation.getHistory();
+  private static buildContextForInjection(
+    iteration: number,
+    options: { seedCode?: string; seedTemplate?: string; maxContextLength?: number; lastKIterations?: number },
+    _prompt?: string,
+    _loadedPrompt?: string
+  ): string {
+    let history = ContextAccumulation.getHistory();
 
-    if (history.length === 0) {
-      return `Iteration: ${iteration}\nNo previous context available.`;
+    if (options.lastKIterations != null && options.lastKIterations > 0 && history.length > options.lastKIterations) {
+      history = history.slice(-options.lastKIterations);
     }
 
-    // Build context from history
-    const contextParts: string[] = [`Current iteration: ${iteration}`];
-
-    // Add information about previous iterations
-    if (history.length > 0) {
+    let base: string;
+    if (history.length === 0) {
+      base = `Iteration: ${iteration}\nNo previous context available.`;
+    } else {
+      const contextParts: string[] = [`Current iteration: ${iteration}`];
       contextParts.push(`\nPrevious iterations: ${history.length}`);
 
-      // Add details about most recent iteration
       const mostRecent = history[history.length - 1];
       contextParts.push(`\nLast iteration (${mostRecent.iteration}):`);
       contextParts.push(`- Quality score: ${mostRecent.evaluation.score.toFixed(2)}`);
@@ -223,25 +250,34 @@ export class RalphLoop {
         contextParts.push(`- Issues to address: ${mostRecent.evaluation.issues.join(', ')}`);
       }
 
-      // Add brief snippet of previous code for reference
       const codeSnippet = mostRecent.code.substring(0, 500);
       if (codeSnippet.length > 0) {
         contextParts.push(`\nPrevious code (first 500 chars):\n${codeSnippet}`);
       }
+
+      if (history.length > 1) {
+        const scores = history.map((h: any) => h.evaluation.score);
+        const avgScore = scores.reduce((a: number, b: number) => a + b, 0) / scores.length;
+        const improving = scores[scores.length - 1] > scores[0];
+        contextParts.push(`\nQuality trend:`);
+        contextParts.push(`- Average score: ${avgScore.toFixed(2)}`);
+        contextParts.push(`- Trend: ${improving ? 'Improving' : 'Declining'}`);
+      }
+
+      base = contextParts.join('\n');
     }
 
-    // Add iteration patterns
-    if (history.length > 1) {
-      const scores = history.map(h => h.evaluation.score);
-      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-      const improving = scores[scores.length - 1] > scores[0];
-
-      contextParts.push(`\nQuality trend:`);
-      contextParts.push(`- Average score: ${avgScore.toFixed(2)}`);
-      contextParts.push(`- Trend: ${improving ? 'Improving' : 'Declining'}`);
+    let context = base;
+    if (iteration === 1 && (options.seedCode != null || options.seedTemplate != null)) {
+      const seed = options.seedCode ?? options.seedTemplate ?? '';
+      context = 'Here is the seed/template; improve it toward the user\'s goal.\nSeed:\n' + seed + '\n\n' + context;
     }
 
-    return contextParts.join('\n');
+    if (options.maxContextLength != null && options.maxContextLength > 0 && context.length > options.maxContextLength) {
+      context = context.slice(-options.maxContextLength);
+    }
+
+    return context;
   }
 
   /**

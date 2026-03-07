@@ -1,0 +1,96 @@
+import { loadConfig, loadProjectConfig, getEffectiveConfig } from '../../src/config/ConfigLoader.js';
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
+
+const TEST_CONFIG_DIR = path.join(os.tmpdir(), 'atelier-config-test');
+const TEST_CONFIG_PATH = path.join(TEST_CONFIG_DIR, 'config.json');
+const TEST_PROJECT_DIR = path.join(os.tmpdir(), 'atelier-project-config-test');
+
+describe('ConfigLoader', () => {
+  beforeEach(async () => {
+    await fs.mkdir(TEST_CONFIG_DIR, { recursive: true });
+    try { await fs.unlink(TEST_CONFIG_PATH); } catch {}
+  });
+
+  afterEach(async () => {
+    try { await fs.rm(TEST_CONFIG_DIR, { recursive: true, force: true }); } catch {}
+  });
+
+  describe('loadConfig()', () => {
+    it('should load LM Studio config from file', async () => {
+      const config = {
+        defaultProvider: 'lmstudio',
+        providers: {
+          lmstudio: {
+            baseUrl: 'http://100.66.225.85:1234/v1',
+            model: 'qwen3-coder-next-reap-40b-a3b-i1'
+          }
+        }
+      };
+      await fs.writeFile(TEST_CONFIG_PATH, JSON.stringify(config, null, 2));
+
+      const loaded = await loadConfig(TEST_CONFIG_PATH);
+
+      expect(loaded).not.toBeNull();
+      expect(loaded!.defaultProvider).toBe('lmstudio');
+      expect(loaded!.providers.lmstudio.baseUrl).toBe('http://100.66.225.85:1234/v1');
+    });
+
+    it('should return null if config file does not exist', async () => {
+      const loaded = await loadConfig('/nonexistent/path/config.json');
+      expect(loaded).toBeNull();
+    });
+  });
+
+  describe('loadProjectConfig()', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(TEST_PROJECT_DIR, 'config'), { recursive: true });
+    });
+    afterEach(async () => {
+      try { await fs.rm(TEST_PROJECT_DIR, { recursive: true, force: true }); } catch {}
+    });
+
+    it('returns config when given path to dir containing config/atelier.json', async () => {
+      const projectConfig = {
+        name: 'test-project',
+        llm: { model: 'test-model', baseUrl: 'https://test.example/v1' }
+      };
+      await fs.writeFile(
+        path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
+        JSON.stringify(projectConfig, null, 2)
+      );
+
+      const loaded = await loadProjectConfig(TEST_PROJECT_DIR);
+
+      expect(loaded).not.toBeNull();
+      expect(loaded!.name).toBe('test-project');
+      expect(loaded!.llm?.model).toBe('test-model');
+      expect(loaded!.llm?.baseUrl).toBe('https://test.example/v1');
+    });
+  });
+
+  describe('getEffectiveConfig()', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(TEST_PROJECT_DIR, 'config'), { recursive: true });
+    });
+    afterEach(async () => {
+      try { await fs.rm(TEST_PROJECT_DIR, { recursive: true, force: true }); } catch {}
+    });
+
+    it('uses LLM values from project config when project has llm.model and llm.baseUrl', async () => {
+      const projectConfig = {
+        llm: { model: 'project-model', baseUrl: 'https://project.example/v1' }
+      };
+      await fs.writeFile(
+        path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
+        JSON.stringify(projectConfig, null, 2)
+      );
+
+      const effective = await getEffectiveConfig(undefined, TEST_PROJECT_DIR);
+
+      expect(effective.model).toBe('project-model');
+      expect(effective.baseUrl).toBe('https://project.example/v1');
+    });
+  });
+});

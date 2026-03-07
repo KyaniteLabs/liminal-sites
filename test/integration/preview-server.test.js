@@ -3,10 +3,12 @@ import http from 'http';
 
 describe('PreviewServer Integration Tests', () => {
   let previewServer;
-  const TEST_PORT = 3456;
+  const getTestPort = () => 3456 + Math.floor(Math.random() * 1000) + (process.pid % 100);
+  let TEST_PORT;
 
   beforeEach(() => {
     previewServer = new PreviewServer();
+    TEST_PORT = getTestPort();
   });
 
   afterEach(async () => {
@@ -291,10 +293,10 @@ describe('PreviewServer Integration Tests', () => {
       expect(html).toContain('🎨');
     });
 
-    it('should escape HTML in sketch code to prevent XSS', async () => {
+    it('should escape </script> tags to prevent XSS while keeping code executable', async () => {
       const sketchCode = `
         function setup() {
-          let x = "<script>alert('xss')</script>";
+          let x = "</script><script>alert('xss')</script>";
           createCanvas(400, 400);
         }
       `;
@@ -304,8 +306,11 @@ describe('PreviewServer Integration Tests', () => {
       const response = await fetch(`http://localhost:${TEST_PORT}/`);
       const html = await response.text();
 
-      // The sketch code should be properly escaped
-      expect(html).not.toContain('<script>alert');
+      // </script> should be escaped to prevent breaking out of script tag
+      expect(html).not.toContain('</script><script>');
+      // But the code should still be executable (not HTML-escaped)
+      expect(html).toContain('function setup()');
+      expect(html).toContain('createCanvas(400, 400)');
     });
   });
 

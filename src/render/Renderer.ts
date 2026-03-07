@@ -11,7 +11,7 @@ import path from 'path';
 
 export class Renderer {
   private browser: Browser | null = null;
-  private readonly RENDER_TIMEOUT = 10000; // 10 seconds
+  private readonly RENDER_TIMEOUT = 30000; // 30 seconds (increased from 10s for CDN reliability)
   private readonly DEFAULT_WIDTH = 800;
   private readonly DEFAULT_HEIGHT = 600;
 
@@ -66,9 +66,10 @@ export class Renderer {
       // Generate HTML with p5.js sketch
       const html = this.generateHTML(code);
 
-      // Load the sketch
+      // Load the sketch - use 'load' instead of 'networkidle0' for CDN resilience
+      // 'load' waits for DOM + resources, but not all network activity to cease
       await page.setContent(html, {
-        waitUntil: 'networkidle0',
+        waitUntil: 'load',
         timeout: this.RENDER_TIMEOUT
       });
 
@@ -107,11 +108,6 @@ export class Renderer {
     }
   }
 
-  /**
-   * Generate HTML page with p5.js sketch
-   * @param code - p5.js sketch code
-   * @returns HTML string
-   */
   private generateHTML(code: string): string {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -120,51 +116,29 @@ export class Renderer {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atelier Renderer</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #000;
-    }
-    canvas {
-      display: block;
-    }
+    body { margin: 0; padding: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
-  <script>
-    ${code}
-  </script>
+  <script>${code}</script>
 </body>
 </html>`;
   }
 
-  /**
-   * Wait for p5.js to initialize
-   * @param page - Puppeteer page
-   */
   private async waitForP5Initialization(page: Page): Promise<void> {
     try {
-      // Wait for canvas element to appear
-      await page.waitForSelector('canvas', { timeout: 5000 });
+      await page.waitForSelector('canvas', { timeout: 10000 });
     } catch (error) {
-      // If waiting fails, still proceed - the sketch might work anyway
       await this.delay(500);
     }
   }
 
-  /**
-   * Helper function to create a delay
-   * @param ms - Milliseconds to delay
-   */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Clean up resources
-   */
   async cleanup(): Promise<void> {
     if (this.browser) {
       await this.browser.close().catch(() => {});

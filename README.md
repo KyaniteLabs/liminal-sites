@@ -159,7 +159,7 @@ npm run benchmark
 
 ## 🎵 Live Music Coding
 
-Atelier supports live music coding for performative, real-time generative art:
+**Planned / Roadmap (not yet implemented):** Atelier supports live music coding for performative, real-time generative art:
 
 ### Supported Platforms
 

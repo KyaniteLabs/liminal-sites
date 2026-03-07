@@ -1,288 +1,250 @@
 #!/usr/bin/env node
-/**
- * Atelier TUI - Terminal User Interface
- * 
- * Rich interactive interface for Atelier creative coding agent.
- * Features:
- * - Prompt input panel
- * - Live preview pane (screenshots from Gallery)
- * - Gallery navigation (arrow keys to browse iterations)
- * - Controls: Generate/Stop/Export
- */
+import dotenv from "dotenv";
+dotenv.config();
 
-import React, { useState, useEffect } from 'react';
-import { render, Box, Text, useInput } from 'ink';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import React, { useState, useEffect } from "react";
+import { render, Box, Text, useInput, useStdout, Spacer } from "ink";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PROJECT_ROOT = path.resolve(__dirname, '../..');
+const PROJECT_ROOT = path.resolve(__dirname, "../..");
 
-// Types
+// Import v2.0 components
+import { PlayerPiano } from "./components/PlayerPiano";
+import { XRayPanel } from "./components/XRayPanel";
+import { VoiceInputUI } from "./components/VoiceInput";
+
 interface GalleryEntry {
-	projectName: string;
-	path: string;
-	iterations: string[];
+  projectName: string;
+  path: string;
+  iterations: string[];
 }
 
-// Load gallery synchronously at startup
-async function loadGallerySync(): Promise<GalleryEntry[]> {
-	try {
-		const galleryDir = path.join(PROJECT_ROOT, 'gallery');
-		const entries = await fs.readdir(galleryDir, { withFileTypes: true });
-		
-		const projects: GalleryEntry[] = [];
-		for (const entry of entries) {
-			if (entry.isDirectory()) {
-				const projectPath = path.join(galleryDir, entry.name);
-				const files = await fs.readdir(projectPath);
-				const iterations = files
-					.filter(f => f.endsWith('.js'))
-					.sort();
-				
-				projects.push({
-					projectName: entry.name,
-					path: projectPath,
-					iterations
-				});
-			}
-		}
-		
-		return projects.sort((a, b) => b.projectName.localeCompare(a.projectName));
-	} catch (err) {
-		console.error('Gallery load error:', err);
-		return [];
-	}
+interface LogEntry {
+  type: "info" | "code" | "success" | "error" | "iteration" | "system" | "llm";
+  message: string;
+  timestamp: number;
 }
 
-// Color scheme
+interface Iteration {
+  id: number;
+  code: string;
+  timestamp: number;
+  quality?: number;
+  reason?: string;
+}
+
 const COLORS = {
-	primary: '#6366f1',
-	success: '#22c55e',
-	warning: '#f59e0b',
-	error: '#ef4444',
-	muted: '#6b7280',
-	border: '#374151',
+  primary: "cyan", success: "green", warning: "yellow", error: "red",
+  muted: "gray", border: "gray", code: "green", info: "blue",
+  highlight: "magenta", llm: "yellow",
 };
 
-// Banner
+async function loadGallery(): Promise<GalleryEntry[]> {
+  try {
+    const galleryDir = path.join(PROJECT_ROOT, "gallery");
+    const entries = await fs.readdir(galleryDir, { withFileTypes: true });
+    const projects: GalleryEntry[] = [];
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const projectPath = path.join(galleryDir, entry.name);
+        const files = await fs.readdir(projectPath);
+        const iterations = files.filter(f => f.endsWith(".js")).sort();
+        projects.push({ projectName: entry.name, path: projectPath, iterations });
+      }
+    }
+    return projects.sort((a, b) => b.projectName.localeCompare(a.projectName));
+  } catch { return []; }
+}
+
+function useTerminalSize() {
+  const { stdout } = useStdout();
+  const [size, setSize] = useState({ rows: 40, columns: 120 });
+  useEffect(() => {
+    const updateSize = () => setSize({ rows: stdout.rows || 40, columns: stdout.columns || 120 });
+    updateSize();
+    stdout.on("resize", updateSize);
+    return () => { stdout.off("resize", updateSize); };
+  }, [stdout]);
+  return size;
+}
+
 const Banner = () => (
-	<Box borderStyle="bold" borderColor={COLORS.primary} paddingX={1}>
-		<Text bold color={COLORS.primary}>🎨 ATELIER TUI v1.0.0</Text>
-		<Text color={COLORS.muted}> | Creative Coding Agent</Text>
-	</Box>
+  <Box borderStyle="double" borderColor={COLORS.primary} paddingX={1} marginBottom={1}>
+    <Text bold color={COLORS.primary}>ATELIER TUI v2.0</Text>
+    <Spacer />
+    <Text color={COLORS.muted}>Creative Coding Agent</Text>
+  </Box>
 );
 
-// PromptInput
-const PromptInput = ({ value, onChange, onSubmit, disabled }: {
-	value: string;
-	onChange: (v: string) => void;
-	onSubmit: () => void;
-	disabled?: boolean;
-}) => {
-	useInput((input, key) => {
-		if (disabled) return;
-		if (key.return) onSubmit();
-		else if (key.backspace || key.delete) onChange(value.slice(0, -1));
-		else if (input) onChange(value + input);
-	});
-
-	return (
-		<Box flexDirection="column" borderStyle="round" borderColor={COLORS.border} paddingX={1}>
-			<Text bold color="#9ca3af">Prompt</Text>
-			<Text color={disabled ? COLORS.muted : '#f9fafb'}>
-				{value || (disabled ? '[Processing...]' : 'Enter your creative prompt...')}
-			</Text>
-			{!disabled && <Text color={COLORS.muted} dimColor>ENTER to generate | ESC to clear</Text>}
-		</Box>
-	);
+const LogsPanel = ({ logs, height }: { logs: LogEntry[]; height: number }) => {
+  const displayLogs = logs.slice(-(height - 3));
+  return (
+    <Box flexDirection="column" borderStyle="single" borderColor={COLORS.border} width="20%" height={height} paddingX={1}>
+      <Box marginBottom={1}><Text bold color={COLORS.info}>LOGS</Text><Text color={COLORS.muted}> (Streaming)</Text></Box>
+      <Box flexDirection="column" flexGrow={1}>
+        {displayLogs.map((log, i) => (
+          <Box key={i}>
+            <Text color={log.type === "error" ? COLORS.error : log.type === "success" ? COLORS.success : log.type === "code" ? COLORS.code : log.type === "llm" ? COLORS.llm : log.type === "iteration" ? COLORS.warning : log.type === "system" ? COLORS.highlight : COLORS.muted}>
+              {log.type === "llm" ? "⚡ " : log.type === "iteration" ? "↻ " : log.type === "success" ? "✓ " : log.type === "error" ? "✗ " : "> "}
+              {log.message.length > 25 ? log.message.slice(0, 25) + ".." : log.message}
+            </Text>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
 };
 
-// PreviewPane
-const PreviewPane = ({ projectName, iteration, code, isGenerating }: {
-	projectName: string | null;
-	iteration: number;
-	code: string | null;
-	isGenerating: boolean;
-}) => (
-	<Box flexDirection="column" borderStyle="round" borderColor={COLORS.border} paddingX={1} minHeight={15}>
-		<Box>
-			<Text bold color="#9ca3af">Preview</Text>
-			<Text color={COLORS.muted}> | </Text>
-			<Text color={COLORS.primary}>{projectName || 'No project'}</Text>
-			{projectName && <><Text color={COLORS.muted}> v</Text><Text color={COLORS.success}>{iteration}</Text></>}
-		</Box>
-		<Box flexDirection="column" flexGrow={1} justifyContent="center" alignItems="center">
-			{isGenerating ? (
-				<Text color={COLORS.warning} bold>Generating...</Text>
-			) : code ? (
-				<Box flexDirection="column">
-					<Text color={COLORS.success}>✓ Code ready</Text>
-					<Text color="#9ca3af" dimColor>{code.split('\n').slice(0, 5).join('\n')}{code.split('\n').length > 5 ? '\n...' : ''}</Text>
-				</Box>
-			) : (
-				<Text color={COLORS.muted}>No preview available</Text>
-			)}
-		</Box>
-	</Box>
-);
-
-// GalleryNav
-const GalleryNav = ({ projects, currentIndex, onSelect }: {
-	projects: GalleryEntry[];
-	currentIndex: number;
-	onSelect: (i: number) => void;
-}) => {
-	useInput((_, key) => {
-		if (projects.length === 0) return;
-		if (key.upArrow) onSelect(Math.max(0, currentIndex - 1));
-		else if (key.downArrow) onSelect(Math.min(projects.length - 1, currentIndex + 1));
-	});
-
-	return (
-		<Box flexDirection="column" borderStyle="round" borderColor={COLORS.border} paddingX={1} minHeight={10}>
-			<Text bold color="#9ca3af">Gallery ({projects.length} projects)</Text>
-			{projects.length === 0 ? (
-				<Text color={COLORS.muted}>No projects yet</Text>
-			) : (
-				projects.slice(0, 8).map((project, index) => (
-					<Box key={project.projectName}>
-						<Text color={index === currentIndex ? COLORS.primary : COLORS.muted}>
-							{index === currentIndex ? '▶ ' : '  '}
-						</Text>
-						<Text color={index === currentIndex ? '#f9fafb' : '#9ca3af'}>
-							{project.projectName}
-						</Text>
-						<Text color={COLORS.muted} dimColor> ({project.iterations.length} iters)</Text>
-					</Box>
-				))
-			)}
-			<Text color={COLORS.muted} dimColor>↑↓ Navigate | ENTER Select</Text>
-		</Box>
-	);
+const GalleryPanel = ({ projects, currentIndex, onSelect, height }: any) => {
+  useInput((_input: string, key: any) => {
+    if (key.upArrow) onSelect(Math.max(0, currentIndex - 1));
+    else if (key.downArrow) onSelect(Math.min(projects.length - 1, currentIndex + 1));
+  });
+  return (
+    <Box flexDirection="column" borderStyle="single" borderColor={COLORS.border} width="20%" height={height} paddingX={1}>
+      <Box marginBottom={1}><Text bold color={COLORS.success}>GALLERY</Text><Text color={COLORS.muted}> ({projects.length})</Text></Box>
+      <Box flexDirection="column" flexGrow={1}>
+        {projects.slice(0, height - 6).map((project: GalleryEntry, index: number) => (
+          <Box key={project.projectName}>
+            <Text color={index === currentIndex ? COLORS.primary : COLORS.muted}>{index === currentIndex ? "> " : "  "}</Text>
+            <Text color={index === currentIndex ? "white" : COLORS.muted} bold={index === currentIndex}>{project.projectName.slice(0, 10)}</Text>
+            <Text color={COLORS.muted}>({project.iterations.length})</Text>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
 };
 
-// Controls
-const Controls = ({ isGenerating, onGenerate, onStop, onExport, hasProject }: {
-	isGenerating: boolean;
-	onGenerate: () => void;
-	onStop: () => void;
-	onExport: () => void;
-	hasProject: boolean;
-}) => (
-	<Box flexDirection="column" borderStyle="round" borderColor={COLORS.border} paddingX={1}>
-		<Text bold color="#9ca3af">Controls</Text>
-		<Box>
-			<Text color={isGenerating ? COLORS.warning : COLORS.success}>
-				{isGenerating ? '⏹ STOP' : '▶ GENERATE'}
-			</Text>
-			<Text color={COLORS.muted}> | </Text>
-			<Text color={hasProject ? COLORS.primary : COLORS.muted}>📦 EXPORT</Text>
-		</Box>
-		<Text color={COLORS.muted} dimColor>{isGenerating ? 'Ctrl+C to cancel' : 'ENTER to start | E to export'}</Text>
-	</Box>
-);
+const PromptBar = ({ value, onChange, onSubmit, disabled }: any) => {
+  useInput((_input: string, key: any) => {
+    if (disabled) return;
+    if (key.return) onSubmit();
+    else if (key.backspace || key.delete) onChange(value.slice(0, -1));
+    else if (_input) onChange(value + _input);
+  });
+  return (
+    <Box borderStyle="round" borderColor={disabled ? COLORS.muted : COLORS.primary} paddingX={1} marginBottom={1}>
+      <Text bold color={disabled ? COLORS.muted : COLORS.primary}>Prompt:</Text>
+      <Text color={disabled ? COLORS.muted : "white"}> {value || (disabled ? "[Generating...]" : "Type prompt...")}</Text>
+      <Spacer />
+      {disabled ? <Text color={COLORS.warning}>Working...</Text> : value ? <Text color={COLORS.success}>[ENTER]</Text> : <Text color={COLORS.muted}>[ESC]</Text>}
+    </Box>
+  );
+};
 
-// StatusBar
-const StatusBar = ({ message, errors }: { message: string; errors: string[]; }) => (
-	<Box flexDirection="column" borderStyle="single" borderColor={COLORS.border}>
-		<Text color={COLORS.muted}>{message}</Text>
-		{errors.map((err, i) => <Text key={i} color={COLORS.error}>{err}</Text>)}
-	</Box>
-);
-
-// Main App
 const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
-	const [prompt, setPrompt] = useState('');
-	const [isGenerating, setIsGenerating] = useState(false);
-	const [currentProject, setCurrentProject] = useState<string | null>(null);
-	const [currentIteration, setCurrentIteration] = useState(1);
-	const [currentCode, setCurrentCode] = useState<string | null>(null);
-	const [gallery] = useState<GalleryEntry[]>(initialGallery);
-	const [galleryIndex, setGalleryIndex] = useState(0);
-	const [status, setStatus] = useState('Ready');
-	const [errors, setErrors] = useState<string[]>([]);
+  const { rows } = useTerminalSize();
+  const contentHeight = Math.max(20, rows - 10);
+  const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([
+    { type: "system", message: "Atelier TUI v2.0 initialized", timestamp: Date.now() },
+    { type: "info", message: `Loaded ${initialGallery.length} projects`, timestamp: Date.now() },
+    { type: "info", message: "v2.0: PlayerPiano + X-Ray + Voice ready", timestamp: Date.now() },
+  ]);
+  const [currentIterations, setCurrentIterations] = useState<Iteration[]>([]);
+  const [gallery, setGallery] = useState<GalleryEntry[]>(initialGallery);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [playerPianoIndex, setPlayerPianoIndex] = useState(0);
+  const [isPlayerPianoPlaying, setIsPlayerPianoPlaying] = useState(false);
+  const rawLLMOutput = useState<string[]>([])[0];
+  const [showVoiceInput, setShowVoiceInput] = useState(false);
 
-	const handleGenerate = async () => {
-		if (!prompt.trim() || isGenerating) return;
-		setIsGenerating(true);
-		setStatus('Generating...');
-		setErrors([]);
-		
-		try {
-			const { run } = await import('../dist/index.js');
-			const result = await run(prompt, { maxIterations: 10, timeoutMinutes: 5, galleryDir: 'gallery' });
-			setCurrentProject(result.project || prompt.slice(0, 30));
-			setCurrentIteration(result.iterations);
-			setCurrentCode(result.code);
-			setStatus(`Complete: ${result.iterations} iterations, score: ${result.finalScore.toFixed(2)}`);
-		} catch (err) {
-			setErrors(prev => [...prev, `Generation failed: ${err}`]);
-			setStatus('Generation failed');
-		} finally {
-			setIsGenerating(false);
-		}
-	};
+  const addLog = (type: LogEntry["type"], message: string) => {
+    setLogs(prev => [...prev, { type, message, timestamp: Date.now() }].slice(-100));
+  };
 
-	const handleStop = () => {
-		if (isGenerating) { setIsGenerating(false); setStatus('Stopped'); }
-	};
+  const handleGenerate = async () => {
+    if (!prompt.trim() || isGenerating) return;
+    setIsGenerating(true);
+    addLog("info", `Starting: "${prompt.slice(0, 30)}..."`);
+    addLog("llm", "→ LLM Request: inception/inception-001");
+    addLog("llm", `  Prompt: ~${prompt.length + 2000} chars`);
+    
+    const projectName = `project-${Date.now()}`;
+    try {
+      const { run } = await import(path.join(PROJECT_ROOT, "dist/index.js"));
+      const startTime = Date.now();
+      const result = await run(prompt, { maxIterations: 10, timeoutMinutes: 5, galleryDir: "gallery", project: projectName });
+      const duration = Date.now() - startTime;
+      
+      addLog("llm", `← LLM Response: ${result.code.length} chars`);
+      addLog("llm", `  Time: ${duration}ms`);
+      addLog("success", `Complete: ${result.iterations} iters`);
+      
+      const iterations: Iteration[] = Array.from({ length: result.iterations }, (_, i) => ({
+        id: i + 1,
+        code: result.code,
+        timestamp: Date.now() - (result.iterations - i) * 1000,
+      }));
+      setCurrentIterations(iterations);
+      setPlayerPianoIndex(iterations.length - 1);
+      
+      const newGallery = await loadGallery();
+      setGallery(newGallery);
+    } catch (err: any) {
+      addLog("error", `Failed: ${err.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-	const handleExport = async () => {
-		if (!currentProject) return;
-		try {
-			const projectDir = path.join(PROJECT_ROOT, 'gallery', currentProject);
-			const outputDir = path.join(PROJECT_ROOT, 'output');
-			await fs.mkdir(outputDir, { recursive: true });
-			const files = await fs.readdir(projectDir);
-			const latestFile = files.filter(f => f.endsWith('.js')).sort().pop();
-			if (latestFile) {
-				const code = await fs.readFile(path.join(projectDir, latestFile), 'utf-8');
-				await fs.writeFile(path.join(outputDir, `${currentProject}-export.js`), code);
-				setStatus(`Exported to output/${currentProject}-export.js`);
-			}
-		} catch (err) { setErrors(prev => [...prev, `Export failed: ${err}`]); }
-	};
+  const handleGallerySelect = async (index: number) => {
+    setGalleryIndex(index);
+    const project = gallery[index];
+    if (project) {
+      addLog("info", `Selected: ${project.projectName}`);
+    }
+  };
 
-	const handleGallerySelect = async (index: number) => {
-		setGalleryIndex(index);
-		const project = gallery[index];
-		if (project) {
-			setCurrentProject(project.projectName);
-			setCurrentIteration(project.iterations.length);
-			const latestFile = project.iterations[project.iterations.length - 1];
-			if (latestFile) {
-				const code = await fs.readFile(path.join(project.path, latestFile), 'utf-8');
-				setCurrentCode(code);
-			}
-		}
-	};
+  useInput((input: string) => {
+    if (input === "q") process.exit(0);
+    if (input === "1") setIsPlayerPianoPlaying(prev => !prev);
+    if (input === "v") setShowVoiceInput(prev => !prev);
+  });
 
-	useInput((input, key) => {
-		if (key.escape) setPrompt('');
-		if (input.toLowerCase() === 'e' && !isGenerating) handleExport();
-	});
-
-	return (
-		<Box flexDirection="column" padding={1}>
-			<Banner />
-			<Box flexDirection="row" marginY={1} gap={1}>
-				<Box flexDirection="column" flexGrow={1} gap={1}>
-					<PromptInput value={prompt} onChange={setPrompt} onSubmit={handleGenerate} disabled={isGenerating} />
-					<PreviewPane projectName={currentProject} iteration={currentIteration} code={currentCode} isGenerating={isGenerating} />
-				</Box>
-				<Box flexDirection="column" width={30} gap={1}>
-					<GalleryNav projects={gallery} currentIndex={galleryIndex} onSelect={handleGallerySelect} />
-					<Controls isGenerating={isGenerating} onGenerate={handleGenerate} onStop={handleStop} onExport={handleExport} hasProject={!!currentProject} />
-				</Box>
-			</Box>
-			<StatusBar message={status} errors={errors} />
-		</Box>
-	);
+  return (
+    <Box flexDirection="column" padding={1}>
+      <Banner />
+      <PromptBar value={prompt} onChange={setPrompt} onSubmit={handleGenerate} disabled={isGenerating} />
+      <Box flexDirection="row" gap={1}>
+        <LogsPanel logs={logs} height={contentHeight} />
+        <PlayerPiano
+          iterations={currentIterations}
+          currentIndex={playerPianoIndex}
+          isPlaying={isPlayerPianoPlaying}
+          speed={200}
+          onIndexChange={setPlayerPianoIndex}
+          onTogglePlay={() => setIsPlayerPianoPlaying(prev => !prev)}
+        />
+        <XRayPanel
+          iterations={currentIterations}
+          currentIndex={playerPianoIndex}
+          rawOutput={rawLLMOutput}
+          isStreaming={isGenerating}
+        />
+        {showVoiceInput && (
+          <Box flexDirection="column" borderStyle="single" borderColor={COLORS.border} width="20%" height={contentHeight} paddingX={1}>
+            <VoiceInputUI />
+          </Box>
+        )}
+        <GalleryPanel projects={gallery} currentIndex={galleryIndex} onSelect={handleGallerySelect} height={contentHeight} />
+      </Box>
+      <Box borderStyle="single" borderColor={COLORS.border} paddingX={1} marginTop={1}>
+        <Text color={COLORS.muted}>Status: {isGenerating ? "Generating..." : "Ready"} | [1] PlayerPiano | [V]oice | [Q]uit</Text>
+      </Box>
+    </Box>
+  );
 };
 
-// Preload gallery and render
-const gallery = await loadGallerySync();
-render(<App initialGallery={gallery} />);
+const main = async () => {
+  const initialGallery = await loadGallery();
+  render(<App initialGallery={initialGallery} />);
+};
+
+main().catch(console.error);

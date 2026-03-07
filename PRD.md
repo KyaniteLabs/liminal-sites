@@ -72,6 +72,10 @@ This creates a **self-referential feedback loop** — the agent critiques and im
 
 ## 3. Architecture
 
+### 3.0 Substrate
+
+Atelier's substrate = prompt (optional {{context}}) + context injection + evaluation (CreativeEvaluator) + termination (promise, max-iterations, quality gate).
+
 ### 3.1 System Diagram
 
 ```
@@ -733,17 +737,32 @@ Output: <promise>COMPLETE</promise> only when all requirements met.
 
 ### 12.1 Research Sources
 
-- **Emergent Garden:** Artificial life, emergence, "weird programs"
-- **Blaise Agüera y Arcas:** "Computational Life" paper (2024)
-- **Geoffrey Huntley:** Ralph-Wiggum Loop pattern
-- **Google Research:** Growing Neural Cellular Automata
+Preliminary research has been completed and written up in the repo. See:
+
+- **[docs/PRELIMINARY_RESEARCH.md](docs/PRELIMINARY_RESEARCH.md)** — Consolidated entry point: executive summary, synthesis table, and consolidated references. It summarizes and links to the four detailed reports below.
+
+**Primary sources (expanded in the reports):**
+
+- **Emergent Garden:** Artificial life, emergence, "weird programs" — see *Research: Computational Life, Emergent Garden* in docs.
+- **Blaise Agüera y Arcas et al.:** "Computational Life" (2024) — arXiv:2406.19108; Google Research. Self-replicating programs from simple interaction without explicit fitness. See *Research: Computational Life, Emergent Garden* in docs.
+- **Geoffrey Huntley:** Ralph-Wiggum Loop pattern — ghuntley.com/ralph, ghuntley.com/loop, github.com/ghuntley/how-to-ralph-wiggum. See *RALPH_WIGGUM_RESEARCH.md* in docs.
+- **Google Research:** Growing Neural Cellular Automata (Distill 2020) — distill.pub/2020/growing-ca. See *research_GNCA_Lenia.md* in docs.
 
 ### 12.2 Related Work
 
-- Claude Code Ralph-Wiggum plugin
-- p5.js / Processing ecosystem
-- Lenia continuous CA framework
-- GA.js / genetic-js libraries
+- **Claude Code Ralph-Wiggum plugin** — anthropics/claude-code, plugins/ralph-wiggum (see RALPH_WIGGUM_RESEARCH.md).
+- **p5.js / Processing ecosystem** — generative art, AI+p5 tooling (p5js.ai); see RESEARCH_P5_GA_ECOSYSTEM.md in docs.
+- **Lenia** — Continuous CA framework (Bert Chan); chakazul.github.io/lenia; see research_GNCA_Lenia.md in docs.
+- **GA.js / genetic-js** — Evolutionary art, IGA; see RESEARCH_P5_GA_ECOSYSTEM.md in docs.
+
+**Detailed reports (all in `docs/`):**
+
+| Report | File |
+|--------|------|
+| Ralph-Wiggum Loop & Claude plugin | RALPH_WIGGUM_RESEARCH.md |
+| Computational Life & Emergent Garden | RESEARCH_COMPUTATIONAL_LIFE_EMERGENT_GARDEN.md |
+| Growing Neural CA & Lenia | research_GNCA_Lenia.md |
+| p5.js & genetic/evolutionary creative coding | RESEARCH_P5_GA_ECOSYSTEM.md |
 
 ---
 
