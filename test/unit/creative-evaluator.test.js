@@ -101,6 +101,71 @@ describe('CreativeEvaluator', () => {
       });
     });
 
+    describe('evaluationCriteria option', () => {
+      it('should use only technical dimension when evaluationCriteria is ["technical"]', () => {
+        const code = `function setup() { createCanvas(400, 400); }
+        function draw() { background(220); circle(200, 200, 50); }`;
+        const withCriteria = CreativeEvaluator.assess(code, { evaluationCriteria: ['technical'] });
+        const withoutCriteria = CreativeEvaluator.assess(code);
+        expect(withCriteria.score).toBe(withCriteria.technicalScore);
+        expect(withCriteria.score).not.toBe(withoutCriteria.score);
+        expect(withCriteria.technicalScore).toBeGreaterThan(0);
+      });
+
+      it('should give non-zero sound factor when code contains p5.sound', () => {
+        const codeWithSound = `function setup() {
+          createCanvas(400, 400);
+          let osc = new p5.Oscillator();
+          osc.start();
+        }
+        function draw() { background(220); }`;
+        const result = CreativeEvaluator.assess(codeWithSound, {
+          evaluationCriteria: ['aesthetic', 'technical', 'novelty']
+        });
+        expect(result.score).toBeGreaterThan(0);
+        const codeNoSound = `function setup() { createCanvas(400, 400); }
+        function draw() { background(220); }`;
+        const noSoundScore = CreativeEvaluator.assess(codeNoSound, {
+          evaluationCriteria: ['aesthetic', 'technical', 'novelty']
+        }).score;
+        expect(result.score).toBeGreaterThanOrEqual(noSoundScore);
+      });
+
+      it('when evaluationCriteria includes "aesthetic", sound-using code gets aesthetic score >= same code without sound', () => {
+        const baseCode = `function setup() { createCanvas(400, 400); }
+        function draw() { background(220); circle(200, 200, 50); }`;
+        const codeWithSound = `function setup() {
+          createCanvas(400, 400);
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          osc.connect(ctx.destination);
+          osc.start();
+        }
+        function draw() { background(220); circle(200, 200, 50); }`;
+        const optsAestheticOnly = { evaluationCriteria: ['aesthetic'] };
+        const scoreNoSound = CreativeEvaluator.assess(baseCode, optsAestheticOnly).score;
+        const scoreWithSound = CreativeEvaluator.assess(codeWithSound, optsAestheticOnly).score;
+        expect(scoreWithSound).toBeGreaterThanOrEqual(scoreNoSound);
+      });
+
+      it('code containing AudioContext, createOscillator, p5.sound, or Web Audio gets non-zero sound dimension', () => {
+        const snippets = [
+          { name: 'AudioContext', code: `function setup(){createCanvas(400,400);var c=new AudioContext();} function draw(){background(0);}` },
+          { name: 'createOscillator', code: `function setup(){createCanvas(400,400);var c=new AudioContext();var o=c.createOscillator();} function draw(){background(0);}` },
+          { name: 'p5.sound', code: `function setup(){createCanvas(400,400);/* p5.sound */} function draw(){background(0);}` },
+          { name: 'Web Audio', code: `function setup(){createCanvas(400,400);/* Web Audio */} function draw(){background(0);}` }
+        ];
+        const noSoundCode = `function setup(){createCanvas(400,400);} function draw(){background(0);}`;
+        const opts = { evaluationCriteria: ['aesthetic'] };
+        const noSoundScore = CreativeEvaluator.assess(noSoundCode, opts).score;
+        for (const { name, code } of snippets) {
+          const result = CreativeEvaluator.assess(code, opts);
+          expect(result.score).toBeGreaterThanOrEqual(noSoundScore);
+          expect(result.score).toBeGreaterThan(0);
+        }
+      });
+    });
+
     describe('Creative quality assessment', () => {
       it('should reject low-quality trivial code', () => {
         const output = 'console.log("hello");';
@@ -619,6 +684,36 @@ describe('CreativeEvaluator', () => {
         expect(result.passed).toBe(true);
         expect(result.score).toBeGreaterThan(0.7);
       });
+    });
+  });
+
+  describe('getFitness()', () => {
+    it('returns score in [0, 1] and issues array for valid p5 code', () => {
+      const validP5Code = `function setup() {
+          createCanvas(400, 400);
+        }
+
+        function draw() {
+          background(220);
+          circle(200, 200, 50);
+        }`;
+
+      const result = CreativeEvaluator.getFitness(validP5Code);
+
+      expect(result).toHaveProperty('score');
+      expect(result).toHaveProperty('issues');
+      expect(Array.isArray(result.issues)).toBe(true);
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.score).toBeLessThanOrEqual(1);
+    });
+
+    it('returns same score as assess() for the same code', () => {
+      const code = `function setup() { createCanvas(400, 400); }
+        function draw() { background(220); circle(200, 200, 50); }`;
+      const assessResult = CreativeEvaluator.assess(code);
+      const fitnessResult = CreativeEvaluator.getFitness(code);
+      expect(fitnessResult.score).toBe(assessResult.score);
+      expect(fitnessResult.issues).toEqual(assessResult.issues);
     });
   });
 });

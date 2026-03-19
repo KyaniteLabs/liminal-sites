@@ -3,7 +3,7 @@ import http from 'http';
 
 describe('PreviewServer Integration Tests', () => {
   let previewServer;
-  const getTestPort = () => 3456 + Math.floor(Math.random() * 1000) + (process.pid % 100);
+  const getTestPort = () => 50000 + (process.pid % 5000) + Math.floor(Math.random() * 1000);
   let TEST_PORT;
 
   beforeEach(() => {

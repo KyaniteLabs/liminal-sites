@@ -16,8 +16,18 @@ import { ContextAccumulation } from '../../dist/core/ContextAccumulation.js';
 import { CreativeEvaluator } from '../../dist/core/CreativeEvaluator.js';
 import { P5Generator } from '../../dist/generators/p5/P5Generator.js';
 import { Gallery } from '../../dist/gallery/Gallery.js';
+import { LLMClient } from '../../dist/llm/LLMClient.js';
 import fs from 'fs/promises';
 import path from 'path';
+
+/** Skip when LLM not configured (template fallback returns same code, no promise). */
+function skipIfNoLLM() {
+  if (!LLMClient.isConfigured()) {
+    console.warn('Skipping test: LLM not configured (template fallback does not emit promise or vary code).');
+    return true;
+  }
+  return false;
+}
 
 describe('RalphLoop Integration Tests', () => {
   let testGalleryDir;
@@ -70,6 +80,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should terminate on promise detection', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate a sketch and output <promise>COMPLETE</promise> when done';
 
       const result = await RalphLoop.run(prompt, {
@@ -134,8 +145,10 @@ describe('RalphLoop Integration Tests', () => {
       expect(history[0].code).toBeDefined();
       expect(history[1].code).toBeDefined();
 
-      // Code should evolve (be different)
-      expect(history[0].code).not.toBe(history[1].code);
+      // When LLM is configured, code should evolve; when template fallback is used, same code each time
+      if (LLMClient.isConfigured()) {
+        expect(history[0].code).not.toBe(history[1].code);
+      }
     });
 
     test('should maintain context immutability', async () => {
@@ -342,6 +355,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Promise Detection', () => {
     test('should detect exact promise string', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Complete this task <promise>COMPLETE</promise>';
 
       const result = await RalphLoop.run(prompt, {

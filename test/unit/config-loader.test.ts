@@ -68,6 +68,29 @@ describe('ConfigLoader', () => {
       expect(loaded!.llm?.model).toBe('test-model');
       expect(loaded!.llm?.baseUrl).toBe('https://test.example/v1');
     });
+
+    it('loads optional live config (midiOutput, oscHost, oscPort, syncMode) from project config', async () => {
+      const projectConfig = {
+        live: {
+          midiOutput: 'Virtual MIDI',
+          oscHost: '127.0.0.1',
+          oscPort: 57120,
+          syncMode: 'link'
+        }
+      };
+      await fs.writeFile(
+        path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
+        JSON.stringify(projectConfig, null, 2)
+      );
+
+      const loaded = await loadProjectConfig(TEST_PROJECT_DIR);
+
+      expect(loaded).not.toBeNull();
+      expect(loaded!.live?.midiOutput).toBe('Virtual MIDI');
+      expect(loaded!.live?.oscHost).toBe('127.0.0.1');
+      expect(loaded!.live?.oscPort).toBe(57120);
+      expect(loaded!.live?.syncMode).toBe('link');
+    });
   });
 
   describe('getEffectiveConfig()', () => {
@@ -91,6 +114,37 @@ describe('ConfigLoader', () => {
 
       expect(effective.model).toBe('project-model');
       expect(effective.baseUrl).toBe('https://project.example/v1');
+    });
+  });
+
+  describe('getEffectiveConfig openai and anthropic (W0-C)', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(TEST_PROJECT_DIR, 'config'), { recursive: true });
+    });
+    afterEach(async () => {
+      try { await fs.rm(TEST_PROJECT_DIR, { recursive: true, force: true }); } catch {}
+    });
+
+    it('returns provider openai when project llm.provider is openai', async () => {
+      const projectConfig = { llm: { provider: 'openai', model: 'gpt-4o-mini' } };
+      await fs.writeFile(
+        path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
+        JSON.stringify(projectConfig, null, 2)
+      );
+      const effective = await getEffectiveConfig(undefined, TEST_PROJECT_DIR);
+      expect(effective.provider).toBe('openai');
+      expect(effective.model).toBe('gpt-4o-mini');
+    });
+
+    it('returns provider anthropic when project llm.provider is anthropic', async () => {
+      const projectConfig = { llm: { provider: 'anthropic', model: 'claude-3-5-haiku-20241022' } };
+      await fs.writeFile(
+        path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
+        JSON.stringify(projectConfig, null, 2)
+      );
+      const effective = await getEffectiveConfig(undefined, TEST_PROJECT_DIR);
+      expect(effective.provider).toBe('anthropic');
+      expect(effective.model).toBe('claude-3-5-haiku-20241022');
     });
   });
 });

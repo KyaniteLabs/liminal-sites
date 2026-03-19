@@ -1,0 +1,96 @@
+/**
+ * E2E full loop with cloud LLM: run() from built package (dist/index.js)
+ * with ATELIER_LLM_PROVIDER=inception. Skips with clear message when cloud
+ * is unavailable (no API key, 400/401, timeout).
+ */
+
+import fs from 'fs';
+import path from 'path';
+
+const E2E_TIMEOUT_MS = 90000; // 2 iterations + LLM calls
+
+function restoreEnv(backup: Record<string, string | undefined>) {
+  for (const key of Object.keys(backup)) {
+    if (backup[key] !== undefined) {
+      process.env[key] = backup[key];
+    } else {
+      delete process.env[key];
+    }
+  }
+}
+
+function backupEnv(keys: string[]): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const k of keys) {
+    out[k] = process.env[k];
+  }
+  return out;
+}
+
+describe('E2E full loop (cloud LLM)', () => {
+  const envKeys = [
+    'ATELIER_LLM_PROVIDER',
+    'ATELIER_LLM_BASE_URL',
+    'ATELIER_LLM_MODEL',
+    'ATELIER_LLM_API_KEY',
+    'INCEPTION_API_KEY',
+  ];
+  let envBackup: Record<string, string | undefined>;
+
+  beforeEach(() => {
+    envBackup = backupEnv(envKeys);
+  });
+
+  afterEach(() => {
+    restoreEnv(envBackup);
+  });
+
+  test('run() full loop with cloud (inception): result has code, iterations, output files', async () => {
+    const distPath = path.join(process.cwd(), 'dist', 'index.js');
+    if (!fs.existsSync(distPath)) {
+      console.warn('Skipping E2E cloud test: dist/index.js not found (run npm run build first).');
+      return;
+    }
+
+    process.env.ATELIER_LLM_PROVIDER = 'inception';
+    process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'https://api.inceptionlabs.ai/v1';
+    process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'inception-001';
+
+    const stamp = Date.now();
+    const projectName = `e2e-cloud-${stamp}`;
+    const outputDir = path.join(process.cwd(), 'tmp-e2e', projectName);
+
+    const { run } = await import('../../dist/index.js');
+
+    let result: Awaited<ReturnType<typeof run>>;
+    try {
+      result = await run('simple blue circle', {
+        maxIterations: 2,
+        output: outputDir,
+        project: projectName,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (
+        /ECONNREFUSED|ENOTFOUND|ETIMEDOUT|400|401|403|network|fetch failed|no api key|AbortError/i.test(msg)
+      ) {
+        console.warn(
+          'Skipping E2E cloud test: backend not available (no API key, unreachable, or timeout).'
+        );
+        return;
+      }
+      throw err;
+    }
+
+    expect(result).toBeDefined();
+    expect(result.code).toBeDefined();
+    expect(typeof result.code).toBe('string');
+    expect(result.iterations).toBeGreaterThanOrEqual(1);
+    expect(result.code).toMatch(/function\s+setup\s*\(/);
+    expect(result.code).toMatch(/function\s+draw\s*\(/);
+    expect(result.htmlPath).toBeDefined();
+    expect(result.jsPath).toBeDefined();
+    expect(fs.existsSync(result.htmlPath!)).toBe(true);
+    expect(fs.existsSync(result.jsPath!)).toBe(true);
+  }, E2E_TIMEOUT_MS + 2000);
+});

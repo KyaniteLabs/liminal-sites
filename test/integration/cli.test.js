@@ -38,6 +38,21 @@ describe('CLI Integration Tests', () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Atelier');
     }, TEST_TIMEOUT);
+
+    test('--mode live-music --prompt "ambient" --output <dir> produces files in output dir', async () => {
+      const result = await runCLI([
+        '--mode', 'live-music',
+        '--prompt', 'ambient',
+        '--output', testOutputDir
+      ]);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toMatch(/strudel|hydra|\.js|\.tidal/);
+      const files = await fs.readdir(testOutputDir);
+      expect(files.length).toBeGreaterThan(0);
+      const hasMusic = files.some(f => /strudel\.(js|tidal)/i.test(f) || f === 'strudel.js');
+      const hasVisual = files.some(f => /hydra\.js/i.test(f));
+      expect(hasMusic || hasVisual).toBe(true);
+    }, 15000);
   });
 });
 

@@ -7,7 +7,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { Gallery } from '../../dist/gallery/Gallery.js';
+import { Gallery, type Iteration } from '../../src/gallery/Gallery.js';
 
 describe('Gallery', () => {
   const TEST_GALLERY_DIR = 'test-gallery-temp';
@@ -297,11 +297,11 @@ function draw() {
 
       expect(history).toHaveLength(3);
       expect(history[0].version).toBe(1);
-      expect(history[0].code).toBe('code1');
+      expect((history[0] as Iteration).code).toBe('code1');
       expect(history[1].version).toBe(2);
-      expect(history[1].code).toBe('code2');
+      expect((history[1] as Iteration).code).toBe('code2');
       expect(history[2].version).toBe(3);
-      expect(history[2].code).toBe('code3');
+      expect((history[2] as Iteration).code).toBe('code3');
     });
 
     it('should handle gaps in version numbers', async () => {
@@ -389,7 +389,7 @@ function draw() {
       const history = await gallery.loadHistory('project-with-special.chars_123');
 
       expect(history).toHaveLength(1);
-      expect(history[0].code).toBe('code1');
+      expect((history[0] as Iteration).code).toBe('code1');
     });
 
     it('should return empty array for empty project directory', async () => {
@@ -491,8 +491,8 @@ function draw() {
 
       expect(historyA).toHaveLength(2);
       expect(historyB).toHaveLength(2);
-      expect(historyA[0].code).toBe('code-a1');
-      expect(historyB[0].code).toBe('code-b1');
+      expect((historyA[0] as Iteration).code).toBe('code-a1');
+      expect((historyB[0] as Iteration).code).toBe('code-b1');
     });
 
     it('should preserve code formatting exactly', async () => {
@@ -511,7 +511,7 @@ function draw() {
       await gallery.saveIteration('test', 1, originalCode);
       const history = await gallery.loadHistory('test');
 
-      expect(history[0].code).toBe(originalCode);
+      expect((history[0] as Iteration).code).toBe(originalCode);
     });
   });
 
@@ -566,6 +566,94 @@ function draw() {
       await expect(
         gallery.saveIteration('test', 1, '   \n\n  \n  ')
       ).rejects.toThrow('Code is required and must be a non-empty string');
+    });
+  });
+
+  describe('listProjectDirs', () => {
+    it('should return list of project directory names', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      await gallery.saveIteration('proj-a', 1, 'code1');
+      await gallery.saveIteration('proj-b', 1, 'code2');
+      const dirs = await gallery.listProjectDirs();
+      expect(dirs).toContain('2026-03-01--proj-a');
+      expect(dirs).toContain('2026-03-01--proj-b');
+      expect(dirs.length).toBe(2);
+    });
+
+    it('should return empty array when gallery dir does not exist', async () => {
+      const gallery = new Gallery('nonexistent-gallery-dir');
+      const dirs = await gallery.listProjectDirs();
+      expect(dirs).toEqual([]);
+    });
+  });
+
+  describe('loadHistoryFromDir', () => {
+    it('should load iterations by project dir name', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      await gallery.saveIteration('my-project', 1, 'code1');
+      await gallery.saveIteration('my-project', 2, 'code2');
+      const iterations = await gallery.loadHistoryFromDir('2026-03-01--my-project');
+      expect(iterations).toHaveLength(2);
+      expect(iterations[0].version).toBe(1);
+      expect((iterations[0] as Iteration).code).toBe('code1');
+      expect(iterations[1].version).toBe(2);
+      expect((iterations[1] as Iteration).code).toBe('code2');
+    });
+
+    it('should return empty array for unknown project dir', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      const iterations = await gallery.loadHistoryFromDir('2026-03-01--nonexistent');
+      expect(iterations).toEqual([]);
+    });
+
+    it('should reject path traversal', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      const iterations = await gallery.loadHistoryFromDir('../../../etc');
+      expect(iterations).toEqual([]);
+    });
+  });
+
+  describe('Gallery organism format', () => {
+    it('saveOrganism saves organism payload; loadHistory returns organism iteration', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      const musicCode = 'setcps(2)\nn("c3 e3 g3").sound("sawtooth")';
+      const visualCode = 'osc().out();';
+
+      await gallery.saveOrganism('organism-project', 1, musicCode, visualCode);
+
+      const history = await gallery.loadHistory('organism-project');
+      expect(history).toHaveLength(1);
+      expect(history[0].version).toBe(1);
+      const first = history[0] as { type?: string; musicCode?: string; visualCode?: string; code?: string };
+      expect(first.type).toBe('organism');
+      expect(first.musicCode).toBe(musicCode);
+      expect(first.visualCode).toBe(visualCode);
+    });
+
+    it('saveIteration with plain string still loads as p5 (code only)', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      const code = 'function setup() { createCanvas(400, 400); }';
+
+      await gallery.saveIteration('p5-project', 1, code);
+      const history = await gallery.loadHistory('p5-project');
+
+      expect(history).toHaveLength(1);
+      expect(history[0].version).toBe(1);
+      expect((history[0] as { code?: string }).code).toBe(code);
+      expect((history[0] as { type?: string }).type).toBeUndefined();
+    });
+
+    it('legacy vN.js with plain code (no JSON) loads as p5', async () => {
+      const gallery = new Gallery(TEST_GALLERY_DIR);
+      const projectDir = path.join(TEST_GALLERY_DIR, '2026-03-01--legacy-project');
+      await fs.mkdir(projectDir, { recursive: true });
+      await fs.writeFile(path.join(projectDir, 'v1.js'), 'legacy p5 code here');
+
+      const history = await gallery.loadHistory('legacy-project');
+
+      expect(history).toHaveLength(1);
+      expect(history[0].version).toBe(1);
+      expect((history[0] as { code?: string }).code).toBe('legacy p5 code here');
     });
   });
 });

@@ -11,19 +11,20 @@ describe('TUI Integration v2.0', () => {
     // Component structure:
     // - Banner
     // - PromptBar
-    // - Flex row: LogsPanel + PlayerPiano + XRayPanel + GalleryPanel
-    // - StatusBar
-    
+    // - Seed (optional) line
+    // - Flex row: LogsPanel + IterationTimeline + PlayerPiano + XRayPanel + GalleryPanel
+    // - StatusBar (Run / Stop)
     const components = [
       'Banner',
       'PromptBar',
       'LogsPanel',
+      'IterationTimeline',
       'PlayerPiano',
       'XRayPanel',
       'GalleryPanel',
     ];
-    
-    expect(components.length).toBe(6);
+    expect(components.length).toBe(7);
+    expect(components).toContain('IterationTimeline');
     expect(components).toContain('PlayerPiano');
     expect(components).toContain('XRayPanel');
   });
@@ -75,6 +76,7 @@ describe('TUI Integration v2.0', () => {
   test('state management for v2.0 components', () => {
     const stateKeys = [
       'prompt',
+      'seedCode',
       'isGenerating',
       'logs',
       'currentIterations',
@@ -83,11 +85,11 @@ describe('TUI Integration v2.0', () => {
       'playerPianoIndex',
       'isPlayerPianoPlaying',
     ];
-    
-    expect(stateKeys.length).toBe(8);
+    expect(stateKeys.length).toBe(9);
     expect(stateKeys).toContain('currentIterations');
     expect(stateKeys).toContain('playerPianoIndex');
     expect(stateKeys).toContain('isPlayerPianoPlaying');
+    expect(stateKeys).toContain('seedCode');
   });
 
   test('component width distribution', () => {

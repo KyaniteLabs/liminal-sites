@@ -5,6 +5,7 @@
 
 import { run, runFromArgs } from '../../dist/index.js';
 import fs from 'fs/promises';
+import path from 'path';
 
 describe('Atelier Main Entry Point', () => {
   describe('run()', () => {
@@ -67,7 +68,7 @@ describe('Atelier Main Entry Point', () => {
       });
 
       expect(result).toBeDefined();
-      expect(result.outputDir).toBe('./output');
+      expect(result.outputDir).toBe(path.resolve(process.cwd(), 'output'));
     });
   });
 });

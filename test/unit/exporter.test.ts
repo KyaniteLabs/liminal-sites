@@ -173,6 +173,41 @@ function draw() {
       expect(content).toContain('code2');
       expect(content).not.toContain('code1');
     });
+
+    it('should include Web Audio support and user-gesture comment when code uses AudioContext, createOscillator, or p5.sound', async () => {
+      const exporter = new Exporter();
+      const outputPath = path.join(TEST_EXPORT_DIR, 'sound.html');
+      const soundSketchCode = `function setup() {
+  createCanvas(400, 400);
+  const ctx = new AudioContext();
+  const osc = ctx.createOscillator();
+}
+function draw() {}`;
+
+      await exporter.exportHTML(soundSketchCode, outputPath);
+
+      const content = await fs.readFile(outputPath, 'utf-8');
+      const hasSoundComment = content.includes('Sound may require user click to start (browser policy)');
+      const hasAudioContext = content.includes('AudioContext');
+      const hasCreateOscillator = content.includes('createOscillator');
+      expect(hasSoundComment).toBe(true);
+      expect(hasAudioContext || hasCreateOscillator).toBe(true);
+    });
+
+    it('should include p5.sound script when code uses p5.sound', async () => {
+      const exporter = new Exporter();
+      const outputPath = path.join(TEST_EXPORT_DIR, 'p5sound.html');
+      const p5SoundCode = `// uses p5.sound
+function preload() { loadSound('beat.mp3'); }
+function setup() { createCanvas(400, 400); }
+function draw() {}`;
+
+      await exporter.exportHTML(p5SoundCode, outputPath);
+
+      const content = await fs.readFile(outputPath, 'utf-8');
+      expect(content).toContain('Sound may require user click to start (browser policy)');
+      expect(content).toMatch(/p5\.sound\.min\.js/);
+    });
   });
 
   describe('exportJS', () => {
