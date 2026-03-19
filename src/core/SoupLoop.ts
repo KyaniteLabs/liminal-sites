@@ -7,6 +7,7 @@ import { CreativeEvaluator } from './CreativeEvaluator.js';
 import { ParticleSystem } from '../generators/p5/ParticleSystem.js';
 import { Gallery } from '../gallery/Gallery.js';
 import { promptToGeneratorParams } from '../utils/promptToGeneratorParams.js';
+import { mergeSketchCode } from '../utils/mergeSketchCode.js';
 
 export interface SoupCandidate {
   code: string;
@@ -59,7 +60,7 @@ export class SoupLoop {
       while (j === i) j = Math.floor(Math.random() * population.length);
       const codeA = population[i].code;
       const codeB = population[j].code;
-      const mergedCode = codeA + '\n// soup merge\n' + codeB;
+      const mergedCode = mergeSketchCode(codeA, codeB);
       const mergedEval = CreativeEvaluator.assess(mergedCode);
 
       const worstIdx = population.reduce((min, c, idx) => (c.score < population[min].score ? idx : min), 0);
@@ -71,7 +72,9 @@ export class SoupLoop {
 
       if (project && gallery && merged) {
         const version = steps;
-        await gallery.saveIteration(project, version, population[worstIdx].code).catch(() => {});
+        await gallery.saveIteration(project, version, population[worstIdx].code).catch((err) => {
+          console.error('SoupLoop: gallery save failed:', err instanceof Error ? err.message : err);
+        });
       }
     }
 
@@ -84,3 +87,4 @@ export class SoupLoop {
     };
   }
 }
+

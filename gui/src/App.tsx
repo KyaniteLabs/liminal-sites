@@ -4,12 +4,69 @@ import {
   INITIAL_LIVE_ORGANISM_STATE,
   switchToLiveOrganismView,
   setSandboxRunResult,
-} from '../../src/gui/liveOrganismState.ts';
+} from './gui/liveOrganismState';
+
+// State types
+interface MergeProposal {
+  proposed: {
+    type: string;
+    musicCode?: string;
+    visualCode?: string;
+    code?: string;
+  };
+  versionA?: number;
+  versionB?: number;
+}
+
+interface RunResult {
+  result?: {
+    iterations: number;
+    finalScore: number;
+  };
+  projectDirName?: string;
+}
+
+interface LiveMusicLoading {
+  music: boolean;
+  visuals: boolean;
+}
+
+interface CreateTraits {
+  bpm: number;
+  palette: string;
+}
+
+interface GuiIteration {
+  version?: number;
+  type?: string;
+  musicCode?: string;
+  visualCode?: string;
+  code?: string;
+  id?: number;
+  timestamp?: number;
+}
+
+interface ConfigResponse {
+  effective?: {
+    provider?: string;
+    baseUrl?: string;
+    model?: string;
+    apiKey?: string;
+  };
+  loop?: {
+    maxIterations?: number;
+    timeoutMinutes?: number;
+  };
+  creative?: {
+    minQualityScore?: number;
+  };
+  galleryPath?: string;
+}
 
 const API = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASEURL) ? import.meta.env.VITE_API_BASEURL : '/api';
 
 // Base64 for Strudel embed URL hash (UTF-8 safe)
-function base64UrlCode(str) {
+function base64UrlCode(str: string): string {
   try {
     return btoa(unescape(encodeURIComponent(str)));
   } catch {
@@ -17,7 +74,7 @@ function base64UrlCode(str) {
   }
 }
 
-const tabStyle = (active) => ({
+const tabStyle = (active: boolean): React.CSSProperties => ({
   padding: '10px 18px',
   marginRight: 0,
   border: '1px solid transparent',
@@ -34,50 +91,50 @@ export default function App() {
   const [liveState, dispatchLive] = useReducer(liveOrganismReducer, INITIAL_LIVE_ORGANISM_STATE);
   const { activeTab, sandboxUrl, runError } = liveState;
 
-  const [config, setConfig] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const [config, setConfig] = useState<ConfigResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   // Live organism: gallery selection
-  const [projects, setProjects] = useState([]);
-  const [iterations, setIterations] = useState([]);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [selectedIterationIndex, setSelectedIterationIndex] = useState(0);
-  const [sandboxRunning, setSandboxRunning] = useState(false);
-  const [galleryApiFailed, setGalleryApiFailed] = useState(false);
+  const [projects, setProjects] = useState<string[]>([]);
+  const [iterations, setIterations] = useState<GuiIteration[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedIterationIndex, setSelectedIterationIndex] = useState<number>(0);
+  const [sandboxRunning, setSandboxRunning] = useState<boolean>(false);
+  const [galleryApiFailed, setGalleryApiFailed] = useState<boolean>(false);
 
   // Merge / Approve: proposal from /api/merge or /api/propose-mutate
-  const [mergeProposal, setMergeProposal] = useState(null); // { proposed: { type, musicCode?, visualCode?, code? }, versionA?, versionB? }
-  const [mergeApiError, setMergeApiError] = useState(null); // transient error from merge/mutate
-  const [approveLoading, setApproveLoading] = useState(false);
+  const [mergeProposal, setMergeProposal] = useState<MergeProposal | null>(null);
+  const [mergeApiError, setMergeApiError] = useState<string | null>(null);
+  const [approveLoading, setApproveLoading] = useState<boolean>(false);
 
   // Create (run loop): prompt, run status, result
-  const [createPrompt, setCreatePrompt] = useState('');
-  const [createMaxIterations, setCreateMaxIterations] = useState(5);
-  const [createMode, setCreateMode] = useState('p5'); // 'p5' | 'organism'
-  const [createTraits, setCreateTraits] = useState({ bpm: 120, palette: '' });
-  const [runStatus, setRunStatus] = useState(''); // '' | 'running' | 'done' | 'error'
-  const [runResult, setRunResult] = useState(null);
-  const [createRunError, setCreateRunError] = useState(null);
+  const [createPrompt, setCreatePrompt] = useState<string>('');
+  const [createMaxIterations, setCreateMaxIterations] = useState<number>(5);
+  const [createMode, setCreateMode] = useState<string>('p5');
+  const [createTraits, setCreateTraits] = useState<CreateTraits>({ bpm: 120, palette: '' });
+  const [runStatus, setRunStatus] = useState<string>('');
+  const [runResult, setRunResult] = useState<RunResult | null>(null);
+  const [createRunError, setCreateRunError] = useState<string | null>(null);
 
   // Live Music: generated code
-  const [liveMusicPrompt, setLiveMusicPrompt] = useState('ambient glitch');
-  const [musicCode, setMusicCode] = useState('');
-  const [visualsCode, setVisualsCode] = useState('');
-  const [liveMusicLoading, setLiveMusicLoading] = useState({ music: false, visuals: false });
-  const hydraContainerRef = useRef(null);
+  const [liveMusicPrompt, setLiveMusicPrompt] = useState<string>('ambient glitch');
+  const [musicCode, setMusicCode] = useState<string>('');
+  const [visualsCode, setVisualsCode] = useState<string>('');
+  const [liveMusicLoading, setLiveMusicLoading] = useState<LiveMusicLoading>({ music: false, visuals: false });
+  const hydraContainerRef = useRef<HTMLDivElement>(null);
 
   // Form state: effective + loop + creative + galleryPath; on save we build userConfig
-  const [provider, setProvider] = useState('inception');
-  const [baseUrl, setBaseUrl] = useState('');
-  const [model, setModel] = useState('inception-001');
-  const [apiKey, setApiKey] = useState('');
-  const [maxIterations, setMaxIterations] = useState(20);
-  const [timeoutMinutes, setTimeoutMinutes] = useState(30);
-  const [minQualityScore, setMinQualityScore] = useState(0.7);
-  const [galleryPath, setGalleryPath] = useState('gallery');
+  const [provider, setProvider] = useState<string>('inception');
+  const [baseUrl, setBaseUrl] = useState<string>('');
+  const [model, setModel] = useState<string>('inception-001');
+  const [apiKey, setApiKey] = useState<string>('');
+  const [maxIterations, setMaxIterations] = useState<number>(20);
+  const [timeoutMinutes, setTimeoutMinutes] = useState<number>(30);
+  const [minQualityScore, setMinQualityScore] = useState<number>(0.7);
+  const [galleryPath, setGalleryPath] = useState<string>('gallery');
 
   useEffect(() => {
     let cancelled = false;
@@ -96,8 +153,8 @@ export default function App() {
         setTimeoutMinutes(data.loop?.timeoutMinutes ?? 30);
         setMinQualityScore(data.creative?.minQualityScore ?? 0.7);
         setGalleryPath(data.galleryPath ?? 'gallery');
-      } catch (e) {
-        if (!cancelled) setError(e.message);
+      } catch (e: unknown) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -173,16 +230,23 @@ export default function App() {
       canvas.style.height = 'auto';
       el.appendChild(canvas);
       try {
-        const hydra = new window.Hydra({ canvas, detectAudio: false });
+        const hydra = new (window as any).Hydra({ canvas, detectAudio: false });
         const code = visualsCode.trim().replace(/^\/\/.*$/gm, '').trim();
-        if (code) (0, eval)(code);
-      } catch (err) {
+        if (code) {
+          // new Function() runs in global scope (Hydra API) but without closure access
+          const timeoutId = setTimeout(() => { throw new Error('Hydra execution timed out (5s)'); }, 5000);
+          const fn = new Function(code);
+          fn();
+          clearTimeout(timeoutId);
+        }
+      } catch (err: unknown) {
         console.error('Hydra run error:', err);
-        el.innerHTML = `<div style="color:#f66;padding:12px">${err.message}</div>`;
+        const msg = err instanceof Error ? err.message : String(err);
+        el.innerHTML = `<div style="color:#f66;padding:12px">${msg}</div>`;
       }
     }
 
-    if (window.Hydra) {
+    if ((window as any).Hydra) {
       runHydra();
       return;
     }
@@ -213,8 +277,9 @@ export default function App() {
       }
       const url = data.url || `/preview?version=${version}`;
       dispatchLive(setSandboxRunResult(url, null));
-    } catch (e) {
-      dispatchLive(setSandboxRunResult(null, e.message || 'Request failed'));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Request failed';
+      dispatchLive(setSandboxRunResult(null, msg));
     } finally {
       setSandboxRunning(false);
     }
@@ -238,9 +303,10 @@ export default function App() {
         setMergeProposal(null);
         setMergeApiError(res.status === 404 ? 'Backend not running? Start with: node scripts/start-gui.js' : (data.error || 'Merge failed'));
       }
-    } catch (e) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Request failed';
       setMergeProposal(null);
-      setMergeApiError(e.message || 'Request failed');
+      setMergeApiError(msg);
     }
   };
 
@@ -262,9 +328,10 @@ export default function App() {
         setMergeProposal(null);
         setMergeApiError(res.status === 404 ? 'Backend not running? Start with: node scripts/start-gui.js' : (data.error || 'Mutate failed'));
       }
-    } catch (e) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Request failed';
       setMergeProposal(null);
-      setMergeApiError(e.message || 'Request failed');
+      setMergeApiError(msg);
     }
   };
 
@@ -316,8 +383,9 @@ export default function App() {
       setRunStatus('done');
       setProjects((prev) => (data.projectDirName ? [data.projectDirName, ...prev] : prev));
       if (data.projectDirName) setSelectedProject(data.projectDirName);
-    } catch (e) {
-      setCreateRunError(e.message || 'Request failed');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Request failed';
+      setCreateRunError(msg);
       setRunStatus('error');
     }
   };
@@ -383,8 +451,8 @@ export default function App() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || res.statusText);
       setMessage('Config saved to ~/.atelier/config.json');
-    } catch (e) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
@@ -434,7 +502,7 @@ export default function App() {
       </div>
 
       {activeTab === 'config' && (
-        <form id="atelier-config-form" onSubmit={(e) => e.preventDefault()} className="atelier-panel" style={{ maxWidth: 560 }} autoComplete="off">
+        <form id="atelier-config-form" onSubmit={(e: React.FormEvent) => e.preventDefault()} className="atelier-panel" style={{ maxWidth: 560 }} autoComplete="off">
           {error && (
             <div className="atelier-alert atelier-alert--error" style={{ marginBottom: 12 }}>{error}</div>
           )}
@@ -449,7 +517,7 @@ export default function App() {
             <span className="atelier-label">Provider</span>
             <select
               value={provider}
-              onChange={(e) => setProvider(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setProvider(e.target.value)}
               className="atelier-select"
             >
               <option value="inception">inception</option>
@@ -464,7 +532,7 @@ export default function App() {
             <input
               type="url"
               value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBaseUrl(e.target.value)}
               placeholder="https://…"
               className="atelier-input"
             />
@@ -474,7 +542,7 @@ export default function App() {
             <input
               type="text"
               value={model}
-              onChange={(e) => setModel(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setModel(e.target.value)}
               className="atelier-input"
             />
           </label>
@@ -484,7 +552,7 @@ export default function App() {
               type="password"
               form="atelier-config-form"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiKey(e.target.value)}
               placeholder="••••••••"
               autoComplete="off"
               className="atelier-input"
@@ -503,7 +571,7 @@ export default function App() {
               min={1}
               max={100}
               value={maxIterations}
-              onChange={(e) => setMaxIterations(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMaxIterations(Number(e.target.value))}
               className="atelier-input"
             />
           </label>
@@ -514,7 +582,7 @@ export default function App() {
               min={1}
               max={120}
               value={timeoutMinutes}
-              onChange={(e) => setTimeoutMinutes(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTimeoutMinutes(Number(e.target.value))}
               className="atelier-input"
             />
           </label>
@@ -526,7 +594,7 @@ export default function App() {
               max={1}
               step={0.1}
               value={minQualityScore}
-              onChange={(e) => setMinQualityScore(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMinQualityScore(Number(e.target.value))}
               className="atelier-input"
             />
           </label>
@@ -540,7 +608,7 @@ export default function App() {
           <input
             type="text"
             value={galleryPath}
-            onChange={(e) => setGalleryPath(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGalleryPath(e.target.value)}
             placeholder="gallery"
             className="atelier-input"
           />
@@ -568,7 +636,7 @@ export default function App() {
             <span className="atelier-label">Prompt</span>
             <textarea
               value={createPrompt}
-              onChange={(e) => setCreatePrompt(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCreatePrompt(e.target.value)}
               placeholder="e.g. Create a calming blue particle system with soft gradients"
               rows={3}
               className="atelier-textarea"
@@ -581,7 +649,7 @@ export default function App() {
               min={1}
               max={20}
               value={createMaxIterations}
-              onChange={(e) => setCreateMaxIterations(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreateMaxIterations(Number(e.target.value))}
               className="atelier-input"
               style={{ width: 72 }}
             />
@@ -590,7 +658,7 @@ export default function App() {
             <span className="atelier-label" style={{ marginRight: 8 }}>Run mode</span>
             <select
               value={createMode}
-              onChange={(e) => setCreateMode(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCreateMode(e.target.value)}
               className="atelier-select"
               style={{ width: 'auto', minWidth: 200 }}
             >
@@ -607,7 +675,7 @@ export default function App() {
                   min={60}
                   max={240}
                   value={createTraits.bpm || 120}
-                  onChange={(e) => setCreateTraits((t) => ({ ...t, bpm: Number(e.target.value) }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreateTraits((t) => ({ ...t, bpm: Number(e.target.value) }))}
                   className="atelier-input"
                   style={{ width: 80, marginLeft: 4 }}
                 />
@@ -618,7 +686,7 @@ export default function App() {
                   type="text"
                   placeholder="e.g. warm, mono"
                   value={createTraits.palette || ''}
-                  onChange={(e) => setCreateTraits((t) => ({ ...t, palette: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreateTraits((t) => ({ ...t, palette: e.target.value }))}
                   className="atelier-input"
                   style={{ width: 120, marginLeft: 4 }}
                 />
@@ -655,7 +723,7 @@ export default function App() {
             <input
               type="text"
               value={liveMusicPrompt}
-              onChange={(e) => setLiveMusicPrompt(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLiveMusicPrompt(e.target.value)}
               placeholder="e.g. ambient glitch, anxious build"
               className="atelier-input"
               style={{ maxWidth: 400 }}
@@ -690,7 +758,7 @@ export default function App() {
                   style={{ padding: '6px 12px', fontSize: 12 }}
                   onClick={() => {
                     try {
-                      const ac = new (window.AudioContext || window.webkitAudioContext)();
+                      const ac = new (window.AudioContext || (window as any).webkitAudioContext)();
                       if (ac.state !== 'running') ac.resume();
                     } catch (_) {}
                   }}
@@ -767,7 +835,7 @@ export default function App() {
                 <span style={{ marginRight: 8, color: 'var(--atelier-text-muted)', fontSize: 13 }}>Project</span>
                 <select
                   value={selectedProject}
-                  onChange={(e) => setSelectedProject(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedProject(e.target.value)}
                   className="atelier-select"
                   style={{ width: 'auto', minWidth: 180 }}
                 >
@@ -781,7 +849,7 @@ export default function App() {
                 <span style={{ marginRight: 8, color: 'var(--atelier-text-muted)', fontSize: 13 }}>Iteration</span>
                 <select
                   value={selectedIterationIndex}
-                  onChange={(e) => setSelectedIterationIndex(Number(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedIterationIndex(Number(e.target.value))}
                   className="atelier-select"
                   style={{ width: 'auto', minWidth: 80 }}
                 >

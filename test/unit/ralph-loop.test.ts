@@ -176,10 +176,11 @@ describe('RalphLoop', () => {
       expect(mergeSteps.length).toBe(2);
       expect(mergeSteps[0].codeA).toBeDefined();
       expect(mergeSteps[0].codeB).toBeDefined();
-      expect(mergeSteps[0].proposed).toContain(mergeSteps[0].codeA);
-      expect(mergeSteps[0].proposed).toContain(mergeSteps[0].codeB);
-      expect(mergeSteps[1].proposed).toContain(mergeSteps[1].codeA);
-      expect(mergeSteps[1].proposed).toContain(mergeSteps[1].codeB);
+      // Smart merge extracts setup from A and draw from B — verify output is valid p5.js
+      expect(mergeSteps[0].proposed).toMatch(/function\s+setup\s*\(/);
+      expect(mergeSteps[0].proposed).toMatch(/function\s+draw\s*\(/);
+      expect(mergeSteps[1].proposed).toMatch(/function\s+setup\s*\(/);
+      expect(mergeSteps[1].proposed).toMatch(/function\s+draw\s*\(/);
     });
   });
 });

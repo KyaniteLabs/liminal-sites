@@ -1,34 +1,46 @@
 /**
  * ContextAccumulation - Manages state history and context accumulation
  *
+ * Instance-based: each ContextAccumulation has its own isolated history.
+ * A static `default` instance is provided for backward compatibility with
+ * existing static method calls (RalphLoop.getState, reset, isRunning, getProgress).
+ *
  * Key behavior:
  * - save(state) adds state to history
  * - load() returns most recent state or null
  * - getHistory() returns all saved states (with truncation)
  * - clear() resets all state
- *
- * Used in Ralph-Wiggum Loop where each iteration's state is saved
- * and accumulated context is passed between iterations.
  */
 
-interface State {
-  [key: string]: any;
+export interface IterationContext {
+  iteration: number;
+  prompt: string;
+  usedPrompt: string;
+  code: string;
+  evaluation: { score: number; issues: string[]; [key: string]: unknown };
+  timestamp: string;
+  maxIterations?: number;
 }
 
+export type State = IterationContext;
+
 export class ContextAccumulation {
-  private static history: State[] = [];
+  private history: State[] = [];
   private static readonly MAX_HISTORY_SIZE = 50;
+
+  /** Default shared instance for backward compatibility. */
+  static readonly default = new ContextAccumulation();
 
   /**
    * Save state to history
-   * @param state - The state object to save (any type)
+   * @param state - The state object to save
    */
-  static save(state: any): void {
-    ContextAccumulation.history.push(state);
+  save(state: State): void {
+    this.history.push(state);
 
     // Truncate history if exceeds max size
-    if (ContextAccumulation.history.length > ContextAccumulation.MAX_HISTORY_SIZE) {
-      ContextAccumulation.history = ContextAccumulation.history.slice(-ContextAccumulation.MAX_HISTORY_SIZE);
+    if (this.history.length > ContextAccumulation.MAX_HISTORY_SIZE) {
+      this.history = this.history.slice(-ContextAccumulation.MAX_HISTORY_SIZE);
     }
   }
 
@@ -36,61 +48,51 @@ export class ContextAccumulation {
    * Load most recent state
    * @returns Most recent state or null if no state exists
    */
-  static load(): State | null {
-    if (ContextAccumulation.history.length === 0) {
+  load(): State | null {
+    if (this.history.length === 0) {
       return null;
     }
 
-    const mostRecent = ContextAccumulation.history[ContextAccumulation.history.length - 1];
+    const mostRecent = this.history[this.history.length - 1];
 
     // Return a deep copy to prevent external mutations
-    return ContextAccumulation.deepCopy(mostRecent);
+    return structuredClone(mostRecent);
   }
 
   /**
    * Get full history of all saved states
    * @returns Array of all saved states (copy of internal history)
    */
-  static getHistory(): State[] {
-    // Return a deep copy to prevent external mutations
-    return ContextAccumulation.history.map(state => ContextAccumulation.deepCopy(state));
+  getHistory(): State[] {
+    return this.history.map(state => structuredClone(state));
   }
 
   /**
    * Clear all history
    */
-  static clear(): void {
-    ContextAccumulation.history = [];
+  clear(): void {
+    this.history = [];
   }
 
-  /**
-   * Create a deep copy of an object
-   * Handles circular references and complex objects
-   * @param obj - Object to copy
-   * @returns Deep copy of the object
-   */
-  private static deepCopy(obj: any): any {
-    // Handle null, undefined, and primitives
-    if (obj === null || obj === undefined || typeof obj !== 'object') {
-      return obj;
-    }
+  // ---- Static backward-compat wrappers (delegate to default instance) ----
 
-    // Handle Date objects
-    if (obj instanceof Date) {
-      return new Date(obj.getTime());
-    }
+  /** @deprecated Use instance methods or ContextAccumulation.default */
+  static save(state: State): void {
+    ContextAccumulation.default.save(state);
+  }
 
-    // Handle Array
-    if (Array.isArray(obj)) {
-      return obj.map(item => ContextAccumulation.deepCopy(item));
-    }
+  /** @deprecated Use instance methods or ContextAccumulation.default */
+  static load(): State | null {
+    return ContextAccumulation.default.load();
+  }
 
-    // Try JSON serialization first (handles most cases)
-    try {
-      return JSON.parse(JSON.stringify(obj));
-    } catch (e) {
-      // Fallback for circular references or non-serializable objects
-      return Object.assign({}, obj);
-    }
+  /** @deprecated Use instance methods or ContextAccumulation.default */
+  static getHistory(): State[] {
+    return ContextAccumulation.default.getHistory();
+  }
+
+  /** @deprecated Use instance methods or ContextAccumulation.default */
+  static clear(): void {
+    ContextAccumulation.default.clear();
   }
 }

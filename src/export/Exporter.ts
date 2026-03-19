@@ -225,7 +225,7 @@ export class Exporter {
 <body>${soundComment}
     <main>
         <script>
-${code}
+${code.replace(/<\/script>/gi, '<\\/script>')}
         </script>
     </main>
 </body>

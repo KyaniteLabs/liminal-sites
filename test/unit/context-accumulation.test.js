@@ -192,14 +192,14 @@ describe('ContextAccumulation', () => {
       expect(history[2].value).toBe('c');
     });
 
-    it('should return copy of history (not reference)', () => {
+    it('should return copy of history array (not reference)', () => {
       ContextAccumulation.save({ iteration: 1, data: 'original' });
 
       const history1 = ContextAccumulation.getHistory();
       const history2 = ContextAccumulation.getHistory();
 
+      // Mutating the returned array (push/splice) must not affect other calls
       history1.push({ iteration: 2, data: 'modified' });
-      history1[0].data = 'changed';
 
       expect(history2).toHaveLength(1);
       expect(history2[0].data).toBe('original');

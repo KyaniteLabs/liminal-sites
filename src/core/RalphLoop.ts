@@ -26,14 +26,9 @@ import { PromptStore } from './PromptStore.js';
 import { ContextAccumulation } from './ContextAccumulation.js';
 import { CreativeEvaluator } from './CreativeEvaluator.js';
 import { PromiseDetector } from './PromiseDetector.js';
-import { P5GeneratorLLM } from '../generators/p5/P5GeneratorLLM.js';
-import { ParticleSystem } from '../generators/p5/ParticleSystem.js';
-import { CellularAutomata } from '../generators/p5/CellularAutomata.js';
-import { FlowField } from '../generators/p5/FlowField.js';
-import { ShaderGenerator } from '../generators/glsl/ShaderGenerator.js';
-import { ThreeGenerator } from '../generators/three/ThreeGenerator.js';
+import { generatorRegistry } from '../generators/GeneratorRegistry.js';
+import { registerAllGenerators } from '../generators/registerGenerators.js';
 import { Gallery } from '../gallery/Gallery.js';
-import { promptToGeneratorParams } from '../utils/promptToGeneratorParams.js';
 import { generateMusicToVisual } from '../musicToVisual/generateMusicToVisual.js';
 import { mergeSketchCode } from '../utils/mergeSketchCode.js';
 
@@ -142,21 +137,16 @@ export class RalphLoop {
           usedPrompt = loadedPrompt + '\n\n---\nContext from previous iterations:\n' + contextForInjection;
         }
 
-        // Generate code (route by prompt keywords: particle/galaxy -> ParticleSystem; cellular/automata/lenia -> CellularAutomata; else LLM)
-        const { generatorKind, generatorParams } = this.chooseGenerator(loadedPrompt);
-        if (generatorKind === 'particle') {
-          currentCode = ParticleSystem.generate(generatorParams);
-        } else if (generatorKind === 'cellular') {
-          currentCode = CellularAutomata.generate(generatorParams);
-        } else if (generatorKind === 'flowfield') {
-          currentCode = FlowField.generate(generatorParams);
-        } else if (generatorKind === 'shader') {
-          const shaderGen = new ShaderGenerator();
-          currentCode = await shaderGen.generate(loadedPrompt);
-        } else if (generatorKind === 'three') {
-          const threeGen = new ThreeGenerator();
-          currentCode = await threeGen.generate(loadedPrompt);
+        // Generate code via unified registry dispatch
+        registerAllGenerators();
+        const dispatched = generatorRegistry.dispatch(loadedPrompt);
+        if (dispatched) {
+          const genPrompt = dispatched.entry.name === 'llm' ? usedPrompt : loadedPrompt;
+          currentCode = await dispatched.entry.generate(genPrompt);
         } else {
+          // No generator matched (should not happen with LLM fallback at confidence 0,
+          // but guard against a cleared registry)
+          const { P5GeneratorLLM } = await import('../generators/p5/P5GeneratorLLM.js');
           const generator = new P5GeneratorLLM();
           currentCode = await generator.generate(usedPrompt);
         }
@@ -417,40 +407,6 @@ export class RalphLoop {
     }
 
     return context;
-  }
-
-  /**
-   * Choose code generator by prompt keywords; returns kind and params for that generator.
-   * - "particle" or "galaxy" -> ParticleSystem
-   * - "cellular" or "automata" or "lenia" -> CellularAutomata
-   * - otherwise -> LLM (P5GeneratorLLM)
-   */
-  private static chooseGenerator(
-    prompt: string
-  ): { generatorKind: 'particle' | 'cellular' | 'flowfield' | 'shader' | 'three' | 'llm'; generatorParams: Record<string, unknown> } {
-    const lower = prompt.toLowerCase();
-    const derived = promptToGeneratorParams(prompt);
-    if (/3d|three\.js|\bthree\b|webgl\s*3d|3d\s*scene|3d\s*particle/.test(lower)) {
-      return { generatorKind: 'three', generatorParams: {} };
-    }
-    if (/shader|glsl|ray\s*march|sdf|fragment/.test(lower)) {
-      return { generatorKind: 'shader', generatorParams: {} };
-    }
-    if (/flow\s*field|flow\s*particle|particles?\s+flow/.test(lower)) {
-      const params: Record<string, unknown> = { ...derived };
-      if (/blue/.test(lower)) params.palette = 'cool';
-      if (/warm|red|orange/.test(lower)) params.palette = 'warm';
-      return { generatorKind: 'flowfield', generatorParams: params };
-    }
-    if (/particle|galaxy/.test(lower)) {
-      const params: Record<string, unknown> = { ...derived };
-      if (/blue/.test(lower)) params.palette = 'cool';
-      return { generatorKind: 'particle', generatorParams: params };
-    }
-    if (/cellular|automata|lenia/.test(lower)) {
-      return { generatorKind: 'cellular', generatorParams: { ...derived } };
-    }
-    return { generatorKind: 'llm', generatorParams: {} };
   }
 
   /**

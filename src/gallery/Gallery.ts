@@ -166,58 +166,38 @@ export class Gallery {
     }
     assertSafeSegment(project.trim(), 'Project name');
 
-    // Try to find the project directory
-    // We need to find the most recent date-based directory for this project
-    const date = new Date();
-    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    const projectDirName = `${dateStr}--${project.trim()}`;
-    const projectDir = normalizePath(this.galleryDir, projectDirName);
-
     try {
-      // Check if directory exists
-      await fs.access(projectDir);
-    } catch {
-      // Directory doesn't exist, return empty history
-      return [];
-    }
+      // Find all date-based directories for this project (not just today's)
+      const allDirs = await this.listProjectDirs();
+      const projectSuffix = `--${project.trim()}`;
+      const matchingDirs = allDirs
+        .filter(d => d.endsWith(projectSuffix))
+        .sort(); // oldest first by name (YYYY-MM-DD)
 
-    try {
-      // Read all files in the project directory
-      const files = await fs.readdir(projectDir);
+      if (matchingDirs.length === 0) return [];
 
-      // Filter and parse version files
-      const iterations: GalleryIteration[] = [];
-
-      for (const file of files) {
-        // Match version files (v1.js, v2.js, etc.)
-        const match = file.match(/^v(\d+)\.js$/);
-        if (!match) continue;
-
-        const version = parseInt(match[1], 10);
-
-        try {
-          // Read file content
-          const filepath = normalizePath(projectDir, file);
-          const raw = await fs.readFile(filepath, 'utf-8');
-
-          // Skip empty files
-          if (!raw || raw.trim() === '') continue;
-
-          const timestamp = date.toISOString();
-          const iter = parseVersionContent(raw, version, timestamp);
-          if (iter) iterations.push(iter);
-        } catch (error) {
-          // Skip files that can't be read
-          continue;
-        }
+      // Load from all matching directories, sorted by date
+      const allIterations: GalleryIteration[] = [];
+      for (const dirName of matchingDirs) {
+        const iterations = await this.loadHistoryFromDir(dirName);
+        allIterations.push(...iterations);
       }
 
       // Sort by version number
-      iterations.sort((a, b) => a.version - b.version);
+      allIterations.sort((a, b) => a.version - b.version);
 
-      return iterations;
+      // Deduplicate by version (keep latest by timestamp)
+      const byVersion = new Map<number, GalleryIteration>();
+      for (const iter of allIterations) {
+        const existing = byVersion.get(iter.version);
+        if (!existing || iter.timestamp > existing.timestamp) {
+          byVersion.set(iter.version, iter);
+        }
+      }
+
+      return Array.from(byVersion.values()).sort((a, b) => a.version - b.version);
     } catch (error) {
-      // If we can't read the directory, return empty history
+      console.error(`Gallery.loadHistory("${project}") failed:`, error instanceof Error ? error.message : error);
       return [];
     }
   }
@@ -270,7 +250,8 @@ export class Gallery {
         .map(e => e.name)
         .filter(name => /^\d{4}-\d{2}-\d{2}--.+/.test(name));
       return dirs.sort((a, b) => b.localeCompare(a));
-    } catch {
+    } catch (error) {
+      console.error('Gallery.listProjectDirs() failed:', error instanceof Error ? error.message : error);
       return [];
     }
   }
@@ -297,26 +278,38 @@ export class Gallery {
     }
     try {
       const files = await fs.readdir(projectDir);
-      const iterations: GalleryIteration[] = [];
-      for (const file of files) {
-        const match = file.match(/^v(\d+)\.js$/);
-        if (!match) continue;
-        const version = parseInt(match[1], 10);
-        try {
+      const versionFiles = files.filter(f => /^v(\d+)\.js$/.test(f));
+
+      // Read all files and stats in parallel
+      const results = await Promise.allSettled(
+        versionFiles.map(async (file) => {
+          const match = file.match(/^v(\d+)\.js$/)!;
+          const version = parseInt(match[1], 10);
           const filepath = normalizePath(projectDir, file);
-          const raw = await fs.readFile(filepath, 'utf-8');
-          if (!raw || raw.trim() === '') continue;
-          const stat = await fs.stat(filepath);
-          const timestamp = stat.mtime?.toISOString() ?? new Date().toISOString();
-          const iter = parseVersionContent(raw, version, timestamp);
-          if (iter) iterations.push(iter);
-        } catch {
+          const [raw, stat] = await Promise.all([
+            fs.readFile(filepath, 'utf-8'),
+            fs.stat(filepath),
+          ]);
+          return { file, version, raw, stat };
+        })
+      );
+
+      const iterations: GalleryIteration[] = [];
+      for (const result of results) {
+        if (result.status !== 'fulfilled') {
+          console.error(`Gallery.loadHistoryFromDir: failed to read:`, result.reason instanceof Error ? result.reason.message : result.reason);
           continue;
         }
+        const { version, raw, stat } = result.value;
+        if (!raw || raw.trim() === '') continue;
+        const timestamp = stat.mtime?.toISOString() ?? new Date().toISOString();
+        const iter = parseVersionContent(raw, version, timestamp);
+        if (iter) iterations.push(iter);
       }
       iterations.sort((a, b) => a.version - b.version);
       return iterations;
-    } catch {
+    } catch (error) {
+      console.error(`Gallery.loadHistoryFromDir("${projectDirName}") failed:`, error instanceof Error ? error.message : error);
       return [];
     }
   }

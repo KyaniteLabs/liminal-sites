@@ -74,6 +74,12 @@ export class SeedArchive {
 
     const filename = `${seed}.json`;
     const filepath = path.join(this.archiveDir, filename);
+    // Validate the resolved path stays within archiveDir
+    const resolved = path.resolve(this.archiveDir);
+    const resolvedFile = path.resolve(filepath);
+    if (!resolvedFile.startsWith(resolved + path.sep) && resolvedFile !== resolved) {
+      throw new Error('Seed path must be within archive directory');
+    }
 
     try {
       await fs.writeFile(filepath, JSON.stringify(seedData, null, 2), 'utf-8');
@@ -96,6 +102,12 @@ export class SeedArchive {
 
     const filename = `${seed}.json`;
     const filepath = path.join(this.archiveDir, filename);
+    // Validate the resolved path stays within archiveDir
+    const resolved = path.resolve(this.archiveDir);
+    const resolvedFile = path.resolve(filepath);
+    if (!resolvedFile.startsWith(resolved + path.sep) && resolvedFile !== resolved) {
+      throw new Error('Seed path must be within archive directory');
+    }
 
     try {
       await fs.access(filepath);

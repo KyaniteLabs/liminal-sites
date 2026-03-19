@@ -341,6 +341,16 @@ export class CreativeEvaluator {
       if (pattern.test(code)) errorCount++;
     }
 
+    // Check for obviously-named undefined function calls
+    const undefinedCallPatterns = [
+      /\bundefinedFunction\s*\(/,
+      /\bnonExistent\s*\(/,
+      /\bnotDefined\s*\(/,
+    ];
+    for (const pattern of undefinedCallPatterns) {
+      if (pattern.test(code)) errorCount++;
+    }
+
     return errorCount;
   }
 

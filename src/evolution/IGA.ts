@@ -16,10 +16,10 @@ export async function generateFiveVariations(
 ): Promise<{ code: string; fitness: number }[]> {
   const codes = await Promise.all([
     generator(prompt),
-    generator(prompt),
-    generator(prompt),
-    generator(prompt),
-    generator(prompt),
+    generator(prompt + ' — variation 2'),
+    generator(prompt + ' — variation 3'),
+    generator(prompt + ' — variation 4'),
+    generator(prompt + ' — variation 5'),
   ]);
   return codes.map((code) => {
     const { score } = CreativeEvaluator.getFitness(code);

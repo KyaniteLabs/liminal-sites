@@ -459,7 +459,8 @@ describe('Evaluator-Gallery Integration Tests', () => {
       const codeSamples = [
         { name: 'empty', code: '', shouldPass: false },
         { name: 'incomplete', code: 'function setup() {', shouldPass: false },
-        { name: 'basic', code: 'function setup() { createCanvas(400, 400); } function draw() { background(0); }', shouldPass: true },
+        { name: 'basic', code: 'function setup() { createCanvas(400, 400); } function draw() { background(0); }', shouldPass: false },
+        { name: 'moderate', code: 'function setup() { createCanvas(400, 400); }\nfunction draw() {\n  background(20);\n  fill(100, 150, 255);\n  noStroke();\n  for (let i = 0; i < 5; i++) {\n    let x = width / 2 + cos(frameCount * 0.02 + i) * 100;\n    let y = height / 2 + sin(frameCount * 0.02 + i) * 100;\n    ellipse(x, y, 30);\n  }\n}', shouldPass: true },
         { name: 'complex', code: P5Generator.generate('Create complex art', {}), shouldPass: true }
       ];
 

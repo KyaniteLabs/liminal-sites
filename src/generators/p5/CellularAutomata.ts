@@ -1,3 +1,5 @@
+import { hashCode } from '../../utils/hashCode.js';
+
 /**
  * CellularAutomata - Specialized generator for p5.js cellular automata
  *
@@ -795,20 +797,7 @@ function applyGrowthFunction(state, neighborhood) {
       config.radius +
       Date.now() +
       Math.random() * 1000000;
-    return Math.abs(this.hashCode(combined.toString()));
-  }
-
-  /**
-   * Simple hash function
-   */
-  private static hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash;
+    return Math.abs(hashCode(combined.toString()));
   }
 }
 

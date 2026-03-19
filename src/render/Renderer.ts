@@ -2,17 +2,53 @@
  * Renderer - Screenshot capture for p5.js sketches
  *
  * Provides functionality to render p5.js sketches using a headless browser
- * and capture screenshots of the canvas output.
+ * and capture screenshots of the canvas output. Uses a shared browser
+ * instance (browser pool) to avoid launching a new Chromium process per render.
  */
 
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer from 'puppeteer';
+import type { Browser, Page } from 'puppeteer';
 import fs from 'fs/promises';
 import path from 'path';
 
 export class Renderer {
-  private readonly RENDER_TIMEOUT = 30000; // 30 seconds (increased from 10s for CDN reliability)
+  private readonly RENDER_TIMEOUT = 30000;
   private readonly DEFAULT_WIDTH = 800;
   private readonly DEFAULT_HEIGHT = 600;
+
+  /** Shared browser instance — launched once, reused across render() calls. */
+  private static browser: Browser | null = null;
+  private static browserLaunching: Promise<Browser> | null = null;
+
+  /**
+   * Get or create the shared browser instance.
+   */
+  private static async getBrowser(): Promise<Browser> {
+    if (Renderer.browser) return Renderer.browser;
+    if (Renderer.browserLaunching) return Renderer.browserLaunching;
+    Renderer.browserLaunching = puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    try {
+      Renderer.browser = await Renderer.browserLaunching;
+      return Renderer.browser;
+    } catch (err) {
+      Renderer.browserLaunching = null;
+      throw err;
+    }
+  }
+
+  /**
+   * Close the shared browser instance. Call when done rendering.
+   */
+  static async closeBrowser(): Promise<void> {
+    if (Renderer.browser) {
+      await Renderer.browser.close().catch(() => {});
+      Renderer.browser = null;
+    }
+    Renderer.browserLaunching = null;
+  }
 
   /**
    * Render a p5.js sketch and capture screenshot
@@ -21,7 +57,6 @@ export class Renderer {
    * @throws Error if rendering fails or output path is invalid
    */
   async render(code: string, outputPath: string): Promise<void> {
-    // Validate inputs
     if (!code || typeof code !== 'string') {
       throw new Error('Sketch code is required and must be a non-empty string');
     }
@@ -30,7 +65,6 @@ export class Renderer {
       throw new Error('Output path is required and must be a string');
     }
 
-    // Validate output directory exists
     const outputDir = path.dirname(outputPath);
     try {
       await fs.access(outputDir);
@@ -38,71 +72,49 @@ export class Renderer {
       throw new Error(`Output directory does not exist: ${outputDir}`);
     }
 
-    // Validate file extension
     const ext = path.extname(outputPath).toLowerCase();
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
       throw new Error(`Unsupported file format: ${ext}. Only .png, .jpg, .jpeg are supported.`);
     }
 
-    let browser = null;
-    let page = null;
+    let page: Page | null = null;
 
     try {
-      // Launch headless browser
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-
+      const browser = await Renderer.getBrowser();
       page = await browser.newPage();
 
-      // Set viewport size
       await page.setViewport({
         width: this.DEFAULT_WIDTH,
-        height: this.DEFAULT_HEIGHT
+        height: this.DEFAULT_HEIGHT,
       });
 
-      // Generate HTML with p5.js sketch
       const html = this.generateHTML(code);
 
-      // Load the sketch - use 'load' instead of 'networkidle0' for CDN resilience
-      // 'load' waits for DOM + resources, but not all network activity to cease
       await page.setContent(html, {
         waitUntil: 'load',
-        timeout: this.RENDER_TIMEOUT
+        timeout: this.RENDER_TIMEOUT,
       });
 
-      // Wait for p5.js to initialize
       await this.waitForP5Initialization(page);
-
-      // Wait a bit for the sketch to render
       await this.delay(1000);
 
-      // Get the canvas element
       const canvas = await page.$('canvas');
-
       if (!canvas) {
         throw new Error('No canvas element found. The sketch may have failed to initialize.');
       }
 
-      // Take screenshot of the canvas
       await canvas.screenshot({
         path: outputPath,
-        type: ext === '.png' ? 'png' : 'jpeg'
+        type: ext === '.png' ? 'png' : 'jpeg',
       });
-
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to render sketch: ${error.message}`);
       }
       throw new Error('Failed to render sketch: Unknown error');
     } finally {
-      // Clean up
       if (page) {
         await page.close().catch(() => {});
-      }
-      if (browser) {
-        await browser.close().catch(() => {});
       }
     }
   }
@@ -112,7 +124,7 @@ export class Renderer {
       return this.generateShaderHTML(code);
     }
     if (this.isThreeJSCode(code)) {
-      return code; // Three.js sketches are already full HTML
+      return code;
     }
     return `<!DOCTYPE html>
 <html lang="en">
@@ -135,7 +147,7 @@ export class Renderer {
   private async waitForP5Initialization(page: Page): Promise<void> {
     try {
       await page.waitForSelector('canvas', { timeout: 10000 });
-    } catch (error) {
+    } catch {
       await this.delay(500);
     }
   }
@@ -144,25 +156,15 @@ export class Renderer {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Detect GLSL fragment shader code
-   */
   private isShaderCode(code: string): boolean {
     return /void\s+main\s*\(/.test(code) && /gl_FragColor|out\s+vec4/.test(code);
   }
 
-  /**
-   * Detect Three.js code (full HTML with importmap or three import)
-   */
   private isThreeJSCode(code: string): boolean {
     return /<script\s+type="importmap">/.test(code) || /import.*from\s+['"]three['"]/.test(code);
   }
 
-  /**
-   * Generate full-page WebGL2 HTML wrapping a GLSL fragment shader
-   */
   private generateShaderHTML(code: string): string {
-    // Escape </script> in shader code
     const safeCode = code.replace(/\u003c\/script\u003e/gi, '<\\/script>');
     return `<!DOCTYPE html>
 <html lang="en">

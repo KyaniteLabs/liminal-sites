@@ -13,8 +13,10 @@
  *   with params derived from the prompt via promptToGeneratorParams().
  */
 import { promptToGeneratorParams } from '../../utils/promptToGeneratorParams.js';
+import { hashCode } from '../../utils/hashCode.js';
 import { ParticleSystem } from './ParticleSystem.js';
 import { CellularAutomata } from './CellularAutomata.js';
+import { particleConfidence, cellularConfidence } from '../registerGenerators.js';
 
 export class P5Generator {
   /**
@@ -62,14 +64,17 @@ export class P5Generator {
    * @returns Valid p5.js code string
    */
   private static generateSketch(prompt: string, context: string): string {
-    const promptLower = prompt.toLowerCase();
-
-    // Determine sketch type based on prompt
-    if (promptLower.includes('particle')) {
+    // Use shared confidence-based routing for specialized generators
+    if (particleConfidence(prompt) > 0) {
       return this.generateParticleSystem(prompt, context);
-    } else if (promptLower.includes('cellular') || promptLower.includes('automata')) {
+    }
+    if (cellularConfidence(prompt) > 0) {
       return this.generateCellularAutomata(prompt, context);
-    } else if (promptLower.includes('animat') || promptLower.includes('moving')) {
+    }
+
+    // Template-based fallbacks for P5Generator
+    const promptLower = prompt.toLowerCase();
+    if (promptLower.includes('animat') || promptLower.includes('moving')) {
       return this.generateAnimatedSketch(prompt, context);
     } else if (promptLower.includes('mouse') || promptLower.includes('interact')) {
       return this.generateInteractiveSketch(prompt, context);
@@ -261,7 +266,7 @@ function mouseMoved() {
     ];
 
     // Select based on prompt hash
-    const index = Math.abs(this.hashCode(prompt)) % sizes.length;
+    const index = Math.abs(hashCode(prompt)) % sizes.length;
     return sizes[index];
   }
 
@@ -325,22 +330,7 @@ function mouseMoved() {
   private static generateSeed(prompt: string, context: string): number {
     const randomFactor = Math.floor(Math.random() * 1000000);
     const combined = prompt + context + Date.now() + randomFactor;
-    return Math.abs(this.hashCode(combined));
+    return Math.abs(hashCode(combined));
   }
 
-  /**
-   * Simple hash function for strings
-   *
-   * @param str - String to hash
-   * @returns Hash value
-   */
-  private static hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
-  }
 }

@@ -6,6 +6,7 @@
  */
 
 import puppeteer, { Browser } from 'puppeteer';
+import { generateHTML } from '../utils/generateHTML.js';
 
 export interface SandboxResult {
   stdout?: string;
@@ -18,25 +19,6 @@ export interface SandboxOptions {
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000;
-const P5_CDN =
-  'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
-
-function generateHTML(code: string): string {
-  const escaped = code.replace(/<\/script>/gi, '<\\/script>');
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sandbox</title>
-  <style>body { margin: 0; padding: 0; overflow: hidden; } canvas { display: block; }</style>
-  <script src="${P5_CDN}"></script>
-</head>
-<body>
-  <script>${escaped}</script>
-</body>
-</html>`;
-}
 
 /**
  * Run p5.js code in an isolated headless page with timeout and no file/network access.
@@ -79,7 +61,12 @@ export async function runInSandbox(
       }
     });
 
-    const html = generateHTML(code);
+    const html = generateHTML({
+      code,
+      title: 'Sandbox',
+      bodyStyle: 'margin: 0; padding: 0; overflow: hidden;',
+      fullscreen: true,
+    });
     await page.setContent(html, { waitUntil: 'load', timeout: timeoutMs });
     await page.waitForSelector('canvas', { timeout: Math.min(10000, timeoutMs) });
     await new Promise((r) => setTimeout(r, 300));

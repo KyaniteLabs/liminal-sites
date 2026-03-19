@@ -19,12 +19,12 @@ export interface RequestImprovementState {
  *
  * @param currentCode - Current p5.js sketch code to improve
  * @param state - Optional state (e.g. projectConfigPath for project config)
- * @returns Promise resolving to { code: string } with the improved code
+ * @returns Promise resolving to { code: string; improved: boolean; error?: string }
  */
 export async function requestImprovement(
   currentCode: string,
   state?: RequestImprovementState
-): Promise<{ code: string }> {
+): Promise<{ code: string; improved: boolean; error?: string }> {
   const projectPath = state?.projectConfigPath;
   const effectiveConfig = await getEffectiveConfig(undefined, projectPath);
 
@@ -36,15 +36,20 @@ export async function requestImprovement(
   });
 
   if (!LLMClient.isConfigured()) {
-    return { code: templateFallback(currentCode) };
+    return { code: templateFallback(currentCode), improved: false, error: 'LLM not configured' };
   }
 
   try {
     const response = await llm.improveP5Sketch(currentCode || '');
-    const code = response.success && response.code?.trim() ? response.code.trim() : templateFallback(currentCode);
-    return { code };
-  } catch {
-    return { code: templateFallback(currentCode) };
+    if (response.success && response.code?.trim()) {
+      return { code: response.code.trim(), improved: true };
+    }
+    const fallback = templateFallback(currentCode);
+    return { code: fallback, improved: false, error: response.error || 'LLM returned empty code' };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    console.error('requestImprovement failed:', msg);
+    return { code: templateFallback(currentCode), improved: false, error: msg };
   }
 }
 

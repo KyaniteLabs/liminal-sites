@@ -25,6 +25,7 @@ describe('requestImprovement', () => {
     expect(result).toBeDefined();
     expect(typeof result.code).toBe('string');
     expect(result.code.length).toBeGreaterThan(0);
+    expect(typeof result.improved).toBe('boolean');
   });
 
   test('returned code is valid p5.js (contains setup and createCanvas)', async () => {
@@ -37,5 +38,11 @@ describe('requestImprovement', () => {
     const result = await requestImprovement(validP5Code, {});
     expect(result.code).toBeDefined();
     expect(typeof result.code).toBe('string');
+  });
+
+  test('returns improved=false and error when LLM not configured', async () => {
+    const result = await requestImprovement(validP5Code);
+    expect(result.improved).toBe(false);
+    expect(result.error).toBeDefined();
   });
 });
