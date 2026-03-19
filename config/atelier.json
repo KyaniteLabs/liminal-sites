@@ -27,5 +27,10 @@
   "renderer": {
     "port": 3456,
     "screenshotOnIteration": true
+  },
+  "live": {
+    "oscHost": "127.0.0.1",
+    "oscPort": 57120,
+    "syncMode": "internal"
   }
 }

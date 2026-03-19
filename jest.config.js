@@ -19,12 +19,18 @@ export default {
   ],
   testMatch: [
     '**/test/**/*.test.(js|ts)',
+    '**/test/**/*.e2e.test.(js|ts)',
   ],
+  // Coverage from source (src/) so we don't require a build first. Exclude test files.
   collectCoverageFrom: [
-    'dist/**/*.js',
-    '!dist/**/*.test.js',
-    '!dist/**/*.d.ts',
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    '!src/**/*.test.ts',
+    '!src/**/*.test.tsx',
+    '!src/**/*.d.ts',
   ],
+  // Thresholds: global minimums for statements, branches, functions, lines (percent).
+  // Enforced when running test:coverage; adjust here if needed (current target 80%).
   coverageThreshold: {
     global: {
       statements: 80,

@@ -2,8 +2,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { run, PreviewServer } from '../dist/index.js';
-import { getEffectiveConfig, saveConfig } from '../dist/config/ConfigLoader.js';
+import { run, PreviewServer, generateMusic, generateVisuals } from '../dist/index.js';
+import { getEffectiveConfig, saveConfig, loadProjectConfig } from '../dist/config/ConfigLoader.js';
 import { PromptHistory } from '../dist/config/PromptHistory.js';
 import { InteractiveMode } from '../dist/tui/InteractiveMode.js';
 import { generateCompletions } from '../dist/cli/Completions.js';
@@ -69,6 +69,8 @@ for (let i = 0; i < args.length; i++) {
     flags.interactive = true;
   } else if (arg === '--completions') {
     flags.completions = args[++i];
+  } else if (arg === '--mode') {
+    flags.mode = args[++i];
   } else if (!arg.startsWith('-')) {
     if (cmd === null) { cmd = arg; } else { cmdArgs.push(arg); }
   }
@@ -99,6 +101,7 @@ if (flags.help) {
   console.log('  --favorites                 List favorite prompts');
   console.log('  --interactive, -i           Interactive TUI mode');
   console.log('  --completions <shell>      Generate shell completions (zsh, bash)');
+  console.log('  --mode <mode>              Mode: live-music (generate Strudel/Hydra to --output)');
   console.log('  --help, -h                  Show this help message');
   console.log('  --version                   Show version');
   console.log('');
@@ -232,10 +235,55 @@ await initializeConfig();
 
 const hasOutputFlag = flags.output !== undefined;
 const hasPromptFlag = flags.prompt !== undefined;
+const isLiveMusic = flags.mode === 'live-music' || cmd === 'live-music';
 
-if (hasOutputFlag && !hasPromptFlag && !cmd) {
+if (hasOutputFlag && !hasPromptFlag && !cmd && !isLiveMusic) {
   console.error('Error: --prompt is required');
   process.exit(1);
+}
+
+// --- live-music mode: generateMusic + optional generateVisuals, write to --output, print paths ---
+if (isLiveMusic) {
+  const livePrompt = flags.prompt || cmdArgs[0];
+  if (!livePrompt) {
+    console.error('Error: --prompt is required for live-music');
+    process.exit(1);
+  }
+  const liveOutDir = flags.output || path.join(process.env.HOME || '/tmp', '.atelier', 'output');
+  fs.mkdirSync(liveOutDir, { recursive: true });
+
+  // Load project config for live settings (MIDI, OSC, syncMode) - pass through only
+  let liveConfig = null;
+  try {
+    liveConfig = await loadProjectConfig(process.cwd());
+  } catch (_) {}
+  const liveOpts = liveConfig?.live || {};
+
+  console.log('');
+  console.log('🎵 Atelier: Live Music');
+  console.log('📝 Prompt: "' + livePrompt + '"');
+  console.log('📁 Output: ' + liveOutDir);
+  if (liveOpts.oscHost || liveOpts.syncMode) {
+    console.log('🔧 Live config: oscHost=' + (liveOpts.oscHost || '-') + ', syncMode=' + (liveOpts.syncMode || '-'));
+  }
+  console.log('');
+
+  try {
+    const musicResult = await generateMusic(livePrompt, { musicPlatform: 'strudel' });
+    const strudelPath = path.join(liveOutDir, 'strudel.js');
+    fs.writeFileSync(strudelPath, musicResult.code, 'utf-8');
+    console.log('✅ Music: ' + strudelPath);
+
+    const visualResult = await generateVisuals({ prompt: livePrompt, platform: 'hydra' });
+    const hydraPath = path.join(liveOutDir, 'hydra.js');
+    fs.writeFileSync(hydraPath, visualResult.code, 'utf-8');
+    console.log('✅ Visuals: ' + hydraPath);
+    console.log('');
+  } catch (err) {
+    console.error('❌ Error:', err.message);
+    process.exit(1);
+  }
+  process.exit(0);
 }
 
 if (cmd === 'generate' || cmd === 'gen' || cmd === 'g' || flags.prompt) {

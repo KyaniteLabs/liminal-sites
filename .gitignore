@@ -7,6 +7,9 @@ dist/
 # Coverage
 coverage/
 
+# E2E temp output
+tmp-e2e/
+
 # IDE
 .idea/
 .vscode/
