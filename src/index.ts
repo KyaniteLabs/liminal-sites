@@ -31,9 +31,9 @@ import { ThreeGenerator } from './generators/three/ThreeGenerator.js';
 // Rendering and export
 import { Renderer } from './render/Renderer.js';
 import { PreviewServer } from './render/PreviewServer.js';
-import { Exporter, Project } from './export/Exporter.js';
-import { Gallery, Iteration } from './gallery/Gallery.js';
-import { SeedArchive, SeedMetadata } from './gallery/SeedArchive.js';
+import { Exporter, type Project } from './export/Exporter.js';
+import { Gallery, type Iteration } from './gallery/Gallery.js';
+import { SeedArchive, type SeedMetadata } from './gallery/SeedArchive.js';
 import { generateFiveVariations } from './evolution/IGA.js';
 import { MapElites } from './evolution/MapElites.js';
 import { NoveltyArchive } from './evolution/NoveltyArchive.js';
@@ -365,12 +365,12 @@ export { Renderer };
 export { PreviewServer };
 
 // Export and Persistence
-export { Exporter, Project };
+export { Exporter, type Project };
 
 // Gallery and Seed Management
-export { Gallery, Iteration };
+export { Gallery, type Iteration };
 export type { OrganismIteration, GalleryIteration } from './gallery/Gallery.js';
-export { SeedArchive, SeedMetadata };
+export { SeedArchive, type SeedMetadata };
 
 // IGA / variations
 export { generateFiveVariations } from './evolution/IGA.js';

@@ -475,6 +475,9 @@ Rules:
   }
 
   static isConfigured(): boolean {
+    const provider = (process.env.ATELIER_LLM_PROVIDER || '').toLowerCase();
+    // Ollama and LM Studio don't require API keys — they're local
+    if (provider === 'ollama' || provider === 'lmstudio') return true;
     return !!(
       process.env.OPENAI_API_KEY ||
       process.env.ANTHROPIC_API_KEY ||
