@@ -54,6 +54,11 @@
     "react": "^18.3.1",
     "tsx": "^4.21.0"
   },
+  "pnpm": {
+    "overrides": {
+      "flatted": ">=3.4.0"
+    }
+  },
   "engines": {
     "node": ">=18.0.0"
   },
