@@ -52,8 +52,6 @@ import { normalizePath, assertSafeSegment } from './utils/normalizePath.js';
 import { SERVICE_DEFAULTS } from './constants.js';
 
 export const LIMINAL_VERSION = '1.0.0';
-/** @deprecated Use LIMINAL_VERSION */
-export const ATELIER_VERSION = LIMINAL_VERSION;
 
 export interface AtelierConfig {
   name: string;
@@ -352,6 +350,8 @@ export type { RequestImprovementState } from './improvement/requestImprovement.j
 
 // Creative Evaluation and Quality Control
 export { CreativeEvaluator };
+export { EvaluationFramework } from './core/EvaluationFramework.js';
+export type { EvaluationResult, EvaluationStrategy, EvaluationContext } from './core/EvaluationFramework.js';
 
 // Promise Detection for Loop Termination
 export { PromiseDetector };

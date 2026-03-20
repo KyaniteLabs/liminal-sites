@@ -25,6 +25,8 @@ export interface EvaluationResult {
   details?: Record<string, number>;
   /** Human-readable reasoning or feedback (when available) */
   reasoning?: string;
+  /** Specific issues identified during evaluation (from detailed strategy) */
+  issues?: string[];
   /** The strategy used for evaluation */
   strategy: EvaluationStrategy;
 }
@@ -115,6 +117,7 @@ export class EvaluationFramework {
           score: result.score,
           details,
           reasoning: result.issues.length > 0 ? result.issues.join('; ') : undefined,
+          issues: result.issues,
           strategy: 'detailed',
         };
       }

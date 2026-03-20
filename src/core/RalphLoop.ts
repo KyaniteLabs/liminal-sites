@@ -24,7 +24,7 @@
 
 import { PromptStore } from './PromptStore.js';
 import { ContextAccumulation } from './ContextAccumulation.js';
-import { CreativeEvaluator } from './CreativeEvaluator.js';
+import { EvaluationFramework, type EvaluationStrategy } from './EvaluationFramework.js';
 import { PromiseDetector } from './PromiseDetector.js';
 import { generatorRegistry } from '../generators/GeneratorRegistry.js';
 import { registerAllGenerators } from '../generators/registerGenerators.js';
@@ -60,8 +60,10 @@ interface LoopOptions {
   maxContextLength?: number;
   /** Include only last K iterations in context (default: all in history up to maxContextLength) */
   lastKIterations?: number;
-  /** Optional evaluation criteria (e.g. ["aesthetic", "technical", "novelty"]). When provided, passed to CreativeEvaluator.assess(). */
+  /** Optional evaluation criteria (e.g. ["aesthetic", "technical", "novelty"]). When provided, passed to EvaluationFramework.evaluate(). */
   evaluationCriteria?: string[];
+  /** Evaluation strategy to use (default: 'detailed') */
+  evaluationStrategy?: EvaluationStrategy;
   /** Progress callback: called after each iteration with iteration number, score, promiseDetected, code, timestamp */
   onProgress?: (data: { iteration: number; score: number; promiseDetected: boolean; code: string; timestamp: string }) => void;
   /** Optional AbortSignal to stop the loop (checked at start of each iteration) */
@@ -233,9 +235,13 @@ export class RalphLoop {
         }
 
         // Evaluate quality
-        const evaluation = CreativeEvaluator.assess(currentCode, {
-          evaluationCriteria: normalizedOptions.evaluationCriteria
-        });
+        const evaluation = await EvaluationFramework.evaluate(
+          currentCode,
+          normalizedOptions.evaluationStrategy ?? 'detailed',
+          {
+            criteria: normalizedOptions.evaluationCriteria,
+          }
+        );
 
         // MAP-Elites integration
         if (normalizedOptions.useMapElites) {
@@ -402,6 +408,7 @@ export class RalphLoop {
       maxContextLength: options?.maxContextLength,
       lastKIterations: options?.lastKIterations,
       evaluationCriteria: options?.evaluationCriteria,
+      evaluationStrategy: options?.evaluationStrategy,
       onProgress: options?.onProgress,
       signal: options?.signal,
       useMapElites: options?.useMapElites ?? false,
