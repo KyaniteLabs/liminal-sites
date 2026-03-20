@@ -1,11 +1,7 @@
 import type { SwarmPersona } from './types.js';
 
-export const DEFAULT_REFINEMENT_CONSTRAINTS: string[] = [
-  'Add more spectral imagery',
-  'Deconstruct the physical form',
-  'Focus on the sound of the machine',
-  'Introduce a paradox of memory',
-];
+// Re-export from types for backward compatibility
+export { DEFAULT_REFINEMENT_CONSTRAINTS } from './types.js';
 
 export const DEFAULT_PERSONAS: SwarmPersona[] = [
   {

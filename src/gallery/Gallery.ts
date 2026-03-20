@@ -11,6 +11,7 @@
 
 import fs from 'fs/promises';
 import { normalizePath, assertSafeSegment } from '../utils/normalizePath.js';
+import type { SwarmResult } from '../swarm/types.js';
 
 export interface Iteration {
   version: number;
@@ -106,6 +107,58 @@ export class Gallery {
       await fs.writeFile(filepath, code, 'utf-8');
     } catch (error) {
       throw new Error(`Failed to save iteration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Save a swarm session result alongside the final output code.
+   * Stores the full JSON session in the project directory for provenance.
+   * @param project - Project name
+   * @param result - SwarmResult from TokenMillOrchestrator
+   */
+  async saveSwarmSession(project: string, result: SwarmResult): Promise<void> {
+    if (!project || typeof project !== 'string' || project.trim() === '') {
+      throw new Error('Project name is required and must be a non-empty string');
+    }
+    assertSafeSegment(project.trim(), 'Project name');
+
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0];
+    const projectDirName = `${dateStr}--${project.trim()}`;
+    const projectDir = normalizePath(this.galleryDir, projectDirName);
+
+    await fs.mkdir(projectDir, { recursive: true });
+
+    // Save the full session JSON
+    const sessionPath = normalizePath(projectDir, 'swarm-session.json');
+    const sessionData = {
+      timestamp: date.toISOString(),
+      converged: result.converged,
+      convergenceRound: result.convergenceRound,
+      mode: result.mode,
+      totalDurationMs: result.totalDurationMs,
+      rounds: result.rounds.map(round => ({
+        roundNum: round.roundNum,
+        winnerId: round.winnerId,
+        constraint: round.constraint,
+        scores: Object.fromEntries(round.scores.entries()),
+        outputs: Object.fromEntries(
+          [...round.outputs.entries()].map(([id, out]) => [id, {
+            personaName: out.personaName,
+            content: out.content,
+            model: out.model,
+          }])
+        ),
+      })),
+    };
+
+    await fs.writeFile(sessionPath, JSON.stringify(sessionData, null, 2), 'utf-8');
+
+    // Also save the final output as the latest version
+    if (result.finalOutput) {
+      const history = await this.loadHistory(project).catch(() => []);
+      const nextVersion = history.length + 1;
+      await this.saveIteration(project, nextVersion, result.finalOutput);
     }
   }
 

@@ -7,6 +7,8 @@
  * Supports dynamic domain registration at runtime.
  */
 
+import type { ProjectDNA } from '../scavenger/types.js';
+
 export interface GeneratorEntry {
   name: string;
   canHandle: (prompt: string) => number; // 0 = can't handle, higher = more confident
@@ -35,6 +37,29 @@ class GeneratorRegistryClass {
   private dynamicDomains: Map<string, GeneratorEntry> = new Map();
   /** Track keywords for each dynamic domain */
   private dynamicKeywords: Map<string, string[]> = new Map();
+  /** Global DNA registry: domain -> ProjectDNA */
+  private dnaRegistry: Map<string, ProjectDNA> = new Map();
+
+  /**
+   * Register DNA from the scavenger module.
+   */
+  registerDNA(dna: ProjectDNA): void {
+    this.dnaRegistry.set(dna.domain, dna);
+  }
+
+  /**
+   * Get DNA for a specific domain.
+   */
+  getDNA(domain: string): ProjectDNA | undefined {
+    return this.dnaRegistry.get(domain);
+  }
+
+  /**
+   * Get all registered DNA entries.
+   */
+  getAllDNA(): Map<string, ProjectDNA> {
+    return new Map(this.dnaRegistry);
+  }
 
   register(entry: GeneratorEntry): void {
     this.entries.push(entry);

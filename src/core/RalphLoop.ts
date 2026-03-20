@@ -188,36 +188,35 @@ export class RalphLoop {
         // Check if we should use Token Mill swarm for this iteration
         if (normalizedOptions.useSwarm) {
           currentCode = await this.generateWithSwarm(usedPrompt, normalizedOptions);
-        }
-        // Check if we should use collaboration for this iteration
-        const useCollaboration = normalizedOptions.useDeepCollab || normalizedOptions.useCollab;
-        const shouldUseCollab = useCollaboration && (!dispatched || dispatched.entry.name === 'llm');
-
-        if (shouldUseCollab) {
+        } else if (normalizedOptions.useDeepCollab || normalizedOptions.useCollab) {
           // Use collaboration for LLM generation
-          // Create a wrapper that adapts the generator signature to collaboration signature
-          const collabLLMCaller = async (prompt: string, _systemPrompt?: string): Promise<string> => {
-            // Use the provided callLLM from collabConfig if available
-            if (normalizedOptions.collabConfig?.callLLM) {
-              return normalizedOptions.collabConfig.callLLM(prompt, _systemPrompt);
-            }
-            // Otherwise use the dispatched LLM generator if available
-            if (dispatched?.entry.name === 'llm') {
-              const result = dispatched.entry.generate(prompt, {});
-              return typeof result === 'string' ? result : await result;
-            }
-            // Fallback to importing fresh LLM generator
-            const { P5GeneratorLLM } = await import('../generators/p5/P5GeneratorLLM.js');
-            const generator = new P5GeneratorLLM();
-            const result = generator.generate(prompt);
-            return typeof result === 'string' ? result : await result;
-          };
+          const shouldUseCollab = !dispatched || dispatched.entry.name === 'llm';
 
-          currentCode = await this.generateWithCollaboration(
-            usedPrompt,
-            normalizedOptions,
-            collabLLMCaller
-          );
+          if (shouldUseCollab) {
+            // Create a wrapper that adapts the generator signature to collaboration signature
+            const collabLLMCaller = async (prompt: string, _systemPrompt?: string): Promise<string> => {
+              // Use the provided callLLM from collabConfig if available
+              if (normalizedOptions.collabConfig?.callLLM) {
+                return normalizedOptions.collabConfig.callLLM(prompt, _systemPrompt);
+              }
+              // Otherwise use the dispatched LLM generator if available
+              if (dispatched?.entry.name === 'llm') {
+                const result = dispatched.entry.generate(prompt, {});
+                return typeof result === 'string' ? result : await result;
+              }
+              // Fallback to importing fresh LLM generator
+              const { P5GeneratorLLM } = await import('../generators/p5/P5GeneratorLLM.js');
+              const generator = new P5GeneratorLLM();
+              const result = generator.generate(prompt);
+              return typeof result === 'string' ? result : await result;
+            };
+
+            currentCode = await this.generateWithCollaboration(
+              usedPrompt,
+              normalizedOptions,
+              collabLLMCaller
+            );
+          }
         } else if (dispatched) {
           const genPrompt = dispatched.entry.name === 'llm' ? usedPrompt : loadedPrompt;
           currentCode = await dispatched.entry.generate(genPrompt);

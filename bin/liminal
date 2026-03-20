@@ -71,6 +71,12 @@ for (let i = 0; i < args.length; i++) {
     flags.completions = args[++i];
   } else if (arg === '--mode') {
     flags.mode = args[++i];
+  } else if (arg === '--use-swarm') {
+    flags.useSwarm = true;
+  } else if (arg === '--swarm-mode') {
+    flags.swarmMode = args[++i];
+  } else if (arg === '--swarm-rounds') {
+    flags.swarmRounds = parseInt(args[++i]);
   } else if (!arg.startsWith('-')) {
     if (cmd === null) { cmd = arg; } else { cmdArgs.push(arg); }
   }
@@ -102,6 +108,9 @@ if (flags.help) {
   console.log('  --interactive, -i           Interactive TUI mode');
   console.log('  --completions <shell>      Generate shell completions (zsh, bash)');
   console.log('  --mode <mode>              Mode: live-music (generate Strudel/Hydra to --output)');
+  console.log('  --use-swarm                Use Token Mill swarm (7-persona Ollama) for generation');
+  console.log('  --swarm-mode <mode>        Swarm mode: competitive, hybrid, ring, mesh (default: hybrid)');
+  console.log('  --swarm-rounds <num>       Max swarm rounds (default: 10)');
   console.log('  --help, -h                  Show this help message');
   console.log('  --version                   Show version');
   console.log('');
@@ -310,7 +319,10 @@ if (cmd === 'generate' || cmd === 'gen' || cmd === 'g' || flags.prompt) {
   run(prompt, {
     maxIterations: maxIterations,
     output: outDir,
-    project: 'cli-project'
+    project: 'cli-project',
+    useSwarm: flags.useSwarm,
+    swarmMode: flags.swarmMode,
+    swarmConfig: flags.swarmRounds ? { maxRounds: flags.swarmRounds } : undefined,
   }).then(async (result) => {
     console.log('');
     console.log('✅ Generation complete!');

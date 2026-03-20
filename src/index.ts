@@ -49,6 +49,7 @@ import { generateMusic } from './music/generateMusic.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { normalizePath, assertSafeSegment } from './utils/normalizePath.js';
+import { SERVICE_DEFAULTS } from './constants.js';
 
 export const ATELIER_VERSION = '1.0.0';
 
@@ -93,7 +94,7 @@ export const defaultConfig: AtelierConfig = {
     maxHistoryPerProject: 50,
   },
   renderer: {
-    port: 3456,
+    port: SERVICE_DEFAULTS.PREVIEW_PORT,
     screenshotOnIteration: true,
   },
 };
@@ -121,6 +122,12 @@ export async function run(prompt: string, options: {
   onProgress?: (data: { iteration: number; score: number; promiseDetected: boolean; code: string; timestamp: string }) => void;
   /** Optional AbortSignal to stop the run (Stop button) */
   signal?: AbortSignal;
+  /** Enable Token Mill swarm generation */
+  useSwarm?: boolean;
+  /** Swarm generative mode */
+  swarmMode?: string;
+  /** Swarm configuration overrides */
+  swarmConfig?: Record<string, unknown>;
 } = {}): Promise<{
   code: string;
   iterations: number;
@@ -181,7 +188,10 @@ export async function run(prompt: string, options: {
       seedTemplate,
       evaluationCriteria,
       onProgress,
-      signal
+      signal,
+      useSwarm: options.useSwarm,
+      swarmMode: options.swarmMode as any,
+      swarmConfig: options.swarmConfig as any,
     });
 
     // Initialize Exporter
@@ -504,3 +514,37 @@ export type { TokenMillOrchestratorOptions } from './swarm/TokenMillOrchestrator
 // Scavenger
 export { DNAExtractor } from './scavenger/DNAExtractor.js';
 export type { ProjectDNA, ScavengerConfig } from './scavenger/types.js';
+
+// Routing
+export {
+  SmartRouter,
+  defaultRouter,
+  route,
+  routeByPrompt,
+  AB_TEST_RESULTS,
+  DOMAIN_ROUTING_DATA,
+  OVERALL_FITNESS,
+  DOMAIN_KEYWORDS,
+} from './routing/index.js';
+export type {
+  RoutingDecision,
+  RoutingConfig,
+  DomainType as RoutingDomainType,
+  ModelChoice,
+  DomainFitness,
+  DomainRoutingConfig,
+} from './routing/index.js';
+
+// Learning
+export { ArchiveLearning } from './learning/index.js';
+export { QualityArchive } from './learning/index.js';
+export type {
+  ArchiveConfig,
+  ArchivedItem,
+  ArchiveQueryOptions,
+  ArchiveEntry,
+  QualityArchiveConfig,
+} from './learning/index.js';
+
+// Constants
+export { SERVICE_DEFAULTS } from './constants.js';

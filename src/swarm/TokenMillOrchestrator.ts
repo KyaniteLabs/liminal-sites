@@ -1,22 +1,44 @@
 import type { SwarmConfig, SwarmMode, SwarmOutput, SwarmResult, RoundResult, SwarmPersona } from './types.js';
+import type { ProjectDNA } from '../scavenger/types.js';
+import type { MinedFragment } from './types.js';
 import { DEFAULT_PERSONAS, DEFAULT_REFINEMENT_CONSTRAINTS } from './personas.js';
 import { VotingEngine } from './VotingEngine.js';
+import { MiningEngine } from './MiningEngine.js';
+import { SERVICE_DEFAULTS } from '../constants.js';
 import fs from 'fs/promises';
 import path from 'path';
 
 export interface TokenMillOrchestratorOptions {
   callOllama?: (model: string, prompt: string, options?: { temperature?: number; num_predict?: number }) => Promise<string>;
   onProgress?: (data: { round: number; totalRounds: number; winnerId: string | null; converged: boolean }) => void;
+  onFragmentsMined?: (fragments: MinedFragment[]) => void;
 }
 
+/**
+ * TokenMill Swarm orchestrator — multi-model collaborative generation.
+ *
+ * Designed for Ollama's multi-model concurrent API (`/api/generate` format).
+ * The default `callOllama` callback uses Ollama's native format. LM Studio can
+ * be used via a custom callback that adapts the OpenAI-compatible format, but
+ * multi-model diversity (different personas calling different models) requires
+ * Ollama.
+ */
 export class TokenMillOrchestrator {
   private config: SwarmConfig;
   private personas: SwarmPersona[];
   private callOllama: (model: string, prompt: string, options?: { temperature?: number; num_predict?: number }) => Promise<string>;
+  private dna: ProjectDNA | null = null;
+
+  /**
+   * Pre-load DNA for domain knowledge injection into swarm prompts.
+   */
+  setDNA(dna: ProjectDNA | null): void {
+    this.dna = dna;
+  }
 
   constructor(config?: Partial<SwarmConfig>, options?: TokenMillOrchestratorOptions) {
     this.config = {
-      ollamaHost: config?.ollamaHost ?? 'http://localhost:11434',
+      ollamaHost: config?.ollamaHost ?? SERVICE_DEFAULTS.OLLAMA_URL,
       ollamaTimeout: config?.ollamaTimeout ?? 60,
       maxRounds: config?.maxRounds ?? 10,
       convergenceThreshold: config?.convergenceThreshold ?? 3,
@@ -33,6 +55,7 @@ export class TokenMillOrchestrator {
 
     // Set progress callback from options
     this._onProgress = options?.onProgress;
+    this._onFragmentsMined = options?.onFragmentsMined;
   }
 
   private async defaultOllamaCaller(
@@ -80,6 +103,11 @@ export class TokenMillOrchestrator {
     // Musical chairs: randomize model-to-persona assignments
     if (this.config.musicalChairs) {
       this.shuffleMusicalChairs();
+    }
+
+    // Enrich seed with domain knowledge from DNA if available
+    if (this.dna) {
+      currentSeed = `${currentSeed}\n\n---\nDomain Knowledge:\n${this.dna.coreLogic}\n\nConstraints: ${this.dna.constraints.join('; ')}`;
     }
 
     for (let roundNum = 1; roundNum <= this.config.maxRounds; roundNum++) {
@@ -141,6 +169,12 @@ export class TokenMillOrchestrator {
 
     // Save session
     await this.saveSession(result);
+
+    // Auto-mine fragments from the session
+    const fragments = MiningEngine.mineResult(result);
+    if (fragments.length > 0) {
+      this._onFragmentsMined?.(fragments);
+    }
 
     return result;
   }
@@ -390,6 +424,7 @@ export class TokenMillOrchestrator {
 
   // Public getter for onProgress (set after construction)
   private _onProgress?: (data: { round: number; totalRounds: number; winnerId: string | null; converged: boolean }) => void;
+  private _onFragmentsMined?: (fragments: MinedFragment[]) => void;
 
   get onProgress() { return this._onProgress; }
   set onProgress(fn: ((data: { round: number; totalRounds: number; winnerId: string | null; converged: boolean }) => void) | undefined) {

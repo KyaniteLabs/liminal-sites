@@ -8,11 +8,6 @@
 export { DeepCollaboration } from './DeepCollaboration.js';
 export { CollaborativeClient } from './CollaborativeClient.js';
 
-// Critics
-export { TechnicalCritic } from './critics/TechnicalCritic.js';
-export { ArtisticCritic } from './critics/ArtisticCritic.js';
-export { DomainExpert } from './critics/DomainExpert.js';
-
 // Types
 export type {
   CollaborationRole,

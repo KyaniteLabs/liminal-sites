@@ -9,6 +9,7 @@
 
 import { QualityArchive } from './QualityArchive.js';
 import { createHash } from 'crypto';
+import type { MinedFragment } from '../swarm/types.js';
 
 /**
  * Configuration for ArchiveLearning.
@@ -48,6 +49,8 @@ export interface ArchivedItem {
   usedCount?: number;
   /** User rating if provided */
   userRating?: number;
+  /** Optional mined fragment metadata from swarm sessions */
+  fragment?: MinedFragment;
 }
 
 /**
@@ -250,5 +253,52 @@ export class ArchiveLearning {
    */
   getArchive(): QualityArchive {
     return this.archive;
+  }
+
+  /**
+   * Add a mined fragment to the archive.
+   * @param fragment - The mined fragment from a swarm session
+   * @param domain - Domain identifier
+   * @returns ArchivedItem if added, null if quality too low
+   */
+  addFragment(fragment: MinedFragment, domain: string): ArchivedItem | null {
+    const qualityScore = Math.min(fragment.score / 15, 1); // Normalize score to 0-1
+    return this.addOutput(
+      fragment.sessionPrompt || fragment.text.slice(0, 100),
+      fragment.text,
+      domain,
+      qualityScore,
+      {
+        fragmentId: fragment.id,
+        source: fragment.source,
+        persona: fragment.persona,
+        round: fragment.round,
+        tags: fragment.tags,
+      }
+    );
+  }
+
+  /**
+   * Query archived fragments by persona, mode, or minimum score.
+   * @param options - Query filters
+   * @returns Matching archived items that have fragment metadata
+   */
+  queryFragments(options?: { persona?: string; mode?: string; minScore?: number; domain?: string }): ArchivedItem[] {
+    // Search across all domains by using the search method with broad terms
+    const domains = ['p5', 'glsl', 'three', 'music', 'swarm', 'generative-art'];
+    const results: ArchivedItem[] = [];
+
+    for (const domain of options?.domain ? [options.domain] : domains) {
+      const entries = this.archive.query(domain, { limit: 100, minQuality: options?.minScore ?? 0 });
+      for (const entry of entries) {
+        const item = entry as unknown as ArchivedItem;
+        if (!item.fragment) continue;
+        if (options?.persona && item.fragment.persona !== options.persona) continue;
+        if (options?.mode && item.fragment.mode !== options.mode) continue;
+        results.push(item);
+      }
+    }
+
+    return results;
   }
 }

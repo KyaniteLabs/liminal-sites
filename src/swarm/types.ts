@@ -82,3 +82,11 @@ export interface MinedFragment {
   sessionPrompt: string;
   extractedAt: string;
 }
+
+/** Default refinement constraints used across swarm rounds. */
+export const DEFAULT_REFINEMENT_CONSTRAINTS: string[] = [
+  'Add more spectral imagery',
+  'Deconstruct the physical form',
+  'Focus on the sound of the machine',
+  'Introduce a paradox of memory',
+];

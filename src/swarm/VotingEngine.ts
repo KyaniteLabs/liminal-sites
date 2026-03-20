@@ -24,7 +24,7 @@ export class VotingEngine {
     const secondMatch = voteText.match(new RegExp(`2nd(?:\\s*choice)?[:\\s]+(${regex})`, 'i'));
 
     let first = firstMatch ? candidateMap.get(firstMatch[1].toUpperCase()) ?? null : null;
-    let second = secondMatch ? candidateMap.get(secondMatch[1].toUpperCase()) ?? null : null;
+    const second = secondMatch ? candidateMap.get(secondMatch[1].toUpperCase()) ?? null : null;
 
     // Fallback: find any letter in text
     if (!first) {
