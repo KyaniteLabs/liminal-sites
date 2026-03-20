@@ -6,6 +6,7 @@
  */
 
 import { LLMClient } from './llm/LLMClient.js';
+import { PromptLibrary } from './prompts/index.js';
 
 export interface GenerateVisualsOptions {
   prompt: string;
@@ -74,33 +75,25 @@ async function generateVisualsLLM(
   const llm = new LLMClient();
 
   let systemPrompt: string;
+  let userPrompt: string;
+
   if (platform === 'hydra') {
     const audioContext = audioInput
       ? `Audio context: BPM=${audioInput.bpm}, FFT length=${audioInput.fft?.length || 0}`
       : '';
-    systemPrompt = `You are an expert Hydra live-coder.
-Generate Hydra (hydra-synth) JavaScript code based on the user's description.
-${audioContext}
-
-Rules:
-1. Return ONLY runnable Hydra code (no markdown, no explanations)
-2. Use osc(), src(), noise(), shape(), color(), etc.
-3. Chain transformations for rich visuals
-4. Use .out() at the end of each chain
-5. Be creative with feedback, modulation, and effects`;
+    const rendered = PromptLibrary.render('hydra.generate', {
+      platform,
+      prompt,
+      audioContext,
+    });
+    systemPrompt = rendered.system;
+    userPrompt = rendered.user;
   } else {
-    systemPrompt = `You are an expert creative coder specializing in p5.js.
-Generate a p5.js visual sketch based on the user's description.
-
-Rules:
-1. Return ONLY valid JavaScript code for p5.js (no markdown, no explanations)
-2. Include setup() and draw() functions
-3. Use creative colors, animations, and effects
-4. Ensure code is self-contained and runnable
-5. Canvas size: createCanvas(800, 600)`;
+    const rendered = PromptLibrary.render('p5.generate', { prompt });
+    systemPrompt = rendered.system;
+    userPrompt = rendered.user;
   }
 
-  const userPrompt = `Generate ${platform} visuals: ${prompt}`;
   const response = await llm.generate(systemPrompt, userPrompt, signal);
 
   if (!response.success || !response.code || response.code.trim().length === 0) {

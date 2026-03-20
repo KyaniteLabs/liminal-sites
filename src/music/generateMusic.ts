@@ -4,6 +4,7 @@
  */
 
 import { LLMClient } from '../llm/LLMClient.js';
+import { PromptLibrary } from '../prompts/index.js';
 
 export type GenerateMusicPlatform = 'strudel' | 'p5-webaudio';
 
@@ -63,30 +64,18 @@ async function generateMusicLLM(prompt: string, bpm: number, platform: GenerateM
   const llm = new LLMClient();
 
   let systemPrompt: string;
+  let userPrompt: string;
+
   if (platform === 'strudel') {
-    systemPrompt = `You are an expert live-coder specializing in Strudel (TidalCycles).
-Generate Strudel mini-notation code based on the user's description.
-
-Rules:
-1. Return ONLY runnable Strudel code (no markdown, no explanations)
-2. Include setcps() for tempo (BPM ${bpm})
-3. Use rich patterns with stack, s, n, sometimes, every, etc.
-4. Be creative with sounds, effects, and structure
-5. Keep it playable and musical`;
+    const rendered = PromptLibrary.render('music.strudel', { bpm: String(bpm), prompt });
+    systemPrompt = rendered.system;
+    userPrompt = rendered.user;
   } else {
-    systemPrompt = `You are an expert creative coder specializing in p5.js with Web Audio API.
-Generate a p5.js sketch with generative music/audio based on the user's description.
-
-Rules:
-1. Return ONLY valid JavaScript code for p5.js (no markdown, no explanations)
-2. Include setup() and draw() functions
-3. Use Web Audio API (AudioContext, createOscillator, createGain) for sound
-4. Require user gesture (mousePressed) to start audio (browser policy)
-5. BPM: ${bpm}
-6. Make it visually and sonically interesting`;
+    const rendered = PromptLibrary.render('music.p5-webaudio', { bpm: String(bpm), prompt });
+    systemPrompt = rendered.system;
+    userPrompt = rendered.user;
   }
 
-  const userPrompt = `Generate ${platform} music: ${prompt}`;
   const response = await llm.generate(systemPrompt, userPrompt, signal);
 
   if (!response.success || !response.code || response.code.trim().length === 0) {
