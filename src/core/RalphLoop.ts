@@ -1,5 +1,5 @@
 /**
- * RalphLoop - Self-recursive iteration engine for Atelier
+ * RalphLoop - Self-recursive iteration engine for Liminal
  *
  * Implements the Ralph-Wiggum Loop pattern:
  * - Same prompt every iteration
@@ -216,6 +216,10 @@ export class RalphLoop {
               normalizedOptions,
               collabLLMCaller
             );
+          } else if (dispatched) {
+            // Collab enabled but non-LLM generator matched — use it directly
+            const genPrompt = dispatched.entry.name === 'llm' ? usedPrompt : loadedPrompt;
+            currentCode = await dispatched.entry.generate(genPrompt);
           }
         } else if (dispatched) {
           const genPrompt = dispatched.entry.name === 'llm' ? usedPrompt : loadedPrompt;

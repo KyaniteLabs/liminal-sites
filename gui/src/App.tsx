@@ -469,7 +469,7 @@ export default function App() {
 
   return (
     <div style={{ padding: '32px 24px', maxWidth: 920, margin: '0 auto' }}>
-      <h1 className="atelier-title" style={{ marginBottom: 8 }}>Atelier</h1>
+      <h1 className="liminal-title" style={{ marginBottom: 8 }}>Liminal</h1>
       <p style={{ margin: '0 0 24px', color: 'var(--atelier-text-muted)', fontSize: 15 }}>Creative coding studio — generate, merge, and evolve sketches.</p>
       <div className="atelier-tabs">
         <button

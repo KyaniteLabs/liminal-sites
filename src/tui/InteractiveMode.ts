@@ -92,7 +92,7 @@ export class InteractiveMode {
    */
   async run(): Promise<{ prompt: string; options: InteractiveOptions }> {
     console.log('');
-    console.log('Atelier - Interactive Mode');
+    console.log('Liminal - Interactive Mode');
     console.log('==========================');
     console.log('');
 

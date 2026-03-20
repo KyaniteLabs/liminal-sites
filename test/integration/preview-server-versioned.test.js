@@ -83,7 +83,7 @@ describe('PreviewServer versioned preview', () => {
     expect(res.status).toBe(200);
     const html = await res.text();
     // GUI serves gui/index.html (Config app); static HTML has title and root div, not "preview"/"Code"
-    expect(html).toContain('Atelier');
+    expect(html).toContain('Liminal');
     expect(html).toContain('root');
     expect(html).toMatch(/<title>.*<\/title>/);
   });

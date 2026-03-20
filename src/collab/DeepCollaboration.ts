@@ -23,6 +23,17 @@
  */
 
 import { SERVICE_DEFAULTS } from '../constants.js';
+import {
+  DOMAIN_GUIDANCE,
+  CREATOR_ROLE_PROMPT,
+  VISIONARY_ROLE_PROMPT,
+  TECHNICAL_CRITIC_ROLE_PROMPT,
+  ARTISTIC_CRITIC_ROLE_PROMPT,
+  DOMAIN_EXPERT_ROLE_PROMPT,
+  INTEGRATOR_ROLE_PROMPT,
+  REFINER_ROLE_PROMPT,
+} from '../prompts/collaboration.js';
+import { quickScore } from './Scoring.js';
 
 import type {
   CollaborationRole,
@@ -122,7 +133,7 @@ export class DeepCollaboration {
     phases.push(phase1);
 
     let currentBest = phase1.synthesis?.content || phase1.outputs.creator || '';
-    const quality1 = this.quickQualityScore(currentBest, domain);
+    const quality1 = quickScore(currentBest, domain);
     qualityTrajectory.push(quality1);
 
     if (phaseCallback) {
@@ -220,7 +231,7 @@ export class DeepCollaboration {
       if (synthesisPhase.synthesis) {
         currentBest = synthesisPhase.synthesis.content;
       }
-      const newQuality = this.quickQualityScore(currentBest, domain);
+      const newQuality = quickScore(currentBest, domain);
       qualityTrajectory.push(newQuality);
 
       if (phaseCallback) {
@@ -279,37 +290,20 @@ export class DeepCollaboration {
     const start = Date.now();
 
     // Creator (Local) - Practical, executable
-    const creatorPrompt = `You are a CREATOR. Your role is to create a high-quality, practical, and well-executed output.
-
-Request: ${prompt}
-
-Domain: ${domain}
-
-Create something that is:
-- Technically sound and correct
-- Practical and usable
-- Well-structured and clear
-
-Focus on execution quality.`;
+    const creatorPrompt = CREATOR_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace('${domain}', domain);
 
     // Visionary (Cloud) - Ambitious, creative
-    const visionaryPrompt = `You are a VISIONARY. Your role is to create an ambitious, creative, and artistically compelling output.
+    const visionaryPrompt = VISIONARY_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace('${domain}', domain);
 
-Request: ${prompt}
-
-Domain: ${domain}
-
-Create something that is:
-- Highly creative and original
-- Aesthetically beautiful
-- Emotionally resonant
-- Pushes boundaries
-
-Focus on artistic merit and creativity.`;
-
-    // Generate in parallel (simulated - call sequentially for now)
-    const creatorOutput = await this.config.callLLM(creatorPrompt, systemPrompt);
-    const visionaryOutput = await this.config.callLLM(visionaryPrompt, systemPrompt);
+    // Generate in parallel
+    const [creatorOutput, visionaryOutput] = await Promise.all([
+      this.config.callLLM(creatorPrompt, systemPrompt),
+      this.config.callLLM(visionaryPrompt, systemPrompt),
+    ]);
 
     // Initial synthesis
     const synthesisPrompt = `Synthesize the best elements from these two outputs:
@@ -357,21 +351,10 @@ The synthesis should be better than either alone.`;
     const analyses: Analysis[] = [];
 
     // Technical Critic
-    const techPrompt = `You are a TECHNICAL CRITIC. Analyze this output for technical quality.
-
-Request: ${prompt}
-Domain: ${domain}
-
-Output to analyze:
-${currentOutput}
-
-Provide:
-1. Technical correctness
-2. Structural integrity
-3. Execution quality
-4. Technical improvements needed
-
-Be specific and actionable.`;
+    const techPrompt = TECHNICAL_CRITIC_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace('${domain}', domain)
+      .replace('${output}', currentOutput);
 
     const techResponse = await this.config.callLLM(techPrompt, systemPrompt);
     analyses.push({
@@ -380,21 +363,10 @@ Be specific and actionable.`;
     });
 
     // Artistic Critic
-    const artPrompt = `You are an ARTISTIC CRITIC. Analyze this output for aesthetic and creative quality.
-
-Request: ${prompt}
-Domain: ${domain}
-
-Output to analyze:
-${currentOutput}
-
-Provide:
-1. Creativity and originality
-2. Aesthetic appeal
-3. Emotional impact
-4. Artistic improvements needed
-
-Be insightful and inspiring.`;
+    const artPrompt = ARTISTIC_CRITIC_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace('${domain}', domain)
+      .replace('${output}', currentOutput);
 
     const artResponse = await this.config.callLLM(artPrompt, systemPrompt);
     analyses.push({
@@ -403,30 +375,12 @@ Be insightful and inspiring.`;
     });
 
     // Domain Expert
-    const domainGuidance: Record<string, string> = {
-      ascii: 'Focus on visual clarity, character balance, and recognizability of the subject.',
-      music: 'Focus on musicality, emotional expression, harmony, and rhythm.',
-      code: 'Focus on code quality, functionality, elegance, and best practices.',
-      p5: 'Focus on p5.js patterns, creative techniques, and visual appeal.',
-      glsl: 'Focus on shader correctness, performance, and visual effects.',
-      three: 'Focus on Three.js best practices, scene structure, and rendering quality.',
-    };
-
-    const expertPrompt = `You are a DOMAIN EXPERT in ${domain}. Analyze this output.
-
-Request: ${prompt}
-Domain: ${domain}
-
-Output to analyze:
-${currentOutput}
-
-${domainGuidance[domain] || 'Focus on overall quality and effectiveness.'}
-
-Provide:
-1. Domain-specific quality assessment
-2. How well it meets the request
-3. Comparison to professional standards
-4. Expert recommendations for improvement`;
+    const guidance = DOMAIN_GUIDANCE[domain] || 'Focus on overall quality and effectiveness.';
+    const expertPrompt = DOMAIN_EXPERT_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace(/\${domain}/g, domain)
+      .replace('${output}', currentOutput)
+      .replace('${guidance}', guidance);
 
     const expertResponse = await this.config.callLLM(expertPrompt, systemPrompt);
     analyses.push({
@@ -460,43 +414,19 @@ Provide:
     ).join('\n\n');
 
     // Integrator (Cloud) - Synthesize improvements
-    const integratorPrompt = `You are an INTEGRATOR. Create an improved version incorporating all feedback.
-
-Original request: ${prompt}
-Domain: ${domain}
-
-Current output:
-${currentOutput}
-
-FEEDBACK FROM CRITICS:
-${allFeedback}
-
-Create an improved version that:
-1. Addresses all major criticisms
-2. Incorporates the best suggestions
-3. Maintains what already works well
-4. Achieves higher quality across all dimensions
-
-The output should be significantly improved while maintaining coherence.`;
+    const integratorPrompt = INTEGRATOR_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace('${domain}', domain)
+      .replace('${currentOutput}', currentOutput)
+      .replace('${feedback}', allFeedback);
 
     const integratedOutput = await this.config.callLLM(integratorPrompt, systemPrompt);
 
     // Refiner (Local) - Final polish
-    const refinerPrompt = `You are a REFINER. Put the final polish on this output.
-
-Original request: ${prompt}
-Domain: ${domain}
-
-Integrated version:
-${integratedOutput}
-
-Apply final refinement:
-1. Fix any remaining issues
-2. Optimize for quality and clarity
-3. Add final polish and details
-4. Ensure it meets professional standards
-
-Return the polished final version.`;
+    const refinerPrompt = REFINER_ROLE_PROMPT
+      .replace('${prompt}', prompt)
+      .replace('${domain}', domain)
+      .replace('${integratedOutput}', integratedOutput);
 
     const refinedOutput = await this.config.callLLM(refinerPrompt, systemPrompt);
 
@@ -510,47 +440,5 @@ Return the polished final version.`;
       },
       durationSeconds: (Date.now() - start) / 1000,
     };
-  }
-
-  /**
-   * Quick heuristic quality score
-   */
-  private quickQualityScore(output: string, domain: DomainType): number {
-    let score = 0.5;
-
-    // Length check
-    const length = output.length;
-    if (length >= 100 && length <= 3000) {
-      score += 0.15;
-    } else if (length < 50) {
-      score -= 0.3;
-    }
-
-    // Domain-specific quality signals
-    if (domain === 'ascii') {
-      // Good ASCII has density and structure
-      const lines = output.split('\n');
-      if (lines.length >= 5) score += 0.1;
-      // Character variety
-      const uniqueChars = new Set(output).size;
-      if (uniqueChars >= 10) score += 0.1;
-    } else if (domain === 'music') {
-      // Music notation markers
-      const markers = ['X:', 'T:', 'M:', 'K:', 'L:', 'V:', '|', ':|', '[', ']', '"'];
-      const markerCount = markers.filter(m => output.includes(m)).length;
-      score += Math.min(0.25, markerCount * 0.03);
-      // Note density
-      const noteCount = (output.match(/[CDEFGAB]/gi) || []).length;
-      if (noteCount >= 10) score += 0.1;
-    } else if (domain === 'code' || domain === 'p5' || domain === 'glsl' || domain === 'three') {
-      // Code structure indicators
-      const codeKeywords = ['def ', 'class ', 'function', 'import ', 'from ', 'const ', 'let ', 'var '];
-      if (codeKeywords.some(kw => output.includes(kw))) score += 0.15;
-      // Logic indicators
-      const logicKeywords = ['if ', 'for ', 'while ', 'return '];
-      if (logicKeywords.some(kw => output.includes(kw))) score += 0.1;
-    }
-
-    return Math.max(0, Math.min(1, score));
   }
 }

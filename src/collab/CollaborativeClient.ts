@@ -15,6 +15,8 @@
  */
 
 import { SERVICE_DEFAULTS } from '../constants.js';
+import { DOMAIN_GUIDANCE } from '../prompts/collaboration.js';
+import { quickScore } from './Scoring.js';
 
 import type {
   CollaborativeConfig,
@@ -110,8 +112,8 @@ export class CollaborativeClient {
 
     // Report generation completion
     if (progressCallback) {
-      const localQuality = this.quickScore(localOut, prompt, domain);
-      const cloudQuality = this.quickScore(cloudOut, prompt, domain);
+      const localQuality = quickScore(localOut, domain);
+      const cloudQuality = quickScore(cloudOut, domain);
 
       progressCallback({
         phaseName: 'Generation',
@@ -196,8 +198,8 @@ export class CollaborativeClient {
       roundResult.cloudRefined = cloudRefined;
 
       if (progressCallback) {
-        const localRefinedQuality = this.quickScore(localRefined, prompt, domain);
-        const cloudRefinedQuality = this.quickScore(cloudRefined, prompt, domain);
+        const localRefinedQuality = quickScore(localRefined, domain);
+        const cloudRefinedQuality = quickScore(cloudRefined, domain);
 
         progressCallback({
           phaseName: 'Refinement',
@@ -260,8 +262,8 @@ export class CollaborativeClient {
     }
 
     const bestFinal = allOutputs.reduce((best, current) => {
-      const currentScore = this.quickScore(current.output, prompt, domain);
-      const bestScore = this.quickScore(best.output, prompt, domain);
+      const currentScore = quickScore(current.output, domain);
+      const bestScore = quickScore(best.output, domain);
       return currentScore > bestScore ? current : best;
     });
 
@@ -269,7 +271,7 @@ export class CollaborativeClient {
 
     // Final selection callback
     if (progressCallback) {
-      const finalQuality = this.quickScore(bestFinal.output, prompt, domain);
+      const finalQuality = quickScore(bestFinal.output, domain);
       progressCallback({
         phaseName: 'Selection',
         model: 'Both',
@@ -284,7 +286,7 @@ export class CollaborativeClient {
       source: bestFinal.source as 'local' | 'cloud' | 'collaborative',
       rounds,
       totalDurationSeconds: duration,
-      qualityScore: this.quickScore(bestFinal.output, prompt, domain),
+      qualityScore: quickScore(bestFinal.output, domain),
       metadata: {
         bestRound: bestFinal.round,
         totalOutputsGenerated: allOutputs.length,
@@ -338,8 +340,10 @@ export class CollaborativeClient {
       domain
     );
 
-    const localAnalysis = await this.config.callLLM(localAnalysisPrompt, systemPrompt);
-    const cloudAnalysis = await this.config.callLLM(cloudAnalysisPrompt, systemPrompt);
+    const [localAnalysis, cloudAnalysis] = await Promise.all([
+      this.config.callLLM(localAnalysisPrompt, systemPrompt),
+      this.config.callLLM(cloudAnalysisPrompt, systemPrompt),
+    ]);
 
     return [localAnalysis, cloudAnalysis];
   }
@@ -369,8 +373,10 @@ export class CollaborativeClient {
       localAnalysis
     );
 
-    const localRefined = await this.config.callLLM(localRefinePrompt, systemPrompt);
-    const cloudRefined = await this.config.callLLM(cloudRefinePrompt, systemPrompt);
+    const [localRefined, cloudRefined] = await Promise.all([
+      this.config.callLLM(localRefinePrompt, systemPrompt),
+      this.config.callLLM(cloudRefinePrompt, systemPrompt),
+    ]);
 
     return [localRefined, cloudRefined];
   }
@@ -384,15 +390,6 @@ export class CollaborativeClient {
     author: string,
     _domain: DomainType
   ): string {
-    const domainGuidance: Record<string, string> = {
-      ascii: 'Analyze the visual appeal, character balance, and recognizability of the ASCII art.',
-      music: 'Analyze the musicality, emotional expression, and technical correctness of the composition.',
-      code: 'Analyze the code quality, functionality, and elegance of the implementation.',
-      p5: 'Analyze the creative techniques, visual appeal, and technical quality of the p5.js sketch.',
-      glsl: 'Analyze the shader correctness, visual effects, and performance.',
-      three: 'Analyze the Three.js code quality, scene structure, and rendering.',
-    };
-
     return `Analyze this output from ${author} for the following request:
 
 Request: ${originalPrompt}
@@ -400,7 +397,7 @@ Request: ${originalPrompt}
 Output:
 ${output}
 
-${domainGuidance[_domain] || 'Analyze the quality and effectiveness of this output.'}
+${DOMAIN_GUIDANCE[_domain] || 'Analyze the quality and effectiveness of this output.'}
 
 Provide:
 1. Strengths (what works well)
@@ -467,42 +464,6 @@ Return ONLY a number between 0.0 and 1.0 (e.g., 0.75).`;
     }
 
     return scores;
-  }
-
-  /**
-   * Quick heuristic score for ranking
-   */
-  private quickScore(output: string, _prompt: string, domain: DomainType): number {
-    let score = 0.5;
-
-    // Length bonus (too short = bad, too long might be verbose)
-    const length = output.length;
-    if (length >= 100 && length <= 2000) {
-      score += 0.1;
-    } else if (length < 50) {
-      score -= 0.2;
-    }
-
-    // Domain-specific heuristics
-    if (domain === 'ascii') {
-      // ASCII should have special characters
-      if (/[/\\|()\-=+*<>@#%]/.test(output)) score += 0.15;
-      // Should have multiple lines
-      if (output.split('\n').length >= 3) score += 0.1;
-    } else if (domain === 'music') {
-      // Music should have musical notation markers
-      if (/X:|T:|M:|K:|L:/i.test(output)) score += 0.2;
-      // Should have notes
-      if (/[CDEFGAB]/i.test(output)) score += 0.1;
-    } else if (domain === 'code' || domain === 'p5' || domain === 'glsl' || domain === 'three') {
-      // Code should have programming constructs
-      const codeKeywords = ['def ', 'class', 'function', 'return', 'import', 'var', 'let', 'const'];
-      if (codeKeywords.some(kw => output.includes(kw))) score += 0.15;
-      // Should have some structure
-      if (output.split('\n').length >= 5) score += 0.1;
-    }
-
-    return Math.max(0, Math.min(1, score));
   }
 
   /**
