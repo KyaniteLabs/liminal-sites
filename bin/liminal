@@ -15,10 +15,10 @@ async function initializeConfig() {
   const config = await getEffectiveConfig();
   
   // Set env vars so LLMClient picks them up
-  process.env.ATELIER_LLM_PROVIDER = config.provider;
-  if (config.baseUrl) process.env.ATELIER_LLM_BASE_URL = config.baseUrl;
-  process.env.ATELIER_LLM_MODEL = config.model;
-  if (config.apiKey) process.env.ATELIER_LLM_API_KEY = config.apiKey;
+  process.env.LIMINAL_LLM_PROVIDER = config.provider;
+  if (config.baseUrl) process.env.LIMINAL_LLM_BASE_URL = config.baseUrl;
+  process.env.LIMINAL_LLM_MODEL = config.model;
+  if (config.apiKey) process.env.LIMINAL_LLM_API_KEY = config.apiKey;
   
   return config;
 }
@@ -79,10 +79,10 @@ for (let i = 0; i < args.length; i++) {
 // Handle --help flag (global)
 if (flags.help) {
   console.log('');
-  console.log('🎨 Atelier: Creative Coding Agent');
+  console.log('🎨 Liminal: Creative Coding Agent');
   console.log('');
   console.log('USAGE:');
-  console.log('  atelier [options] <command> [args]');
+  console.log('  liminal [options] <command> [args]');
   console.log('');
   console.log('COMMANDS:');
   console.log('  generate, gen, g <prompt>   Create p5.js art from prompt');
@@ -106,25 +106,25 @@ if (flags.help) {
   console.log('  --version                   Show version');
   console.log('');
   console.log('EXAMPLES:');
-  console.log('  atelier --prompt "blue particles"');
-  console.log('  atelier --prompt "red circles" --provider lmstudio');
-  console.log('  atelier --configure');
-  console.log('  atelier serve 3456');
-  console.log('  atelier list');
+  console.log('  liminal --prompt "blue particles"');
+  console.log('  liminal --prompt "red circles" --provider lmstudio');
+  console.log('  liminal --configure');
+  console.log('  liminal serve 3456');
+  console.log('  liminal list');
   console.log('');
   process.exit(0);
 }
 
 // Handle --version flag
 if (flags.version) {
-  console.log('Atelier v1.0.0');
+  console.log('Liminal v1.0.0');
   process.exit(0);
 }
 
 // Handle --configure flag
 if (flags.configure) {
   console.log('');
-  console.log('🎨 Atelier Configuration');
+  console.log('🎨 Liminal Configuration');
   console.log('');
   console.log('Setting up LM Studio config...');
   console.log('');
@@ -140,10 +140,10 @@ if (flags.configure) {
   };
   
   saveConfig(config).then(() => {
-    console.log('✅ Config saved to ~/.atelier/config.json');
+    console.log('✅ Config saved to ~/.liminal/config.json');
     console.log('');
     console.log('You can now run:');
-    console.log('  atelier --prompt "your idea"');
+    console.log('  liminal --prompt "your idea"');
     console.log('');
     process.exit(0);
   }).catch(err => {
@@ -157,10 +157,10 @@ if (flags.configure) {
 
 // Override config with CLI flags
 if (flags.provider) {
-  process.env.ATELIER_LLM_PROVIDER = flags.provider;
+  process.env.LIMINAL_LLM_PROVIDER = flags.provider;
 }
 if (flags.model) {
-  process.env.ATELIER_LLM_MODEL = flags.model;
+  process.env.LIMINAL_LLM_MODEL = flags.model;
 }
 
 // Handle --completions flag
@@ -183,7 +183,7 @@ if (flags.interactive) {
     const { prompt: interactivePrompt, options } = await mode.run();
     flags.prompt = interactivePrompt;
     if (options.provider) {
-      process.env.ATELIER_LLM_PROVIDER = options.provider === 'lmstudio' ? 'inception' : options.provider;
+      process.env.LIMINAL_LLM_PROVIDER = options.provider === 'lmstudio' ? 'inception' : options.provider;
     }
   } catch (err) {
     console.error('Interactive mode cancelled');
@@ -249,7 +249,7 @@ if (isLiveMusic) {
     console.error('Error: --prompt is required for live-music');
     process.exit(1);
   }
-  const liveOutDir = flags.output || path.join(process.env.HOME || '/tmp', '.atelier', 'output');
+  const liveOutDir = flags.output || path.join(process.env.HOME || '/tmp', '.liminal', 'output');
   fs.mkdirSync(liveOutDir, { recursive: true });
 
   // Load project config for live settings (MIDI, OSC, syncMode) - pass through only
@@ -260,7 +260,7 @@ if (isLiveMusic) {
   const liveOpts = liveConfig?.live || {};
 
   console.log('');
-  console.log('🎵 Atelier: Live Music');
+  console.log('🎵 Liminal: Live Music');
   console.log('📝 Prompt: "' + livePrompt + '"');
   console.log('📁 Output: ' + liveOutDir);
   if (liveOpts.oscHost || liveOpts.syncMode) {
@@ -295,11 +295,11 @@ if (cmd === 'generate' || cmd === 'gen' || cmd === 'g' || flags.prompt) {
   if (flags.maxIterations) maxIterations = flags.maxIterations;
   if (flags.output) output = flags.output;
   
-  const outDir = output || path.join(process.env.HOME || '/tmp', '.atelier', 'output');
+  const outDir = output || path.join(process.env.HOME || '/tmp', '.liminal', 'output');
   fs.mkdirSync(outDir, { recursive: true });
 
   console.log('');
-  console.log('🎨 Atelier: Creative Coding Agent');
+  console.log('🎨 Liminal: Creative Coding Agent');
   console.log('📝 Prompt: "' + prompt + '"');
   console.log('🔄 Max iterations: ' + maxIterations);
   if (output) console.log('📁 Output: ' + output);
@@ -359,7 +359,7 @@ else if (cmd === 'serve' || cmd === 's') {
   }
   
   const searchDirs = [
-    path.join(process.env.HOME || '/tmp', '.atelier', 'output'),
+    path.join(process.env.HOME || '/tmp', '.liminal', 'output'),
     path.join(process.cwd(), 'gallery'),
   ];
   
@@ -371,7 +371,7 @@ else if (cmd === 'serve' || cmd === 's') {
     console.log('📄 Loading sketch:', latestSketch.file);
   } else {
     console.log('⚠️  No sketches found. Generate one first:');
-    console.log('   atelier --prompt "your idea"');
+    console.log('   liminal --prompt "your idea"');
   }
   
   server.serveSketch(sketchCode);
@@ -383,7 +383,7 @@ else if (cmd === 'serve' || cmd === 's') {
   });
 }
 else if (cmd === 'list' || cmd === 'ls') {
-  const outDir = path.join(process.env.HOME || '/tmp', '.atelier', 'output');
+  const outDir = path.join(process.env.HOME || '/tmp', '.liminal', 'output');
   console.log('📁 Sketches:');
   if (fs.existsSync(outDir)) {
     fs.readdirSync(outDir).filter(f => f.endsWith('.js')).forEach(f => console.log('  ' + f));
@@ -394,7 +394,7 @@ else if (cmd === 'list' || cmd === 'ls') {
 else {
   console.error('Error: --prompt is required');
   console.error('');
-  console.error('Run "atelier --configure" to set up LM Studio');
-  console.error('Or use: atelier --prompt "your idea"');
+  console.error('Run "liminal --configure" to set up LM Studio');
+  console.error('Or use: liminal --prompt "your idea"');
   process.exit(1);
 }

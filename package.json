@@ -1,7 +1,7 @@
 {
-  "name": "atelier",
+  "name": "liminal-ai",
   "version": "1.0.0",
-  "description": "Creative coding agent with internal Ralph-Wiggum Loop",
+  "description": "Creative coding agent with internal Ralph-Wiggum Loop and multi-domain intelligence",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -63,6 +63,6 @@
     "node": ">=18.0.0"
   },
   "bin": {
-    "atelier": "bin/atelier"
+    "liminal": "bin/liminal"
   }
 }

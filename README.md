@@ -1,4 +1,4 @@
-# Atelier — Creative Coding Agent
+# Liminal — Creative Coding Agent
 
 > "The code evolves. You curate."
 
@@ -14,12 +14,12 @@ npm install
 npm test
 
 # Generate your first creative work
-atelier --prompt "Create a calming blue particle system"
+liminal --prompt "Create a calming blue particle system"
 ```
 
-## 📖 What is Atelier?
+## 📖 What is Liminal?
 
-Atelier is a creative coding agent that generates emergent generative art through self-recursive iteration. The same prompt runs repeatedly, but the "world" (files, context, history) changes each time, creating a feedback loop where the agent critiques and improves its own previous output.
+Liminal is a creative coding agent that generates emergent generative art through self-recursive iteration. The same prompt runs repeatedly, but the "world" (files, context, history) changes each time, creating a feedback loop where the agent critiques and improves its own previous output.
 
 ### Key Features
 
@@ -59,16 +59,16 @@ Atelier is a creative coding agent that generates emergent generative art throug
 
 ```bash
 # Basic usage
-atelier --prompt "Create a particle system"
+liminal --prompt "Create a particle system"
 
 # With custom options
-atelier --prompt "Generate cellular automata" \
+liminal --prompt "Generate cellular automata" \
   --max-iterations 10 \
   --output ./my-art \
   --project my-experiment
 
 # Short flags
-atelier -p "Interactive sketch" -m 5 -o ./output
+liminal -p "Interactive sketch" -m 5 -o ./output
 ```
 
 #### CLI Options
@@ -81,7 +81,7 @@ atelier -p "Interactive sketch" -m 5 -o ./output
 ### Programmatic Usage
 
 ```javascript
-import { run } from 'atelier';
+import { run } from 'liminal-ai';
 
 // Basic usage
 const result = await run('Create a calming particle system');
@@ -103,11 +103,11 @@ console.log(`Reason: ${result.reason}`);
 
 ### Configuration
 
-Create `config/atelier.json` for project-wide settings:
+Create `config/liminal.json` for project-wide settings:
 
 ```json
 {
-  "name": "atelier",
+  "name": "liminal",
   "version": "1.0.0",
   "loop": {
     "maxIterations": 20,
@@ -137,27 +137,27 @@ Atelier can use a **cloud** LLM (e.g. Inception) or a **local** LLM (e.g. Ollama
 **Cloud (e.g. Inception)**  
 Set the provider and credentials via env (or in `~/.atelier/config.json` / project `config/atelier.json`):
 
-- `ATELIER_LLM_PROVIDER=inception` — use the Inception-compatible API (default).
-- `ATELIER_LLM_BASE_URL` — API base URL (e.g. `https://api.inceptionlabs.ai/v1`). Omit to use the default Inception URL.
-- `ATELIER_LLM_MODEL` — model name (e.g. `inception-001`).
-- `ATELIER_LLM_API_KEY` or `INCEPTION_API_KEY` — API key for auth.
+- `LIMINAL_LLM_PROVIDER=inception` — use the Inception-compatible API (default).
+- `LIMINAL_LLM_BASE_URL` — API base URL (e.g. `https://api.inceptionlabs.ai/v1`). Omit to use the default Inception URL.
+- `LIMINAL_LLM_MODEL` — model name (e.g. `inception-001`).
+- `LIMINAL_LLM_API_KEY` or `INCEPTION_API_KEY` — API key for auth.
 
 Example:
 
 ```bash
-export ATELIER_LLM_PROVIDER=inception
-export ATELIER_LLM_BASE_URL=https://api.inceptionlabs.ai/v1
-export ATELIER_LLM_MODEL=inception-001
-export ATELIER_LLM_API_KEY=your-api-key
-atelier --prompt "Create a particle system"
+export LIMINAL_LLM_PROVIDER=inception
+export LIMINAL_LLM_BASE_URL=https://api.inceptionlabs.ai/v1
+export LIMINAL_LLM_MODEL=inception-001
+export LIMINAL_LLM_API_KEY=your-api-key
+liminal --prompt "Create a particle system"
 ```
 
 **Local (Ollama)**  
 Run [Ollama](https://ollama.ai) locally, then point Atelier at it:
 
-- `ATELIER_LLM_PROVIDER=ollama` — use the Ollama API.
-- `ATELIER_LLM_BASE_URL` — Ollama base URL (default `http://localhost:11434`).
-- `ATELIER_LLM_MODEL` — model name (e.g. `llama3.2`). No API key needed.
+- `LIMINAL_LLM_PROVIDER=ollama` — use the Ollama API.
+- `LIMINAL_LLM_BASE_URL` — Ollama base URL (default `http://localhost:11434`).
+- `LIMINAL_LLM_MODEL` — model name (e.g. `llama3.2`). No API key needed.
 
 Example:
 
@@ -166,9 +166,9 @@ Example:
 ollama serve
 ollama pull llama3.2
 
-export ATELIER_LLM_PROVIDER=ollama
-export ATELIER_LLM_MODEL=llama3.2
-atelier --prompt "Create a particle system"
+export LIMINAL_LLM_PROVIDER=ollama
+export LIMINAL_LLM_MODEL=llama3.2
+liminal --prompt "Create a particle system"
 ```
 
 Integration tests for the dual-LLM path (`test/integration/dual-llm.test.ts`) run against the configured backend when available and skip with a clear message when the backend is unreachable or not configured (e.g. no API key, Ollama not running).
@@ -236,7 +236,7 @@ Atelier supports **live music coding** for performative, real-time generative ar
 ### CLI
 
 ```bash
-atelier --prompt "ambient glitch set, 20 min" \
+liminal --prompt "ambient glitch set, 20 min" \
   --mode live-music \
   --output ./set
 ```
@@ -246,7 +246,7 @@ This writes `strudel.js` and `hydra.js` to the output directory. Optional projec
 ### Programmatic API
 
 ```javascript
-import { generateMusic, generateVisuals, generateMusicToVisual } from 'atelier';
+import { generateMusic, generateVisuals, generateMusicToVisual } from 'liminal-ai';
 
 const musicOutput = await generateMusic("anxious post-rock build", { musicPlatform: 'strudel' });
 const visualOutput = await generateVisuals({ prompt: "same mood, audio reactive", platform: 'hydra' });
