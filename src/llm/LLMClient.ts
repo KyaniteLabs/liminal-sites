@@ -37,6 +37,8 @@ export class LLMAuthError extends LLMError {
 
 // ── Config & Response ──
 
+import { SERVICE_DEFAULTS } from '../constants.js';
+
 export interface LLMConfig {
   provider: 'inception' | 'ollama' | 'openai' | 'anthropic' | 'minimax' | 'lmstudio' | 'hybrid';
   apiKey?: string;
@@ -79,13 +81,13 @@ export class LLMClient {
   constructor(config?: Partial<LLMConfig>) {
     this.config = {
       provider: config?.provider || (process.env.ATELIER_LLM_PROVIDER as LLMConfig['provider']) || 'inception',
-      apiKey: config?.apiKey ?? process.env.OPENAI_API_KEY ?? process.env.ANTHROPIC_API_KEY ?? process.env.INCEPTION_API_KEY ?? process.env.ATELIER_LLM_API_KEY,
+      apiKey: config?.apiKey ?? process.env.MINIMAX_API_KEY ?? process.env.ATELIER_LLM_API_KEY ?? process.env.OPENAI_API_KEY ?? process.env.ANTHROPIC_API_KEY ?? process.env.INCEPTION_API_KEY,
       baseUrl: config?.baseUrl || process.env.ATELIER_LLM_BASE_URL,
       model: config?.model || process.env.ATELIER_LLM_MODEL || 'inception-001',
       temperature: config?.temperature ?? 0.7,
       maxTokens: config?.maxTokens ?? 2000,
       useReasoningTransfer: config?.useReasoningTransfer ?? false,
-      hydraBaseUrl: config?.hydraBaseUrl || process.env.ATELIER_HYDRA_URL || 'http://localhost:8000',
+      hydraBaseUrl: config?.hydraBaseUrl || process.env.ATELIER_HYDRA_URL || SERVICE_DEFAULTS.HYDRA_URL,
     };
   }
 
@@ -316,7 +318,7 @@ Rules:
   }
 
   private async callMinimax(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    const baseUrl = this.config.baseUrl || 'https://api.minimax.chat/v1';
+    const baseUrl = this.config.baseUrl || SERVICE_DEFAULTS.MINIMAX_URL;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -356,7 +358,7 @@ Rules:
   }
 
   private async callLMStudio(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    const baseUrl = this.config.baseUrl || 'http://localhost:1234/v1';
+    const baseUrl = this.config.baseUrl || SERVICE_DEFAULTS.LOCAL_LLM_URL;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -406,7 +408,7 @@ Rules:
   }
 
   private async callOllama(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    const baseUrl = this.config.baseUrl || 'http://localhost:11434';
+    const baseUrl = this.config.baseUrl || SERVICE_DEFAULTS.OLLAMA_URL;
     
     const response = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
@@ -483,6 +485,7 @@ Rules:
       process.env.ANTHROPIC_API_KEY ||
       process.env.INCEPTION_API_KEY ||
       process.env.ATELIER_LLM_API_KEY ||
+      process.env.MINIMAX_API_KEY ||
       process.env.ATELIER_LLM_BASE_URL
     );
   }

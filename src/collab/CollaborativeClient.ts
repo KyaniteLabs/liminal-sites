@@ -14,6 +14,8 @@
  * strengths through structured interaction.
  */
 
+import { SERVICE_DEFAULTS } from '../constants.js';
+
 import type {
   CollaborativeConfig,
   CollaborativeResult,
@@ -37,11 +39,11 @@ export class CollaborativeClient {
 
   constructor(config: CollaborativeConfig) {
     this.config = {
-      localBaseUrl: config.localBaseUrl || 'http://localhost:1234/v1',
-      localModel: config.localModel || 'qwen3.5:4b',
-      cloudApiKey: config.cloudApiKey || '',
-      cloudModel: config.cloudModel || 'MiniMax-M2.7',
-      cloudBaseUrl: config.cloudBaseUrl || 'https://api.minimax.io/v1',
+      localBaseUrl: config.localBaseUrl ?? SERVICE_DEFAULTS.LOCAL_LLM_URL,
+      localModel: config.localModel ?? 'qwen3.5:4b',
+      cloudApiKey: config.cloudApiKey ?? '',
+      cloudModel: config.cloudModel ?? 'MiniMax-M2.7',
+      cloudBaseUrl: config.cloudBaseUrl ?? SERVICE_DEFAULTS.MINIMAX_URL,
       maxRounds: config.maxRounds ?? 3,
       convergenceThreshold: config.convergenceThreshold ?? 0.85,
       parallel: config.parallel ?? true,

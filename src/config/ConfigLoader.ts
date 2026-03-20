@@ -55,6 +55,17 @@ export interface ProjectConfig {
     port?: number;
     screenshotOnIteration?: boolean;
   };
+  swarm?: {
+    ollamaHost?: string;
+    maxRounds?: number;
+    mode?: 'competitive' | 'hybrid' | 'ring' | 'mesh';
+    streamDir?: string;
+  };
+  scavenger?: {
+    scanPaths?: string[];
+    outputDir?: string;
+    autoRegister?: boolean;
+  };
   /** Optional live performance config (MIDI, OSC, sync). Not implemented; load and pass through only. */
   live?: {
     midiOutput?: string;
@@ -65,7 +76,7 @@ export interface ProjectConfig {
 }
 
 export interface EffectiveConfig {
-  provider: 'inception' | 'ollama' | 'openai' | 'anthropic';
+  provider: 'inception' | 'ollama' | 'openai' | 'anthropic' | 'minimax' | 'lmstudio' | 'hybrid';
   baseUrl?: string;
   model: string;
   apiKey?: string;
@@ -128,12 +139,14 @@ export async function getEffectiveConfig(configPath?: string, projectConfigPath?
   const projectProvider = projectConfig?.llm?.provider;
   const providerName = process.env.ATELIER_LLM_PROVIDER || projectProvider || fileConfig?.defaultProvider || 'inception';
 
-  const providerMap: Record<string, 'inception' | 'ollama' | 'openai' | 'anthropic'> = {
-    'lmstudio': 'inception',
+  const providerMap: Record<string, 'inception' | 'ollama' | 'openai' | 'anthropic' | 'minimax' | 'lmstudio' | 'hybrid'> = {
+    'lmstudio': 'lmstudio',
     'inception': 'inception',
     'ollama': 'ollama',
     'openai': 'openai',
     'anthropic': 'anthropic',
+    'minimax': 'minimax',
+    'hybrid': 'hybrid',
   };
 
   const provider = providerMap[providerName] || 'inception';
