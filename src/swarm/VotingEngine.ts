@@ -1,4 +1,5 @@
 import type { SwarmPersona, SwarmOutput, SwarmConfig, Vote } from './types.js';
+import { PromptLibrary } from '../prompts/index.js';
 
 interface VotingResult {
   scores: Map<string, number>;
@@ -87,46 +88,45 @@ export class VotingEngine {
       return { scores, winnerId: firstPersonaId, votes };
     }
 
-    // Ask each persona to vote
-    for (const voter of personas) {
-      if (!outputs.has(voter.id)) continue; // Skip if this persona didn't generate
-
-      const votingPrompt = `You are ${voter.id}, ${voter.displayName}. ${voter.voice}.
-
-Your voting criteria: ${voter.votingBias}
-
-Review these pieces and pick your 1st and 2nd favorite:
-
-${candidatesStr}
-
-Cast your vote:
-1st choice: [A/B/C/etc]
-2nd choice: [A/B/C/etc]
-Briefly explain why (1 sentence):`;
-
-      try {
-        const voteText = await callOllama(voter.model, votingPrompt, {
-          temperature: voter.temperature,
-          num_predict: 100,
+    // Ask each persona to vote (in parallel)
+    const results = await Promise.all(
+      personas.filter(v => outputs.has(v.id)).map(async voter => {
+        // Build the voting prompt (same as before)
+        const rendered = PromptLibrary.render('swarm.voting', {
+          displayName: voter.displayName,
+          voice: voter.voice,
+          votingBias: voter.votingBias,
+          candidates: candidatesStr,
         });
+        const votingPrompt = rendered.system + '\n\n' + rendered.user;
 
-        const parsed = this.parseVote(voteText, candidateMap);
+        try {
+          const voteText = await callOllama(voter.model, votingPrompt, {
+            temperature: voter.temperature,
+            num_predict: voter.maxTokens,
+          });
 
-        votes.set(voter.id, {
-          voterId: voter.id,
-          firstChoice: parsed.first ?? '',
-          secondChoice: parsed.second ?? '',
-          reasoning: parsed.reasoning,
-        });
-      } catch (error) {
-        // If voting fails for a persona, skip them
-        votes.set(voter.id, {
-          voterId: voter.id,
-          firstChoice: '',
-          secondChoice: '',
-          reasoning: `Voting error: ${error instanceof Error ? error.message : 'unknown'}`,
-        });
-      }
+          const parsed = this.parseVote(voteText, candidateMap);
+
+          return [voter.id, {
+            voterId: voter.id,
+            firstChoice: parsed.first ?? '',
+            secondChoice: parsed.second ?? '',
+            reasoning: parsed.reasoning,
+          }] as const;
+        } catch (error) {
+          return [voter.id, {
+            voterId: voter.id,
+            firstChoice: '',
+            secondChoice: '',
+            reasoning: `Voting error: ${error instanceof Error ? error.message : 'unknown'}`,
+          }] as const;
+        }
+      })
+    );
+
+    for (const [id, vote] of results) {
+      votes.set(id, vote);
     }
 
     // Tally scores: first choice = votingPower * 2, second choice = votingPower * 1
