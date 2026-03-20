@@ -69,7 +69,7 @@ describe('E2E sandbox self-improve', () => {
     it('code -> requestImprovement -> returns improved code (skip if LLM unavailable)', async () => {
       if (!LLMClient.isConfigured()) {
         console.warn(
-          'Skipping E2E improvement test: LLM unavailable (set ATELIER_LLM_API_KEY or INCEPTION_API_KEY or ATELIER_LLM_BASE_URL).'
+          'Skipping E2E improvement test: LLM unavailable (set LIMINAL_LLM_API_KEY or ATELIER_LLM_API_KEY or ATELIER_LLM_BASE_URL).'
         );
         return;
       }

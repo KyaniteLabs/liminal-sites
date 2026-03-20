@@ -1,6 +1,6 @@
 /**
  * E2E full loop with cloud LLM: run() from built package (dist/index.js)
- * with ATELIER_LLM_PROVIDER=inception. Skips with clear message when cloud
+ * with ATELIER_LLM_PROVIDER=lmstudio. Skips with clear message when cloud
  * is unavailable (no API key, 400/401, timeout).
  */
 
@@ -33,7 +33,7 @@ describe('E2E full loop (cloud LLM)', () => {
     'ATELIER_LLM_BASE_URL',
     'ATELIER_LLM_MODEL',
     'ATELIER_LLM_API_KEY',
-    'INCEPTION_API_KEY',
+    'LIMINAL_LLM_API_KEY',
   ];
   let envBackup: Record<string, string | undefined>;
 
@@ -45,16 +45,16 @@ describe('E2E full loop (cloud LLM)', () => {
     restoreEnv(envBackup);
   });
 
-  test('run() full loop with cloud (inception): result has code, iterations, output files', async () => {
+  test('run() full loop with cloud (lmstudio): result has code, iterations, output files', async () => {
     const distPath = path.join(process.cwd(), 'dist', 'index.js');
     if (!fs.existsSync(distPath)) {
       console.warn('Skipping E2E cloud test: dist/index.js not found (run npm run build first).');
       return;
     }
 
-    process.env.ATELIER_LLM_PROVIDER = 'inception';
-    process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'https://api.inceptionlabs.ai/v1';
-    process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'inception-001';
+    process.env.ATELIER_LLM_PROVIDER = 'lmstudio';
+    process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'http://localhost:1234/v1';
+    process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'local-model';
 
     const stamp = Date.now();
     const projectName = `e2e-cloud-${stamp}`;

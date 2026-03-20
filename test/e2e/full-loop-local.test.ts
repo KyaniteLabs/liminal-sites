@@ -65,7 +65,7 @@ describe('E2E full loop (local Ollama)', () => {
     'ATELIER_LLM_BASE_URL',
     'ATELIER_LLM_MODEL',
     'ATELIER_LLM_API_KEY',
-    'INCEPTION_API_KEY',
+    'LIMINAL_LLM_API_KEY',
   ];
   let envBackup: Record<string, string | undefined>;
 
@@ -75,7 +75,7 @@ describe('E2E full loop (local Ollama)', () => {
     process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'http://localhost:11434';
     process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'llama3.2';
     delete process.env.ATELIER_LLM_API_KEY;
-    delete process.env.INCEPTION_API_KEY;
+    delete process.env.LIMINAL_LLM_API_KEY;
   });
 
   afterEach(() => {

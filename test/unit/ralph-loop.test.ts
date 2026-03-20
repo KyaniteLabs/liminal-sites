@@ -16,7 +16,7 @@ function getResultCode(result: { code: string }): string {
 describe('RalphLoop', () => {
   beforeEach(() => {
     RalphLoop.reset();
-    delete process.env.INCEPTION_API_KEY;
+    delete process.env.LIMINAL_LLM_API_KEY;
     delete process.env.ATELIER_LLM_API_KEY;
   });
 

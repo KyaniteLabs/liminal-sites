@@ -20,7 +20,7 @@ describe('GUI config API', () => {
 
   beforeAll(async () => {
     await fs.mkdir(TEST_DIR, { recursive: true });
-    process.env.ATELIER_CONFIG_PATH = TEST_CONFIG_PATH;
+    process.env.LIMINAL_CONFIG_PATH = TEST_CONFIG_PATH;
     // Unset LLM env so saved file config is used
     delete process.env.ATELIER_LLM_PROVIDER;
     delete process.env.ATELIER_LLM_MODEL;
@@ -37,7 +37,7 @@ describe('GUI config API', () => {
 
   afterAll(async () => {
     if (server) await new Promise((resolve) => server.close(resolve));
-    delete process.env.ATELIER_CONFIG_PATH;
+    delete process.env.LIMINAL_CONFIG_PATH;
     await fs.rm(TEST_DIR, { recursive: true, force: true }).catch(() => {});
   });
 
@@ -116,9 +116,9 @@ describe('GUI config API', () => {
   describe('POST /api/config', () => {
     it('persists config to file and GET returns same values', async () => {
       const payload = {
-        defaultProvider: 'inception',
+        defaultProvider: 'lmstudio',
         providers: {
-          inception: { baseUrl: 'https://api.example/v1', model: 'inception-001', apiKey: 'key' },
+          lmstudio: { baseUrl: 'http://localhost:1234/v1', model: 'local-model', apiKey: 'key' },
         },
         loop: { maxIterations: 15, timeoutMinutes: 20 },
         creative: { minQualityScore: 0.6 },
@@ -128,8 +128,8 @@ describe('GUI config API', () => {
 
       const raw = await fs.readFile(TEST_CONFIG_PATH, 'utf-8');
       const parsed = JSON.parse(raw);
-      expect(parsed.defaultProvider).toBe('inception');
-      expect(parsed.providers.inception.model).toBe('inception-001');
+      expect(parsed.defaultProvider).toBe('lmstudio');
+      expect(parsed.providers.lmstudio.model).toBe('local-model');
       expect(parsed.loop.maxIterations).toBe(15);
       expect(parsed.creative.minQualityScore).toBe(0.6);
       expect(parsed.galleryPath).toBe('gallery');

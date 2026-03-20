@@ -5,11 +5,11 @@ import { LLMError, LLMTimeoutError, LLMRateLimitError, LLMAuthError } from '../.
 
 describe('LLMError hierarchy', () => {
   it('LLMError has correct properties', () => {
-    const err = new LLMError('test error', 'inception', 500, true);
+    const err = new LLMError('test error', 'lmstudio', 500, true);
     expect(err).toBeInstanceOf(Error);
     expect(err).toBeInstanceOf(LLMError);
     expect(err.message).toBe('test error');
-    expect(err.provider).toBe('inception');
+    expect(err.provider).toBe('lmstudio');
     expect(err.statusCode).toBe(500);
     expect(err.retryable).toBe(true);
     expect(err.name).toBe('LLMError');
@@ -22,11 +22,11 @@ describe('LLMError hierarchy', () => {
   });
 
   it('LLMTimeoutError is retryable', () => {
-    const err = new LLMTimeoutError('anthropic');
+    const err = new LLMTimeoutError('lmstudio');
     expect(err).toBeInstanceOf(LLMError);
     expect(err).toBeInstanceOf(LLMTimeoutError);
     expect(err.retryable).toBe(true);
-    expect(err.provider).toBe('anthropic');
+    expect(err.provider).toBe('lmstudio');
     expect(err.name).toBe('LLMTimeoutError');
   });
 
@@ -41,7 +41,7 @@ describe('LLMError hierarchy', () => {
   });
 
   it('LLMAuthError is not retryable', () => {
-    const err = new LLMAuthError('anthropic');
+    const err = new LLMAuthError('minimax');
     expect(err).toBeInstanceOf(LLMError);
     expect(err).toBeInstanceOf(LLMAuthError);
     expect(err.retryable).toBe(false);

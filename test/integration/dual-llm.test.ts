@@ -1,6 +1,6 @@
 /**
  * Dual LLM integration tests: critical path getEffectiveConfig + LLMClient
- * with cloud (inception) and local (ollama) backends.
+ * with cloud (lmstudio) and local (ollama) backends.
  * Tests pass when the respective backend is available; skip with a clear message when not.
  */
 
@@ -33,7 +33,7 @@ describe('Dual LLM (cloud vs local)', () => {
     'ATELIER_LLM_BASE_URL',
     'ATELIER_LLM_MODEL',
     'ATELIER_LLM_API_KEY',
-    'INCEPTION_API_KEY',
+    'LIMINAL_LLM_API_KEY',
   ];
   let envBackup: Record<string, string | undefined>;
 
@@ -45,14 +45,14 @@ describe('Dual LLM (cloud vs local)', () => {
     restoreEnv(envBackup);
   });
 
-  test('getEffectiveConfig + LLMClient path with cloud (inception) backend', async () => {
-    process.env.ATELIER_LLM_PROVIDER = 'inception';
-    process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'https://api.inceptionlabs.ai/v1';
-    process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'inception-001';
-    // ATELIER_LLM_API_KEY / INCEPTION_API_KEY left from env if set
+  test('getEffectiveConfig + LLMClient path with cloud (lmstudio) backend', async () => {
+    process.env.ATELIER_LLM_PROVIDER = 'lmstudio';
+    process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'http://localhost:1234/v1';
+    process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'local-model';
+    // ATELIER_LLM_API_KEY / LIMINAL_LLM_API_KEY left from env if set
 
     const config = await getEffectiveConfig();
-    expect(config.provider).toBe('inception');
+    expect(config.provider).toBe('lmstudio');
 
     const client = new LLMClient({
       provider: config.provider,
@@ -75,7 +75,7 @@ describe('Dual LLM (cloud vs local)', () => {
         msg.includes('AbortError')
       ) {
         console.warn(
-          'Skipping cloud (inception) test: backend not available (no API key, unreachable, or timeout).'
+          'Skipping cloud (lmstudio) test: backend not available (no API key, unreachable, or timeout).'
         );
         return;
       }
@@ -85,7 +85,7 @@ describe('Dual LLM (cloud vs local)', () => {
 
     if (!response.success) {
       console.warn(
-        'Skipping cloud (inception) test: backend not available (' + (response.error || 'unknown') + ').'
+        'Skipping cloud (lmstudio) test: backend not available (' + (response.error || 'unknown') + ').'
       );
       return;
     }
@@ -102,7 +102,7 @@ describe('Dual LLM (cloud vs local)', () => {
     process.env.ATELIER_LLM_BASE_URL = process.env.ATELIER_LLM_BASE_URL || 'http://localhost:11434';
     process.env.ATELIER_LLM_MODEL = process.env.ATELIER_LLM_MODEL || 'llama3.2';
     delete process.env.ATELIER_LLM_API_KEY;
-    delete process.env.INCEPTION_API_KEY;
+    delete process.env.LIMINAL_LLM_API_KEY;
 
     const config = await getEffectiveConfig();
     expect(config.provider).toBe('ollama');

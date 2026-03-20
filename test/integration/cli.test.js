@@ -61,9 +61,9 @@ async function runCLI(args) {
     const cliProcess = spawn('node', [cliPath, ...args], {
       env: {
         ...process.env,
-        ATELIER_LLM_PROVIDER: 'inception',
+        ATELIER_LLM_PROVIDER: 'lmstudio',
         ATELIER_LLM_BASE_URL: 'http://100.66.225.85:1234/v1',
-        ATELIER_LLM_MODEL: 'liquid/lfm2-24b-a2b'
+        ATELIER_LLM_MODEL: 'local-model'
       }
     });
     let stdout = '';

@@ -15,8 +15,8 @@ function draw() {
 
 describe('requestImprovement', () => {
   afterEach(() => {
+    delete process.env.LIMINAL_LLM_API_KEY;
     delete process.env.ATELIER_LLM_API_KEY;
-    delete process.env.INCEPTION_API_KEY;
     delete process.env.ATELIER_LLM_BASE_URL;
   });
 

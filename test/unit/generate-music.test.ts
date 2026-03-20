@@ -53,7 +53,7 @@ describe('generateMusic', () => {
   });
 
   it('falls back to template when LLM is not configured', async () => {
-    // Without ATELIER_LLM_API_KEY, should use template fallback
+    // Without LIMINAL_LLM_API_KEY, should use template fallback
     const result = await generateMusic({ prompt: 'ambient chill', platform: 'strudel' });
     expect(result.code).toContain('setcps');
   });

@@ -1,7 +1,7 @@
 /**
  * LLMClient tests - OpenAI-compatible API support
  *
- * Tests for LM Studio, Ollama Cloud, OpenAI, and Anthropic
+ * Tests for LM Studio, Ollama, OpenAI, MiniMax, and Hybrid
  */
 
 import { LLMClient } from '../../src/llm/LLMClient.js';
@@ -22,17 +22,16 @@ function createFetchStub(response: any) {
 
 describe('LLMClient Configuration', () => {
   afterEach(() => {
+    delete process.env.LIMINAL_LLM_API_KEY;
     delete process.env.ATELIER_LLM_API_KEY;
-    delete process.env.INCEPTION_API_KEY;
     delete process.env.OPENAI_API_KEY;
-    delete process.env.ANTHROPIC_API_KEY;
   });
 
   test('should create client with LM Studio config (no API key)', () => {
     const client = new LLMClient({
-      provider: 'inception',
+      provider: 'lmstudio',
       baseUrl: 'http://100.66.225.85:1234/v1',
-      model: 'llama-3.2-3b',
+      model: 'local-model',
       // apiKey intentionally omitted for LM Studio
     });
 
@@ -42,7 +41,7 @@ describe('LLMClient Configuration', () => {
 
   test('should create client with Ollama Cloud config (with API key)', () => {
     const client = new LLMClient({
-      provider: 'inception',
+      provider: 'ollama',
       baseUrl: 'https://api.ollama.com/v1',
       model: 'llama3.2',
       apiKey: 'ollama-cloud-key-123',
@@ -51,13 +50,13 @@ describe('LLMClient Configuration', () => {
     expect(client).toBeDefined();
   });
 
-  test('isConfigured returns true when INCEPTION_API_KEY is set', () => {
-    process.env.INCEPTION_API_KEY = 'sk-test-key';
+  test('isConfigured returns true when LIMINAL_LLM_API_KEY is set', () => {
+    process.env.LIMINAL_LLM_API_KEY = 'sk-test-key';
     expect(LLMClient.isConfigured()).toBe(true);
   });
 
   test('isConfigured returns false when no API keys are set', () => {
-    delete process.env.INCEPTION_API_KEY;
+    delete process.env.LIMINAL_LLM_API_KEY;
     delete process.env.ATELIER_LLM_API_KEY;
     expect(LLMClient.isConfigured()).toBe(false);
   });
@@ -66,12 +65,6 @@ describe('LLMClient Configuration', () => {
     process.env.OPENAI_API_KEY = 'sk-test';
     expect(LLMClient.isConfigured()).toBe(true);
     delete process.env.OPENAI_API_KEY;
-  });
-
-  test('isConfigured returns true when ANTHROPIC_API_KEY is set', () => {
-    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
-    expect(LLMClient.isConfigured()).toBe(true);
-    delete process.env.ANTHROPIC_API_KEY;
   });
 });
 
@@ -106,28 +99,30 @@ describe('LLMClient OpenAI (W0-L)', () => {
   });
 });
 
-describe('LLMClient Anthropic (W0-A)', () => {
-  const anthropicResponse = {
-    content: [{ type: 'text', text: 'function setup() { createCanvas(400,400); }' }],
+describe('LLMClient MiniMax', () => {
+  const minimaxResponse = {
+    choices: [{ message: { content: 'function setup() { createCanvas(400,400); }\nfunction draw() {}' } }],
   };
 
-  it('calls Anthropic API with correct shape and parses response to code', async () => {
-    const { stub, getLastUrl, getLastOpts } = createFetchStub(anthropicResponse);
+  it('calls MiniMax API with correct shape and parses response to code', async () => {
+    const { stub, getLastOpts } = createFetchStub(minimaxResponse);
     global.fetch = stub as any;
 
     const client = new LLMClient({
-      provider: 'anthropic',
-      apiKey: 'sk-ant-test',
-      model: 'claude-3-5-haiku-20241022',
+      provider: 'minimax',
+      apiKey: 'test-minimax-key',
+      model: 'mini-model',
     });
 
     const result = await client.generateP5Sketch('a circle');
 
     expect(result.success).toBe(true);
     expect(result.code).toContain('createCanvas');
-    expect(getLastUrl()).toMatch(/anthropic\.com.*messages|.*\/v1\/messages/);
-    const body = JSON.parse((getLastOpts().body as string) ?? '{}');
-    expect(body.model).toBeDefined();
+    const opts = getLastOpts();
+    expect(opts?.method).toBe('POST');
+    expect((opts?.headers as Record<string, string>)?.['Authorization']).toBe('Bearer test-minimax-key');
+    const body = JSON.parse((opts?.body as string) ?? '{}');
+    expect(body.model).toBe('mini-model');
     expect(body.messages).toBeDefined();
   });
 });

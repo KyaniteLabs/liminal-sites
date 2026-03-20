@@ -1,5 +1,5 @@
 /**
- * Interactive mode tests - TUI for Atelier
+ * Interactive mode tests - TUI for Liminal
  */
 import { InteractiveMode } from '../../src/tui/InteractiveMode.js';
 import { PromptHistory } from '../../src/config/PromptHistory.js';
@@ -27,11 +27,13 @@ describe('InteractiveMode', () => {
   describe('getProviders()', () => {
     it('should list available providers', () => {
       const providers = mode.getProviders();
-      
+
       expect(providers).toContain('lmstudio');
-      expect(providers).toContain('inception');
+      expect(providers).toContain('minimax');
       expect(providers).toContain('ollama');
-      expect(providers).toHaveLength(3);
+      expect(providers).toContain('openai');
+      expect(providers).toContain('hybrid');
+      expect(providers.length).toBeGreaterThanOrEqual(5);
     });
   });
 

@@ -1,5 +1,5 @@
 /**
- * Tests for MiniMax, LM Studio, and Hybrid provider support in LLMClient.
+ * Tests for MiniMax, LM Studio, Ollama, OpenAI, and Hybrid provider support in LLMClient.
  * Only tests configuration and cost estimation -- no network calls.
  */
 
@@ -31,12 +31,8 @@ describe('LLMConfig provider types', () => {
 
 describe('LLMClient.estimatedCost', () => {
   test('returns correct values for known providers', () => {
-    // inception: input=0.000008, output=0.000024; defaults: 1000 in, 500 out
-    expect(LLMClient.estimatedCost('inception')).toBeCloseTo(0.000008 * 1000 + 0.000024 * 500);
     // openai: input=0.00001, output=0.00003
     expect(LLMClient.estimatedCost('openai')).toBeCloseTo(0.00001 * 1000 + 0.00003 * 500);
-    // anthropic: input=0.000003, output=0.000015
-    expect(LLMClient.estimatedCost('anthropic')).toBeCloseTo(0.000003 * 1000 + 0.000015 * 500);
     // minimax: input=0.000001, output=0.000002
     expect(LLMClient.estimatedCost('minimax')).toBeCloseTo(0.000001 * 1000 + 0.000002 * 500);
   });

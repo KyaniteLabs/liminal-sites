@@ -24,7 +24,9 @@ describe("InteractiveMode Integration", () => {
   it("should list available providers", () => {
     const providers = mode.getProviders();
     expect(providers).toContain("lmstudio");
-    expect(providers).toContain("inception");
+    expect(providers).toContain("minimax");
     expect(providers).toContain("ollama");
+    expect(providers).toContain("openai");
+    expect(providers).toContain("hybrid");
   });
 });

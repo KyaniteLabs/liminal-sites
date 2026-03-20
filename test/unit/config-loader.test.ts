@@ -117,7 +117,7 @@ describe('ConfigLoader', () => {
     });
   });
 
-  describe('getEffectiveConfig openai and anthropic (W0-C)', () => {
+  describe('getEffectiveConfig legacy provider mapping (W0-C)', () => {
     beforeEach(async () => {
       await fs.mkdir(path.join(TEST_PROJECT_DIR, 'config'), { recursive: true });
     });
@@ -136,14 +136,25 @@ describe('ConfigLoader', () => {
       expect(effective.model).toBe('gpt-4o-mini');
     });
 
-    it('returns provider anthropic when project llm.provider is anthropic', async () => {
+    it('maps legacy "inception" provider to "lmstudio"', async () => {
+      const projectConfig = { llm: { provider: 'inception', model: 'local-model' } };
+      await fs.writeFile(
+        path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
+        JSON.stringify(projectConfig, null, 2)
+      );
+      const effective = await getEffectiveConfig(undefined, TEST_PROJECT_DIR);
+      expect(effective.provider).toBe('lmstudio');
+      expect(effective.model).toBe('local-model');
+    });
+
+    it('maps legacy "anthropic" provider to "openai"', async () => {
       const projectConfig = { llm: { provider: 'anthropic', model: 'claude-3-5-haiku-20241022' } };
       await fs.writeFile(
         path.join(TEST_PROJECT_DIR, 'config', 'atelier.json'),
         JSON.stringify(projectConfig, null, 2)
       );
       const effective = await getEffectiveConfig(undefined, TEST_PROJECT_DIR);
-      expect(effective.provider).toBe('anthropic');
+      expect(effective.provider).toBe('openai');
       expect(effective.model).toBe('claude-3-5-haiku-20241022');
     });
   });

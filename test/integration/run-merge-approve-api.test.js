@@ -22,9 +22,9 @@ describe('Run / Merge / Approve / Propose-mutate API', () => {
     await fs.mkdir(TEST_GALLERY, { recursive: true });
     await fs.writeFile(
       TEST_CONFIG_PATH,
-      JSON.stringify({ defaultProvider: 'inception', providers: {}, galleryPath: TEST_GALLERY }, null, 2)
+      JSON.stringify({ defaultProvider: 'lmstudio', providers: {}, galleryPath: TEST_GALLERY }, null, 2)
     );
-    process.env.ATELIER_CONFIG_PATH = TEST_CONFIG_PATH;
+    process.env.LIMINAL_CONFIG_PATH = TEST_CONFIG_PATH;
     const { createApp } = await import('../../gui/server.js');
     const app = createApp(TEST_CONFIG_PATH, 0);
     server = http.createServer(app);
@@ -36,7 +36,7 @@ describe('Run / Merge / Approve / Propose-mutate API', () => {
 
   afterAll(async () => {
     if (server) await new Promise((resolve) => server.close(resolve));
-    delete process.env.ATELIER_CONFIG_PATH;
+    delete process.env.LIMINAL_CONFIG_PATH;
     await fs.rm(TEST_DIR, { recursive: true, force: true }).catch(() => {});
   });
 
