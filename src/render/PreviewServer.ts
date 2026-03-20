@@ -9,6 +9,7 @@ import { Server } from 'http';
 import { Gallery } from '../gallery/Gallery.js';
 import { Exporter } from '../export/Exporter.js';
 import { normalizePath } from '../utils/normalizePath.js';
+import { SERVICE_DEFAULTS } from '../constants.js';
 
 export interface PreviewServerOptions {
   galleryDir?: string;
@@ -25,7 +26,7 @@ export class PreviewServer {
   private server: Server | null = null;
   private currentSketch: string = '';
   private versionedSketches: Map<number, string> = new Map();
-  private readonly DEFAULT_PORT = 3456;
+  private readonly DEFAULT_PORT = SERVICE_DEFAULTS.PREVIEW_PORT;
   private readonly galleryDir: string | null;
 
   constructor(options: PreviewServerOptions | string | null = null) {
