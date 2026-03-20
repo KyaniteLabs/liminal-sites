@@ -38,6 +38,8 @@ import { SafetyGuardrails } from './SafetyGuardrails.js';
 import { DeepCollaboration } from '../collab/DeepCollaboration.js';
 import { CollaborativeClient } from '../collab/CollaborativeClient.js';
 import type { DeepCollaborationConfig, CollaborativeConfig, DomainType } from '../collab/types.js';
+import { TokenMillOrchestrator } from '../swarm/TokenMillOrchestrator.js';
+import type { SwarmConfig, SwarmMode } from '../swarm/types.js';
 
 interface LoopOptions {
   maxIterations?: number;
@@ -84,6 +86,12 @@ interface LoopOptions {
   collabConfig?: Partial<DeepCollaborationConfig & CollaborativeConfig>;
   /** Domain for collaboration quality assessment (default: 'p5') */
   collabDomain?: DomainType;
+  /** Enable Token Mill swarm generation (7-persona Ollama swarm) */
+  useSwarm?: boolean;
+  /** Configuration for the Token Mill swarm */
+  swarmConfig?: Partial<SwarmConfig>;
+  /** Swarm generative mode (default: 'hybrid') */
+  swarmMode?: SwarmMode;
 }
 
 interface LoopResult {
@@ -177,6 +185,10 @@ export class RalphLoop {
         registerAllGenerators();
         const dispatched = generatorRegistry.dispatch(loadedPrompt);
 
+        // Check if we should use Token Mill swarm for this iteration
+        if (normalizedOptions.useSwarm) {
+          currentCode = await this.generateWithSwarm(usedPrompt, normalizedOptions);
+        }
         // Check if we should use collaboration for this iteration
         const useCollaboration = normalizedOptions.useDeepCollab || normalizedOptions.useCollab;
         const shouldUseCollab = useCollaboration && (!dispatched || dispatched.entry.name === 'llm');
@@ -370,7 +382,7 @@ export class RalphLoop {
   /**
    * Normalize options with defaults
    */
-  private static normalizeOptions(options: LoopOptions | null): LoopOptions & { maxIterations: number; timeoutMinutes: number; galleryDir: string; project: string; tolerateErrors: boolean; minQualityScore: number; useMapElites: boolean; mapElitesDims: [number, number]; safetyConfig: import('./SafetyGuardrails.js').SafetyConfig | undefined; _mapElites: any; _noveltyArchive: any; useDeepCollab: boolean; useCollab: boolean; collabConfig: any; collabDomain: DomainType } {
+  private static normalizeOptions(options: LoopOptions | null): LoopOptions & { maxIterations: number; timeoutMinutes: number; galleryDir: string; project: string; tolerateErrors: boolean; minQualityScore: number; useMapElites: boolean; mapElitesDims: [number, number]; safetyConfig: import('./SafetyGuardrails.js').SafetyConfig | undefined; _mapElites: any; _noveltyArchive: any; useDeepCollab: boolean; useCollab: boolean; collabConfig: any; collabDomain: DomainType; useSwarm: boolean; swarmConfig: Partial<SwarmConfig>; swarmMode: SwarmMode } {
     return {
       maxIterations: options?.maxIterations || RalphLoop.DEFAULT_MAX_ITERATIONS,
       timeoutMinutes: options?.timeoutMinutes || RalphLoop.DEFAULT_TIMEOUT_MINUTES,
@@ -397,6 +409,9 @@ export class RalphLoop {
       useCollab: options?.useCollab ?? false,
       collabConfig: options?.collabConfig || {},
       collabDomain: options?.collabDomain || 'p5',
+      useSwarm: options?.useSwarm ?? false,
+      swarmConfig: options?.swarmConfig || {},
+      swarmMode: options?.swarmMode ?? ('hybrid' as SwarmMode),
       _mapElites: options?.useMapElites ? new MapElites(options?.mapElitesDims ?? [10, 10]) : undefined,
       _noveltyArchive: options?.useMapElites ? new NoveltyArchive() : undefined,
     };
@@ -453,6 +468,33 @@ export class RalphLoop {
       finalScore: 1,
       project: options.project,
     };
+  }
+
+  /**
+   * Generate using Token Mill swarm (7-persona Ollama swarm)
+   *
+   * @param prompt - The prompt to generate from
+   * @param options - Normalized loop options
+   * @returns Generated text from the swarm
+   */
+  private static async generateWithSwarm(
+    prompt: string,
+    options: ReturnType<typeof RalphLoop.normalizeOptions>
+  ): Promise<string> {
+    const orchestrator = new TokenMillOrchestrator(options.swarmConfig, {
+      onProgress: (data) => {
+        options.onProgress?.({
+          iteration: data.round,
+          score: 0,
+          promiseDetected: false,
+          code: '',
+          timestamp: new Date().toISOString(),
+        });
+      },
+    });
+
+    const result = await orchestrator.run(prompt, options.swarmMode);
+    return result.finalOutput;
   }
 
   /**

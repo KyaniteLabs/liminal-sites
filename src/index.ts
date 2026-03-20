@@ -491,3 +491,16 @@ export { ShaderGenerator };
 
 // Three.js Generator
 export { ThreeGenerator };
+
+// Token Mill Swarm
+export { TokenMillOrchestrator } from './swarm/TokenMillOrchestrator.js';
+export { VotingEngine } from './swarm/VotingEngine.js';
+export { MiningEngine } from './swarm/MiningEngine.js';
+export { DEFAULT_PERSONAS, DEFAULT_REFINEMENT_CONSTRAINTS } from './swarm/personas.js';
+export { SwarmMode } from './swarm/types.js';
+export type { SwarmPersona, SwarmConfig, SwarmOutput, Vote, RoundResult, SwarmResult, MinedFragment } from './swarm/types.js';
+export type { TokenMillOrchestratorOptions } from './swarm/TokenMillOrchestrator.js';
+
+// Scavenger
+export { DNAExtractor } from './scavenger/DNAExtractor.js';
+export type { ProjectDNA, ScavengerConfig } from './scavenger/types.js';

@@ -13,7 +13,7 @@ import type { NoveltyArchive } from '../evolution/NoveltyArchive.js';
 import type { AestheticModel } from '../evolution/AestheticModel.js';
 
 export interface AssessOptions {
-  /** When provided, overall score is the average of scores for these dimensions. Known dimensions: "technical", "aesthetic", "novelty". Aesthetic combines visual (creative) and sound. */
+  /** When provided, overall score is the average of scores for these dimensions. Known dimensions: "technical", "aesthetic", "novelty", "emergence", "interestingness". Aesthetic combines visual (creative) and sound. */
   evaluationCriteria?: string[];
   /** Optional novelty archive for computing novelty scores */
   noveltyArchive?: NoveltyArchive;
@@ -34,6 +34,8 @@ interface AssessmentResult {
   metrics: CodeMetrics;
   noveltyScore?: number;
   aestheticScore?: number;
+  emergenceScore?: number;
+  interestingnessScore?: number;
 }
 
 interface CodeMetrics {
@@ -69,11 +71,13 @@ export class CreativeEvaluator {
   /**
    * Assess creative output quality.
    *
-   * When `options.evaluationCriteria` is provided (e.g. ["aesthetic", "technical", "novelty"]),
+   * When `options.evaluationCriteria` is provided (e.g. ["aesthetic", "technical", "novelty", "emergence", "interestingness"]),
    * the overall score is the **average** of the present dimension scores:
    * - **technical**: structure, syntax, completeness (0–1).
    * - **aesthetic**: visual quality (creative score) + sound; aesthetic = (creativeScore + soundScore) / 2, with soundScore = 0.5 if code uses p5.sound / AudioContext / createOscillator / Web Audio and looks valid, else 0.
    * - **novelty**: proxied by creative score (complexity, techniques).
+   * - **emergence**: simple rules producing complex behavior (particle systems, cellular automata, noise-based generation, feedback loops, flocking, reaction-diffusion).
+   * - **interestingness**: variance, visual richness, dynamic rendering (noise/randomness usage, high complexity, conditional rendering, color variation).
    *
    * When `evaluationCriteria` is not provided, score = technicalScore * 0.6 + creativeScore * 0.4 (legacy behavior).
    *
@@ -91,6 +95,8 @@ export class CreativeEvaluator {
         technicalScore: 0,
         creativeScore: 0,
         metrics: this.getEmptyMetrics(),
+        emergenceScore: 0,
+        interestingnessScore: 0,
       };
     }
 
@@ -104,6 +110,8 @@ export class CreativeEvaluator {
         technicalScore: 0,
         creativeScore: 0,
         metrics: this.getEmptyMetrics(),
+        emergenceScore: 0,
+        interestingnessScore: 0,
       };
     }
 
@@ -138,6 +146,10 @@ export class CreativeEvaluator {
       }
     }
 
+    // Calculate new dimensions
+    const emergenceScore = this.calculateEmergenceScore(output, metrics);
+    const interestingnessScore = this.calculateInterestingnessScore(output, metrics);
+
     let overallScore: number;
     if (options?.evaluationCriteria && options.evaluationCriteria.length > 0) {
       const dimensionScores: number[] = [];
@@ -146,6 +158,8 @@ export class CreativeEvaluator {
         // Aesthetic = visual + sound for launch (creativeScore + getSoundScore).
         else if (criterion === 'aesthetic') dimensionScores.push(aestheticScore ?? (creativeScore + soundScore) / 2);
         else if (criterion === 'novelty') dimensionScores.push(noveltyScore ?? creativeScore);
+        else if (criterion === 'emergence') dimensionScores.push(emergenceScore);
+        else if (criterion === 'interestingness') dimensionScores.push(interestingnessScore);
         else dimensionScores.push(creativeScore);
       }
       overallScore = dimensionScores.reduce((a, b) => a + b, 0) / dimensionScores.length;
@@ -168,6 +182,8 @@ export class CreativeEvaluator {
       metrics,
       noveltyScore,
       aestheticScore,
+      emergenceScore,
+      interestingnessScore,
     };
   }
 
@@ -521,6 +537,103 @@ export class CreativeEvaluator {
   }
 
   /**
+   * Calculate emergence score (0-1).
+   * Rewards systems where simple rules produce complex behavior:
+   * - Particle systems
+   * - Cellular automata
+   * - Noise-based generation (Perlin, Simplex)
+   * - Feedback loops
+   * - Flocking / boid-like behavior
+   * - Reaction-diffusion
+   */
+  private static calculateEmergenceScore(code: string, _metrics: CodeMetrics): number {
+    let score = 0;
+
+    // Particle systems
+    if (/\bparticles?\b/i.test(code) && /\b(velocity|acceleration|force|vx|vy)\b/.test(code)) score += 0.2;
+
+    // Many objects in arrays (particles, cells, agents)
+    const arrayPushMatches = code.match(/\.(push|splice|pop)\(/g);
+    if ((arrayPushMatches?.length ?? 0) >= 2) score += 0.15;
+
+    // Noise-based generation
+    if (/\bnoise\b/i.test(code) && (/\b(perlin|simplex|randomSeed|noiseSeed)\b/i.test(code) || /\bnoise2D|noise3D|noiseDetail\b/.test(code))) score += 0.2;
+    else if (/\bnoise\b/i.test(code)) score += 0.1;
+
+    // Cellular automata (grid-based with neighbor checking)
+    if (/\bgrid\b/i.test(code) && /\bneighbors?\b/i.test(code)) score += 0.2;
+    if (/\bcell|automaton|conway|game\s+of\s+life/i.test(code)) score += 0.15;
+
+    // Feedback loops (using previous state to compute next)
+    if (/\bprev|previous|last[A-Z]|prevState/.test(code) && /\b(frameCount|delta|time|t)\b/.test(code)) score += 0.15;
+
+    // Flocking / boid-like behavior
+    if (/\b(separate|cohesion|alignment|flock|boid|steer)\b/i.test(code)) score += 0.2;
+
+    // Dynamic object creation/destruction (emergent lifecycle)
+    if (/\bnew\s+\w+/.test(code) && /\b(splice|filter|length\s*[><])/.test(code)) score += 0.1;
+
+    // Sin/cos oscillation (common in emergent visuals)
+    if (/\b(sin|cos)\s*\(/.test(code) && /\bframeCount|time|t\b/.test(code)) score += 0.1;
+
+    // Randomness with structure (emergence requires controlled randomness)
+    if (/\brandom\s*\(/.test(code) && (/\bnoise\b/i.test(code) || /\bmap|constrain|lerp\b/.test(code))) score += 0.1;
+
+    return Math.max(0, Math.min(1, score));
+  }
+
+  /**
+   * Calculate interestingness score (0-1).
+   * Rewards variance, visual richness, and dynamic rendering:
+   * - Variance in visual elements
+   * - Noise/randomness usage
+   * - High complexity
+   * - Conditional/dynamic rendering
+   * - Color variation
+   */
+  private static calculateInterestingnessScore(code: string, metrics: CodeMetrics): number {
+    let score = 0;
+
+    // Noise/randomness usage (unpredictable = interesting)
+    if (/\bnoise\b/i.test(code)) score += 0.15;
+    if (/\brandom\s*\(/.test(code)) score += 0.1;
+
+    // High complexity (more going on = more interesting)
+    if (metrics.complexity > 30) score += 0.15;
+    else if (metrics.complexity > 15) score += 0.1;
+
+    // Color variation (using colorMode, HSB, or multiple fill/stroke calls)
+    const fillCount = (code.match(/\bfill\s*\(/g) || []).length;
+    const strokeCount = (code.match(/\bstroke\s*\(/g) || []).length;
+    if (fillCount + strokeCount >= 4) score += 0.15;
+    if (/\bcolorMode\s*\(\s*HSB/i.test(code)) score += 0.1;
+
+    // Conditional/dynamic rendering (output changes based on conditions)
+    if (/\bif\s*\(.*frameCount/.test(code) || /\bif\s*\(.*time/.test(code) || /\bif\s*\(.*mouse/.test(code)) score += 0.15;
+    if (/\bswitch\s*\(/.test(code) || /\bmap\s*\(/.test(code)) score += 0.1;
+
+    // Visual variety (multiple shape types)
+    const shapeTypes = new Set();
+    if (/\bellipse\b/.test(code)) shapeTypes.add('ellipse');
+    if (/\brect\b/.test(code)) shapeTypes.add('rect');
+    if (/\btriangle\b/.test(code)) shapeTypes.add('triangle');
+    if (/\bline\b/.test(code)) shapeTypes.add('line');
+    if (/\b(beginShape|vertex|curveVertex)\b/.test(code)) shapeTypes.add('custom');
+    if (/\btext\b/.test(code)) shapeTypes.add('text');
+    if (/\bpoint\b/.test(code)) shapeTypes.add('point');
+    if (shapeTypes.size >= 3) score += 0.15;
+    else if (shapeTypes.size >= 2) score += 0.08;
+
+    // Transform usage (rotation, translation create visual interest)
+    if (/\b(translate|rotate|scale|shearX|shearY)\b/.test(code)) score += 0.1;
+
+    // Iterative/generative patterns
+    if (/\b(for|while)\s*\(/.test(code) && /\b(random|noise)\b/.test(code)) score += 0.1;
+
+    return Math.max(0, Math.min(1, score));
+  }
+
+  /**
    * Detect GLSL shader code
    */
   static detectsShaderUsage(code: string): boolean {
@@ -570,6 +683,8 @@ export class CreativeEvaluator {
       technicalScore: Math.max(0, Math.min(1, technicalScore)),
       creativeScore: Math.max(0, Math.min(1, creativeScore)),
       metrics: this.getEmptyMetrics(),
+      emergenceScore: 0,
+      interestingnessScore: 0,
     };
   }
 
@@ -609,6 +724,8 @@ export class CreativeEvaluator {
       technicalScore: Math.max(0, Math.min(1, technicalScore)),
       creativeScore: Math.max(0, Math.min(1, creativeScore)),
       metrics: this.getEmptyMetrics(),
+      emergenceScore: 0,
+      interestingnessScore: 0,
     };
   }
 }
