@@ -132,10 +132,10 @@ Create `config/liminal.json` for project-wide settings:
 
 ### Using cloud vs local LLM
 
-Atelier can use a **cloud** LLM (e.g. Inception) or a **local** LLM (e.g. Ollama). Configuration is driven by environment variables and optional config files.
+Liminal can use a **cloud** LLM (e.g. Inception) or a **local** LLM (e.g. Ollama). Configuration is driven by environment variables and optional config files.
 
-**Cloud (e.g. Inception)**  
-Set the provider and credentials via env (or in `~/.atelier/config.json` / project `config/atelier.json`):
+**Cloud (e.g. Inception)**
+Set the provider and credentials via env (or in `~/.liminal/config.json` / project `config/liminal.json`):
 
 - `LIMINAL_LLM_PROVIDER=inception` — use the Inception-compatible API (default).
 - `LIMINAL_LLM_BASE_URL` — API base URL (e.g. `https://api.inceptionlabs.ai/v1`). Omit to use the default Inception URL.
@@ -152,8 +152,8 @@ export LIMINAL_LLM_API_KEY=your-api-key
 liminal --prompt "Create a particle system"
 ```
 
-**Local (Ollama)**  
-Run [Ollama](https://ollama.ai) locally, then point Atelier at it:
+**Local (Ollama)**
+Run [Ollama](https://ollama.ai) locally, then point Liminal at it:
 
 - `LIMINAL_LLM_PROVIDER=ollama` — use the Ollama API.
 - `LIMINAL_LLM_BASE_URL` — Ollama base URL (default `http://localhost:11434`).
@@ -223,7 +223,7 @@ npm run benchmark
 
 ## 🎵 Live Music Coding
 
-Atelier supports **live music coding** for performative, real-time generative art:
+Liminal supports **live music coding** for performative, real-time generative art:
 
 ### Supported platforms
 
@@ -241,7 +241,7 @@ liminal --prompt "ambient glitch set, 20 min" \
   --output ./set
 ```
 
-This writes `strudel.js` and `hydra.js` to the output directory. Optional project config `config/atelier.json` can include `live` (e.g. `midiOutput`, `oscHost`, `oscPort`, `syncMode`).
+This writes `strudel.js` and `hydra.js` to the output directory. Optional project config `config/liminal.json` can include `live` (e.g. `midiOutput`, `oscHost`, `oscPort`, `syncMode`).
 
 ### Programmatic API
 
@@ -274,7 +274,7 @@ npm run benchmark
 ### Project Structure
 
 ```
-atelier-workspace/
+liminal-workspace/
 ├── src/
 │   ├── core/              # RalphLoop, Evaluator, PromiseDetector, PromptStore, ContextAccumulation
 │   ├── generators/        # P5GeneratorLLM, ParticleSystem, CellularAutomata
@@ -295,7 +295,7 @@ atelier-workspace/
 │   ├── integration/
 │   ├── generators/
 │   └── e2e/
-├── config/                # atelier.json (project config)
+├── config/                # liminal.json (project config)
 ├── gallery/               # Saved iterations
 └── output/                # Exported files
 ```

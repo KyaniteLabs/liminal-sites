@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 
-const cliPath = path.join(process.cwd(), 'bin/atelier');
+const cliPath = path.join(process.cwd(), 'bin/liminal');
 
 describe('CLI Integration Tests', () => {
   let testOutputDir;
@@ -26,7 +26,7 @@ describe('CLI Integration Tests', () => {
     test('should show version', async () => {
       const result = await runCLI(['--version']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Atelier');
+      expect(result.stdout).toContain('Liminal');
     }, 10000);
 
     test('should generate with fast LM Studio model', async () => {
@@ -36,7 +36,7 @@ describe('CLI Integration Tests', () => {
         '--max-iterations', '1'
       ]);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Atelier');
+      expect(result.stdout).toContain('Liminal');
     }, TEST_TIMEOUT);
 
     test('--mode live-music --prompt "ambient" --output <dir> produces files in output dir', async () => {
