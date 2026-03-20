@@ -183,4 +183,59 @@ describe('RalphLoop', () => {
       expect(mergeSteps[1].proposed).toMatch(/function\s+draw\s*\(/);
     });
   });
+
+  describe('deep collaboration integration', () => {
+    it('loop works normally without collab options (existing behavior preserved)', async () => {
+      const result = await RalphLoop.run('blue particles', {
+        maxIterations: 1,
+        galleryDir: TEST_GALLERY_DIR,
+        project: 'no-collab-test'
+      });
+      expect(result.iterations).toBe(1);
+      expect(result.code).toBeDefined();
+      expect(result.code.length).toBeGreaterThan(0);
+    });
+
+    it('loop accepts useDeepCollab option without errors', async () => {
+      // This test verifies the option is accepted and doesn't break the loop
+      // Actual collaboration behavior is tested in integration tests
+      const result = await RalphLoop.run('blue particles', {
+        maxIterations: 1,
+        galleryDir: TEST_GALLERY_DIR,
+        project: 'deep-collab-test',
+        useDeepCollab: true,
+        collabConfig: {
+          maxPhases: 2,
+        },
+      });
+      expect(result.iterations).toBe(1);
+      expect(result.code).toBeDefined();
+    });
+
+    it('loop accepts useCollab option without errors', async () => {
+      const result = await RalphLoop.run('blue particles', {
+        maxIterations: 1,
+        galleryDir: TEST_GALLERY_DIR,
+        project: 'simple-collab-test',
+        useCollab: true,
+        collabConfig: {
+          maxRounds: 2,
+        },
+      });
+      expect(result.iterations).toBe(1);
+      expect(result.code).toBeDefined();
+    });
+
+    it('loop accepts collabDomain option', async () => {
+      const result = await RalphLoop.run('draw a circle', {
+        maxIterations: 1,
+        galleryDir: TEST_GALLERY_DIR,
+        project: 'collab-domain-test',
+        useDeepCollab: true,
+        collabDomain: 'p5',
+      });
+      expect(result.iterations).toBe(1);
+      expect(result.code).toBeDefined();
+    });
+  });
 });

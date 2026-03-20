@@ -35,6 +35,9 @@ import { MapElites } from '../evolution/MapElites.js';
 import { NoveltyArchive } from '../evolution/NoveltyArchive.js';
 import { extractBehavior } from '../evolution/BehaviorVectors.js';
 import { SafetyGuardrails } from './SafetyGuardrails.js';
+import { DeepCollaboration } from '../collab/DeepCollaboration.js';
+import { CollaborativeClient } from '../collab/CollaborativeClient.js';
+import type { DeepCollaborationConfig, CollaborativeConfig, DomainType } from '../collab/types.js';
 
 interface LoopOptions {
   maxIterations?: number;
@@ -73,6 +76,14 @@ interface LoopOptions {
   safetyConfig?: import('./SafetyGuardrails.js').SafetyConfig;
   /** Break loop if no fitness improvement for this many iterations (default 7, 0 = disabled) */
   stagnationThreshold?: number;
+  /** Enable deep collaboration (multi-model specialized roles) */
+  useDeepCollab?: boolean;
+  /** Enable simple 2-model collaboration */
+  useCollab?: boolean;
+  /** Configuration for collaboration (merged with defaults) */
+  collabConfig?: Partial<DeepCollaborationConfig & CollaborativeConfig>;
+  /** Domain for collaboration quality assessment (default: 'p5') */
+  collabDomain?: DomainType;
 }
 
 interface LoopResult {
@@ -165,7 +176,37 @@ export class RalphLoop {
         // Generate code via unified registry dispatch
         registerAllGenerators();
         const dispatched = generatorRegistry.dispatch(loadedPrompt);
-        if (dispatched) {
+
+        // Check if we should use collaboration for this iteration
+        const useCollaboration = normalizedOptions.useDeepCollab || normalizedOptions.useCollab;
+        const shouldUseCollab = useCollaboration && (!dispatched || dispatched.entry.name === 'llm');
+
+        if (shouldUseCollab) {
+          // Use collaboration for LLM generation
+          // Create a wrapper that adapts the generator signature to collaboration signature
+          const collabLLMCaller = async (prompt: string, _systemPrompt?: string): Promise<string> => {
+            // Use the provided callLLM from collabConfig if available
+            if (normalizedOptions.collabConfig?.callLLM) {
+              return normalizedOptions.collabConfig.callLLM(prompt, _systemPrompt);
+            }
+            // Otherwise use the dispatched LLM generator if available
+            if (dispatched?.entry.name === 'llm') {
+              const result = dispatched.entry.generate(prompt, {});
+              return typeof result === 'string' ? result : await result;
+            }
+            // Fallback to importing fresh LLM generator
+            const { P5GeneratorLLM } = await import('../generators/p5/P5GeneratorLLM.js');
+            const generator = new P5GeneratorLLM();
+            const result = generator.generate(prompt);
+            return typeof result === 'string' ? result : await result;
+          };
+
+          currentCode = await this.generateWithCollaboration(
+            usedPrompt,
+            normalizedOptions,
+            collabLLMCaller
+          );
+        } else if (dispatched) {
           const genPrompt = dispatched.entry.name === 'llm' ? usedPrompt : loadedPrompt;
           currentCode = await dispatched.entry.generate(genPrompt);
         } else {
@@ -329,7 +370,7 @@ export class RalphLoop {
   /**
    * Normalize options with defaults
    */
-  private static normalizeOptions(options: LoopOptions | null): LoopOptions & { maxIterations: number; timeoutMinutes: number; galleryDir: string; project: string; tolerateErrors: boolean; minQualityScore: number; useMapElites: boolean; mapElitesDims: [number, number]; safetyConfig: import('./SafetyGuardrails.js').SafetyConfig | undefined; _mapElites: any; _noveltyArchive: any } {
+  private static normalizeOptions(options: LoopOptions | null): LoopOptions & { maxIterations: number; timeoutMinutes: number; galleryDir: string; project: string; tolerateErrors: boolean; minQualityScore: number; useMapElites: boolean; mapElitesDims: [number, number]; safetyConfig: import('./SafetyGuardrails.js').SafetyConfig | undefined; _mapElites: any; _noveltyArchive: any; useDeepCollab: boolean; useCollab: boolean; collabConfig: any; collabDomain: DomainType } {
     return {
       maxIterations: options?.maxIterations || RalphLoop.DEFAULT_MAX_ITERATIONS,
       timeoutMinutes: options?.timeoutMinutes || RalphLoop.DEFAULT_TIMEOUT_MINUTES,
@@ -352,6 +393,10 @@ export class RalphLoop {
       mapElitesDims: options?.mapElitesDims ?? [10, 10],
       safetyConfig: options?.safetyConfig,
       stagnationThreshold: options?.stagnationThreshold ?? 7,
+      useDeepCollab: options?.useDeepCollab ?? false,
+      useCollab: options?.useCollab ?? false,
+      collabConfig: options?.collabConfig || {},
+      collabDomain: options?.collabDomain || 'p5',
       _mapElites: options?.useMapElites ? new MapElites(options?.mapElitesDims ?? [10, 10]) : undefined,
       _noveltyArchive: options?.useMapElites ? new NoveltyArchive() : undefined,
     };
@@ -408,6 +453,68 @@ export class RalphLoop {
       finalScore: 1,
       project: options.project,
     };
+  }
+
+  /**
+   * Generate using deep or simple collaboration
+   *
+   * @param prompt - The prompt to generate from
+   * @param options - Normalized loop options
+   * @param fallbackLLM - Fallback LLM caller for collaboration
+   * @returns Generated code
+   */
+  private static async generateWithCollaboration(
+    prompt: string,
+    options: ReturnType<typeof RalphLoop.normalizeOptions>,
+    fallbackLLM: (prompt: string, systemPrompt?: string) => Promise<string>
+  ): Promise<string> {
+    const domain = options.collabDomain || 'p5';
+
+    if (options.useDeepCollab) {
+      // Deep collaboration with specialized roles
+      const collab = new DeepCollaboration({
+        ...options.collabConfig,
+        callLLM: fallbackLLM,
+      } as DeepCollaborationConfig);
+
+      return await collab.generate(
+        prompt,
+        domain,
+        '', // systemPrompt - could be added to options if needed
+        (update) => {
+          // Feed collaboration phase updates into the main onProgress callback
+          options.onProgress?.({
+            iteration: 0, // Collaboration happens within an iteration
+            score: update.quality || 0,
+            promiseDetected: false,
+            code: update.output || '',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      );
+    } else {
+      // Simple 2-model collaboration
+      const collab = new CollaborativeClient({
+        ...options.collabConfig,
+        callLLM: fallbackLLM,
+      } as CollaborativeConfig);
+
+      return await collab.generate(
+        prompt,
+        domain,
+        '', // systemPrompt - could be added to options if needed
+        (update) => {
+          // Feed collaboration phase updates into the main onProgress callback
+          options.onProgress?.({
+            iteration: 0, // Collaboration happens within an iteration
+            score: update.quality || 0,
+            promiseDetected: false,
+            code: update.output || '',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      );
+    }
   }
 
   /**

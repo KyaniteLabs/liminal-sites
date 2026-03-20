@@ -17,6 +17,8 @@ import { PlayerPiano } from "./components/PlayerPiano";
 import { XRayPanel } from "./components/XRayPanel";
 import { VoiceInputUI } from "./components/VoiceInput";
 import { IterationTimeline } from "./components/IterationTimeline";
+import { TransparencyPanel } from "./components/TransparencyPanel";
+import { TransparencyViewer, type ProcessEvent } from "../ui/TransparencyViewer.js";
 
 interface GalleryEntry {
   projectName: string;
@@ -157,6 +159,9 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
   const [isPlayerPianoPlaying, setIsPlayerPianoPlaying] = useState(false);
   const rawLLMOutput = useState<string[]>([])[0];
   const [showVoiceInput, setShowVoiceInput] = useState(false);
+  const [showTransparency, setShowTransparency] = useState(false);
+  const [transparencyEvents, setTransparencyEvents] = useState<ProcessEvent[]>([]);
+  const transparencyViewerRef = React.useRef<TransparencyViewer | null>(null);
 
   const addLog = (type: LogEntry["type"], message: string) => {
     setLogs(prev => [...prev, { type, message, timestamp: Date.now() }].slice(-100));
@@ -174,6 +179,12 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
     addLog("llm", `  Prompt: ~${prompt.length + 2000} chars`);
 
     const projectName = `project-${Date.now()}`;
+
+    // Initialize TransparencyViewer for this run
+    const viewer = new TransparencyViewer('collab');
+    transparencyViewerRef.current = viewer;
+    setTransparencyEvents([]);
+
     const runOptions = {
       maxIterations: 10,
       timeoutMinutes: 5,
@@ -181,6 +192,31 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
       project: projectName,
       seedCode: seedCode.trim() || undefined,
       signal,
+      useDeepCollab: true,
+      collabConfig: {
+        onProgress: (update: any) => {
+          // Map PhaseUpdate from DeepCollaboration to ProcessEvent
+          const eventType = update.action?.toLowerCase().includes('generating') ? 'prompt' :
+                           update.action?.toLowerCase().includes('output') ? 'output' :
+                           update.action?.toLowerCase().includes('analysis') ? 'analysis' :
+                           update.action?.toLowerCase().includes('refining') ? 'refinement' : 'info';
+
+          viewer.addEvent({
+            phase: update.phaseName || 'general',
+            model: update.model || 'unknown',
+            eventType: eventType as any,
+            title: update.action || `${update.model} - ${update.phaseName}`,
+            content: update.output || '',
+            metadata: {},
+          });
+
+          // Update TUI state with new events
+          setTransparencyEvents(viewer.getEvents());
+
+          // Also add to logs for immediate feedback
+          addLog("llm", `${update.phaseName}: ${update.model} - ${update.action}`);
+        },
+      },
       onProgress: (data: { iteration: number; score: number; promiseDetected: boolean; code: string; timestamp: string }) => {
         const ts = new Date(data.timestamp).getTime();
         setCurrentIterations((prev) => [
@@ -285,6 +321,7 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
     if (input === "q") process.exit(0);
     if (input === "1") setIsPlayerPianoPlaying(prev => !prev);
     if (input === "v") setShowVoiceInput(prev => !prev);
+    if (input === "t") setShowTransparency(prev => !prev);
     if (input === "e" || input === "E") handleExport();
     if (isGenerating && (input === "s" || key.escape)) handleStop();
   });
@@ -320,6 +357,12 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
           rawOutput={rawLLMOutput}
           isStreaming={isGenerating}
         />
+        {showTransparency && (
+          <TransparencyPanel
+            events={transparencyEvents}
+            height={contentHeight}
+          />
+        )}
         {showVoiceInput && (
           <Box flexDirection="column" borderStyle="single" borderColor={COLORS.border} width="20%" height={contentHeight} paddingX={1}>
             <VoiceInputUI />
@@ -328,7 +371,7 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
         <GalleryPanel projects={gallery} currentIndex={galleryIndex} onSelect={handleGallerySelect} height={contentHeight} />
       </Box>
       <Box borderStyle="single" borderColor={COLORS.border} paddingX={1} marginTop={1}>
-        <Text color={COLORS.muted}>Status: {isGenerating ? "Generating... [Esc/S] Stop" : "Ready"} | [Enter] Run | [E] Export | [1] PlayerPiano | [V]oice | [Q]uit</Text>
+        <Text color={COLORS.muted}>Status: {isGenerating ? "Generating... [Esc/S] Stop" : "Ready"} | [Enter] Run | [E] Export | [1] PlayerPiano | [T]ransparency | [V]oice | [Q]uit</Text>
       </Box>
     </Box>
   );

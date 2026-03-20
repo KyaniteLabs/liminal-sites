@@ -1,0 +1,554 @@
+/**
+ * Deep Collaboration - Maximum quality through specialized model teamwork
+ *
+ * Ported from Hydra's llm/deep_collaboration.py
+ *
+ * Models take on specialized roles and collaborate through structured phases:
+ *
+ * PHASE 1: DIVERGENCE
+ * - Creator (Local): Generate initial creative work
+ * - Visionary (Cloud): Generate alternative ambitious vision
+ *
+ * PHASE 2: ANALYSIS (Both models analyze both outputs)
+ * - Technical Critic: Analyze execution, correctness, technical quality
+ * - Artistic Critic: Analyze creativity, aesthetics, emotional impact
+ * - Domain Expert: Analyze domain-specific quality
+ *
+ * PHASE 3: SYNTHESIS
+ * - Integrator (Cloud): Synthesize best elements from both versions
+ * - Refiner (Local): Polish and perfect the synthesis
+ *
+ * PHASE 4: ITERATION
+ * - Repeat analysis and refinement until convergence
+ */
+
+import type {
+  CollaborationRole,
+  DeepCollaborationConfig,
+  DeepCollaborationResult,
+  PhaseResult,
+  Analysis,
+  PhaseUpdate,
+  DomainType,
+} from './types.js';
+
+/**
+ * Deep collaborative client with specialized roles and phases
+ *
+ * Orchestrates sophisticated collaboration process:
+ * 1. Models generate from different perspectives
+ * 2. Multiple specialized critics analyze from different angles
+ * 3. Best elements are synthesized
+ * 4. Process iterates with deeper analysis each round
+ */
+export class DeepCollaboration {
+  private config: Required<DeepCollaborationConfig>;
+
+  constructor(config: DeepCollaborationConfig) {
+    this.config = {
+      localBaseUrl: config.localBaseUrl || 'http://localhost:1234/v1',
+      localModel: config.localModel || 'qwen3.5:4b',
+      cloudApiKey: config.cloudApiKey || '',
+      cloudModel: config.cloudModel || 'MiniMax-M2.7',
+      cloudBaseUrl: config.cloudBaseUrl || 'https://api.minimax.io/v1',
+      maxPhases: config.maxPhases ?? 4,
+      criticsPerPhase: config.criticsPerPhase ?? 3,
+      convergenceThreshold: config.convergenceThreshold ?? 0.90,
+      callLLM: config.callLLM,
+    };
+  }
+
+  /**
+   * Generate using deep collaboration for maximum quality
+   *
+   * @param prompt - User prompt
+   * @param domain - Creative domain
+   * @param systemPrompt - System prompt
+   * @param phaseCallback - Optional callback for progress updates
+   * @returns Final output string
+   */
+  async generate(
+    prompt: string,
+    domain: DomainType = '',
+    systemPrompt: string = '',
+    phaseCallback?: (update: PhaseUpdate) => void
+  ): Promise<string> {
+    const result = await this.generateDeepCollaboration(
+      prompt,
+      domain,
+      systemPrompt,
+      phaseCallback
+    );
+    return result.finalOutput;
+  }
+
+  /**
+   * Generate using full deep collaboration process
+   *
+   * Runs through multiple phases of specialized collaboration
+   *
+   * @param prompt - User prompt
+   * @param domain - Creative domain
+   * @param systemPrompt - System prompt
+   * @param phaseCallback - Optional callback for progress updates
+   * @returns DeepCollaborationResult with full phase history
+   */
+  async generateDeepCollaboration(
+    prompt: string,
+    domain: DomainType = '',
+    systemPrompt: string = '',
+    phaseCallback?: (update: PhaseUpdate) => void
+  ): Promise<DeepCollaborationResult> {
+    const startTime = Date.now();
+    const phases: PhaseResult[] = [];
+    const qualityTrajectory: number[] = [];
+
+    // === PHASE 1: DIVERGENCE ===
+    if (phaseCallback) {
+      phaseCallback({
+        phaseName: 'Divergence',
+        model: 'Both',
+        action: 'Creator generating initial creative work...',
+      });
+    }
+
+    const phase1 = await this.phaseDivergence(
+      prompt,
+      domain,
+      systemPrompt
+    );
+    phases.push(phase1);
+
+    let currentBest = phase1.synthesis?.content || phase1.outputs.creator || '';
+    const quality1 = this.quickQualityScore(currentBest, domain);
+    qualityTrajectory.push(quality1);
+
+    if (phaseCallback) {
+      phaseCallback({
+        phaseName: 'Divergence',
+        model: 'Local',
+        action: 'Creator: Initial creative work complete',
+        output: phase1.outputs.creator?.slice(0, 100),
+        quality: quality1,
+      });
+      phaseCallback({
+        phaseName: 'Divergence',
+        model: 'Cloud',
+        action: 'Visionary: Alternative vision complete',
+        output: phase1.outputs.visionary?.slice(0, 100),
+      });
+      phaseCallback({
+        phaseName: 'Divergence',
+        model: 'Cloud',
+        action: 'Integrator: Synthesized best elements',
+        output: currentBest.slice(0, 100),
+        quality: quality1,
+      });
+    }
+
+    // === PHASE 2-N: ITERATIVE REFINEMENT ===
+    for (let phaseNum = 2; phaseNum <= this.config.maxPhases; phaseNum++) {
+      // Check convergence
+      if (qualityTrajectory[qualityTrajectory.length - 1] >= this.config.convergenceThreshold) {
+        if (phaseCallback) {
+          phaseCallback({
+            phaseName: 'Iteration',
+            model: 'Both',
+            action: `✓ Converged at phase ${phaseNum - 1}! (quality: ${qualityTrajectory[qualityTrajectory.length - 1].toFixed(2)})`,
+            quality: qualityTrajectory[qualityTrajectory.length - 1],
+          });
+        }
+        break;
+      }
+
+      // Analysis phase
+      if (phaseCallback) {
+        phaseCallback({
+          phaseName: 'Analysis',
+          model: 'Both',
+          action: `Phase ${phaseNum}: Critics analyzing from multiple perspectives...`,
+        });
+      }
+
+      const analysisPhase = await this.phaseAnalysis(
+        prompt,
+        currentBest,
+        domain,
+        systemPrompt
+      );
+      phases.push(analysisPhase);
+
+      if (phaseCallback) {
+        phaseCallback({
+          phaseName: 'Analysis',
+          model: 'Cloud',
+          action: `Technical Critic: Analysis complete`,
+        });
+        phaseCallback({
+          phaseName: 'Analysis',
+          model: 'Cloud',
+          action: `Artistic Critic: Analysis complete`,
+        });
+        phaseCallback({
+          phaseName: 'Analysis',
+          model: 'Local',
+          action: `Domain Expert: Analysis complete`,
+        });
+      }
+
+      // Synthesis phase
+      if (phaseCallback) {
+        phaseCallback({
+          phaseName: 'Synthesis',
+          model: 'Both',
+          action: `Phase ${phaseNum}: Integrating feedback and refining...`,
+        });
+      }
+
+      const synthesisPhase = await this.phaseSynthesis(
+        prompt,
+        currentBest,
+        analysisPhase.analyses || [],
+        domain,
+        systemPrompt
+      );
+      phases.push(synthesisPhase);
+
+      // Update best
+      if (synthesisPhase.synthesis) {
+        currentBest = synthesisPhase.synthesis.content;
+      }
+      const newQuality = this.quickQualityScore(currentBest, domain);
+      qualityTrajectory.push(newQuality);
+
+      if (phaseCallback) {
+        phaseCallback({
+          phaseName: 'Synthesis',
+          model: 'Cloud',
+          action: `Integrator: Synthesized critic feedback`,
+        });
+        phaseCallback({
+          phaseName: 'Synthesis',
+          model: 'Local',
+          action: `Refiner: Applied final polish`,
+          quality: newQuality,
+        });
+      }
+    }
+
+    const duration = (Date.now() - startTime) / 1000;
+
+    // Final completion callback
+    if (phaseCallback) {
+      const converged = qualityTrajectory[qualityTrajectory.length - 1] >= this.config.convergenceThreshold;
+      phaseCallback({
+        phaseName: 'Complete',
+        model: 'Both',
+        action: `Deep collaboration complete! Phases: ${phases.length}, Converged: ${converged}`,
+        quality: qualityTrajectory[qualityTrajectory.length - 1],
+        duration,
+      });
+    }
+
+    return {
+      finalOutput: currentBest,
+      phases,
+      totalDurationSeconds: duration,
+      qualityScore: qualityTrajectory[qualityTrajectory.length - 1],
+      improvementTrajectory: qualityTrajectory,
+      metadata: {
+        converged: qualityTrajectory[qualityTrajectory.length - 1] >= this.config.convergenceThreshold,
+        totalPhases: phases.length,
+        improvement: qualityTrajectory.length > 1
+          ? qualityTrajectory[qualityTrajectory.length - 1] - qualityTrajectory[0]
+          : 0,
+      },
+    };
+  }
+
+  /**
+   * Phase 1: Divergence - Generate from different perspectives
+   */
+  private async phaseDivergence(
+    prompt: string,
+    domain: DomainType,
+    systemPrompt: string
+  ): Promise<PhaseResult> {
+    const start = Date.now();
+
+    // Creator (Local) - Practical, executable
+    const creatorPrompt = `You are a CREATOR. Your role is to create a high-quality, practical, and well-executed output.
+
+Request: ${prompt}
+
+Domain: ${domain}
+
+Create something that is:
+- Technically sound and correct
+- Practical and usable
+- Well-structured and clear
+
+Focus on execution quality.`;
+
+    // Visionary (Cloud) - Ambitious, creative
+    const visionaryPrompt = `You are a VISIONARY. Your role is to create an ambitious, creative, and artistically compelling output.
+
+Request: ${prompt}
+
+Domain: ${domain}
+
+Create something that is:
+- Highly creative and original
+- Aesthetically beautiful
+- Emotionally resonant
+- Pushes boundaries
+
+Focus on artistic merit and creativity.`;
+
+    // Generate in parallel (simulated - call sequentially for now)
+    const creatorOutput = await this.config.callLLM(creatorPrompt, systemPrompt);
+    const visionaryOutput = await this.config.callLLM(visionaryPrompt, systemPrompt);
+
+    // Initial synthesis
+    const synthesisPrompt = `Synthesize the best elements from these two outputs:
+
+CREATOR (Practical, technical):
+${creatorOutput}
+
+VISIONARY (Creative, artistic):
+${visionaryOutput}
+
+Original request: ${prompt}
+
+Create a synthesis that combines:
+- The technical soundness and practicality of the Creator
+- The creativity and artistry of the Visionary
+
+The synthesis should be better than either alone.`;
+
+    const synthesisOutput = await this.config.callLLM(synthesisPrompt, systemPrompt);
+
+    return {
+      phaseName: 'Divergence',
+      outputs: {
+        creator: creatorOutput,
+        visionary: visionaryOutput,
+      },
+      synthesis: {
+        content: synthesisOutput,
+        sourceExplanation: 'Synthesis of Creator\'s technical approach with Visionary\'s creativity',
+      },
+      durationSeconds: (Date.now() - start) / 1000,
+    };
+  }
+
+  /**
+   * Analysis phase: Multiple critics from different perspectives
+   */
+  private async phaseAnalysis(
+    prompt: string,
+    currentOutput: string,
+    domain: DomainType,
+    systemPrompt: string
+  ): Promise<PhaseResult> {
+    const start = Date.now();
+    const analyses: Analysis[] = [];
+
+    // Technical Critic
+    const techPrompt = `You are a TECHNICAL CRITIC. Analyze this output for technical quality.
+
+Request: ${prompt}
+Domain: ${domain}
+
+Output to analyze:
+${currentOutput}
+
+Provide:
+1. Technical correctness
+2. Structural integrity
+3. Execution quality
+4. Technical improvements needed
+
+Be specific and actionable.`;
+
+    const techResponse = await this.config.callLLM(techPrompt, systemPrompt);
+    analyses.push({
+      role: 'technical' as CollaborationRole,
+      content: techResponse,
+    });
+
+    // Artistic Critic
+    const artPrompt = `You are an ARTISTIC CRITIC. Analyze this output for aesthetic and creative quality.
+
+Request: ${prompt}
+Domain: ${domain}
+
+Output to analyze:
+${currentOutput}
+
+Provide:
+1. Creativity and originality
+2. Aesthetic appeal
+3. Emotional impact
+4. Artistic improvements needed
+
+Be insightful and inspiring.`;
+
+    const artResponse = await this.config.callLLM(artPrompt, systemPrompt);
+    analyses.push({
+      role: 'artistic' as CollaborationRole,
+      content: artResponse,
+    });
+
+    // Domain Expert
+    const domainGuidance: Record<string, string> = {
+      ascii: 'Focus on visual clarity, character balance, and recognizability of the subject.',
+      music: 'Focus on musicality, emotional expression, harmony, and rhythm.',
+      code: 'Focus on code quality, functionality, elegance, and best practices.',
+      p5: 'Focus on p5.js patterns, creative techniques, and visual appeal.',
+      glsl: 'Focus on shader correctness, performance, and visual effects.',
+      three: 'Focus on Three.js best practices, scene structure, and rendering quality.',
+    };
+
+    const expertPrompt = `You are a DOMAIN EXPERT in ${domain}. Analyze this output.
+
+Request: ${prompt}
+Domain: ${domain}
+
+Output to analyze:
+${currentOutput}
+
+${domainGuidance[domain] || 'Focus on overall quality and effectiveness.'}
+
+Provide:
+1. Domain-specific quality assessment
+2. How well it meets the request
+3. Comparison to professional standards
+4. Expert recommendations for improvement`;
+
+    const expertResponse = await this.config.callLLM(expertPrompt, systemPrompt);
+    analyses.push({
+      role: 'domain' as CollaborationRole,
+      content: expertResponse,
+    });
+
+    return {
+      phaseName: 'Analysis',
+      outputs: {},
+      analyses,
+      durationSeconds: (Date.now() - start) / 1000,
+    };
+  }
+
+  /**
+   * Synthesis phase: Integrate feedback and create improved version
+   */
+  private async phaseSynthesis(
+    prompt: string,
+    currentOutput: string,
+    analyses: Analysis[],
+    domain: DomainType,
+    systemPrompt: string
+  ): Promise<PhaseResult> {
+    const start = Date.now();
+
+    // Compile all feedback
+    const allFeedback = analyses.map(analyst =>
+      `=== ${analyst.role.toUpperCase()} ANALYSIS ===\n${analyst.content}`
+    ).join('\n\n');
+
+    // Integrator (Cloud) - Synthesize improvements
+    const integratorPrompt = `You are an INTEGRATOR. Create an improved version incorporating all feedback.
+
+Original request: ${prompt}
+Domain: ${domain}
+
+Current output:
+${currentOutput}
+
+FEEDBACK FROM CRITICS:
+${allFeedback}
+
+Create an improved version that:
+1. Addresses all major criticisms
+2. Incorporates the best suggestions
+3. Maintains what already works well
+4. Achieves higher quality across all dimensions
+
+The output should be significantly improved while maintaining coherence.`;
+
+    const integratedOutput = await this.config.callLLM(integratorPrompt, systemPrompt);
+
+    // Refiner (Local) - Final polish
+    const refinerPrompt = `You are a REFINER. Put the final polish on this output.
+
+Original request: ${prompt}
+Domain: ${domain}
+
+Integrated version:
+${integratedOutput}
+
+Apply final refinement:
+1. Fix any remaining issues
+2. Optimize for quality and clarity
+3. Add final polish and details
+4. Ensure it meets professional standards
+
+Return the polished final version.`;
+
+    const refinedOutput = await this.config.callLLM(refinerPrompt, systemPrompt);
+
+    return {
+      phaseName: 'Synthesis',
+      outputs: { refined: refinedOutput },
+      synthesis: {
+        content: refinedOutput,
+        sourceExplanation: 'Refined integration of all critic feedback',
+        improvements: [`Addressed ${analyses.length} critic perspectives`],
+      },
+      durationSeconds: (Date.now() - start) / 1000,
+    };
+  }
+
+  /**
+   * Quick heuristic quality score
+   */
+  private quickQualityScore(output: string, domain: DomainType): number {
+    let score = 0.5;
+
+    // Length check
+    const length = output.length;
+    if (length >= 100 && length <= 3000) {
+      score += 0.15;
+    } else if (length < 50) {
+      score -= 0.3;
+    }
+
+    // Domain-specific quality signals
+    if (domain === 'ascii') {
+      // Good ASCII has density and structure
+      const lines = output.split('\n');
+      if (lines.length >= 5) score += 0.1;
+      // Character variety
+      const uniqueChars = new Set(output).size;
+      if (uniqueChars >= 10) score += 0.1;
+    } else if (domain === 'music') {
+      // Music notation markers
+      const markers = ['X:', 'T:', 'M:', 'K:', 'L:', 'V:', '|', ':|', '[', ']', '"'];
+      const markerCount = markers.filter(m => output.includes(m)).length;
+      score += Math.min(0.25, markerCount * 0.03);
+      // Note density
+      const noteCount = (output.match(/[CDEFGAB]/gi) || []).length;
+      if (noteCount >= 10) score += 0.1;
+    } else if (domain === 'code' || domain === 'p5' || domain === 'glsl' || domain === 'three') {
+      // Code structure indicators
+      const codeKeywords = ['def ', 'class ', 'function', 'import ', 'from ', 'const ', 'let ', 'var '];
+      if (codeKeywords.some(kw => output.includes(kw))) score += 0.15;
+      // Logic indicators
+      const logicKeywords = ['if ', 'for ', 'while ', 'return '];
+      if (logicKeywords.some(kw => output.includes(kw))) score += 0.1;
+    }
+
+    return Math.max(0, Math.min(1, score));
+  }
+}
