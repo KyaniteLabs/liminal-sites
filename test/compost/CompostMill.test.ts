@@ -80,7 +80,7 @@ describe('CompostMill', () => {
       await mill.add([file]);
 
       await mill.digest();
-      const status = mill.status();
+      const status = await mill.statusAsync();
       expect(status.heapFileCount).toBe(0);
     });
 
@@ -95,9 +95,9 @@ describe('CompostMill', () => {
     });
   });
 
-  describe('status()', () => {
-    it('returns current state', () => {
-      const status = mill.status();
+  describe('statusAsync()', () => {
+    it('returns current state', async () => {
+      const status = await mill.statusAsync();
       expect(status.heapSize).toBe(0);
       expect(status.heapFileCount).toBe(0);
       expect(status.seedCount).toBe(0);

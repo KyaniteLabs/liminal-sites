@@ -5,7 +5,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { CompostConfig, DigestResult, DigestStats, ExtractionResult, MillStatus } from './types.js';
+import type { CompostConfig, CompostFragment, DigestResult, DigestStats, ExtractionResult, MillStatus } from './types.js';
 import { mergeConfig } from './defaults.js';
 import { CompostHeap } from './CompostHeap.js';
 import { MetadataExtractor } from './MetadataExtractor.js';
@@ -185,13 +185,30 @@ export class CompostMill {
     return results;
   }
 
-  /** Start the soup loop. */
+  /** Start the soup loop, feeding it seeds from the seed bank as fragments. */
   async startSoup(): Promise<void> {
     if (!this.soup) {
       this.soup = new CompostSoup(this.config);
     }
-    // Soup runs with empty fragments initially — it will evolve over time
-    this.soup.run([]);
+    // Load seeds from the seed bank and convert to fragments for the soup
+    const seeds = await this.seedBank.getAll();
+    const fragments: CompostFragment[] = seeds.map(seed => ({
+      id: seed.id,
+      source: `seed:${seed.id}`,
+      domain: seed.source.domains[0] ?? 'unknown',
+      layer: 'semantic' as const,
+      content: seed.content,
+      score: seed.score,
+      metadata: {
+        fileType: 'seed',
+        timestamp: seed.promotedAt,
+        hash: '',
+        size: seed.content.length,
+        extractedAt: seed.promotedAt,
+      },
+      tags: [...seed.source.domains, 'seed'],
+    }));
+    this.soup.run(fragments);
   }
 
   /** Stop the soup loop. */
@@ -204,13 +221,32 @@ export class CompostMill {
     return this.heap.listFiles();
   }
 
+  /** List all seeds sorted by score. */
+  async listSeeds(): Promise<Seed[]> {
+    return this.seedBank.getAll();
+  }
+
+  /** Get top N seeds by score. */
+  async getTopSeeds(n: number): Promise<Seed[]> {
+    return this.seedBank.getTop(n);
+  }
+
+  /** Get seed count. */
+  async getSeedCount(): Promise<number> {
+    return this.seedBank.count();
+  }
+
   /** Get current mill status. */
-  status(): MillStatus {
-    // Synchronous status — heap file count and seed count are approximated
+  async statusAsync(): Promise<MillStatus> {
+    const [heapSize, heapFiles, seedCount] = await Promise.all([
+      this.heap.getHeapSize(),
+      this.heap.listFiles().then(f => f.length),
+      this.seedBank.count(),
+    ]);
     return {
-      heapSize: 0,
-      heapFileCount: 0,
-      seedCount: 0,
+      heapSize,
+      heapFileCount: heapFiles,
+      seedCount,
       soupRunning: this.soup?.isRunning() ?? false,
       soupGeneration: 0,
       lastDigestAt: null,

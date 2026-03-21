@@ -93,23 +93,25 @@ describe('CLI execute', () => {
     expect(mockMill.digest).toHaveBeenCalled();
   });
 
-  it('dispatches status to mill.status()', async () => {
+  it('dispatches status to mill.statusAsync()', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const statusFn: any = jest.fn();
     statusFn.mockReturnValue({ heapSize: 0, heapFileCount: 0, seedCount: 0, soupRunning: false, soupGeneration: 0, lastDigestAt: null });
 
-    const mockMill = {
+    const mockMill: Record<string, unknown> = {
       digest: jest.fn(),
       add: jest.fn(),
-      status: statusFn,
+      statusAsync: jest.fn<() => Promise<unknown>>().mockResolvedValue(statusFn()),
       stopSoup: jest.fn(),
       startSoup: jest.fn(),
       shouldAutoDigest: jest.fn(),
+      listSeeds: jest.fn<() => Promise<unknown>>().mockResolvedValue([]),
+      getTopSeeds: jest.fn<() => Promise<unknown>>().mockResolvedValue([]),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (mockMill.shouldAutoDigest as any).mockResolvedValue(false);
 
     await execute({ command: 'status' }, mockMill as any);
-    expect(mockMill.status).toHaveBeenCalled();
+    expect(mockMill.statusAsync).toHaveBeenCalled();
   });
 });

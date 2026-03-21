@@ -90,13 +90,18 @@ describe('CollisionEngine', () => {
   });
 
   describe('findRandomCollisions()', () => {
-    it('returns stochastic 10% sampling', () => {
+    it('returns stochastic sampling without building full pair array', () => {
       const fragments = Array.from({ length: 20 }, (_, i) =>
         makeFragment({ id: `frag-rand-${i}`, domain: i % 2 === 0 ? 'a' : 'b' })
       );
       const pairs = engine.findRandomCollisions(fragments);
-      // 20 fragments → 190 possible pairs → 10% = ~19 pairs
-      expect(pairs.length).toBeLessThanOrEqual(19);
+      // Capped at min(200, fragments.length * 2) = 40
+      expect(pairs.length).toBeGreaterThan(0);
+      expect(pairs.length).toBeLessThanOrEqual(40);
+      // All pairs should be cross-domain
+      for (const pair of pairs) {
+        expect(pair.a.domain).not.toBe(pair.b.domain);
+      }
     });
   });
 

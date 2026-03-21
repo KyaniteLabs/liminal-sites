@@ -2,6 +2,8 @@
  * CLI argument parser and executor for `liminal compost` subcommands.
  */
 
+import type { Seed } from './types.js';
+
 export type CLIAction =
   | { command: 'add'; paths: string[] }
   | { command: 'digest' }
@@ -66,12 +68,12 @@ export async function execute(action: CLIAction, mill: MillLike): Promise<void> 
     case 'soup':
       if (action.subcommand === 'start') {
         await mill.startSoup();
-        console.log('Soup started.');
+        console.log('Soup started. Press Ctrl+C to stop.');
       } else if (action.subcommand === 'stop') {
         mill.stopSoup();
         console.log('Soup stopped.');
       } else if (action.subcommand === 'status') {
-        const status = mill.status();
+        const status = await mill.statusAsync();
         console.log('Soup running: ' + status.soupRunning);
         console.log('Generation: ' + status.soupGeneration);
       }
@@ -79,12 +81,42 @@ export async function execute(action: CLIAction, mill: MillLike): Promise<void> 
 
     case 'seeds':
       if (action.subcommand === 'list') {
-        console.log('Seed listing not yet implemented via CLI.');
+        const seeds = await mill.listSeeds();
+        if (seeds.length === 0) {
+          console.log('No seeds yet. Run `liminal compost digest` first.');
+        } else {
+          console.log('Seeds (' + seeds.length + '):');
+          for (const seed of seeds) {
+            const preview = seed.content.length > 80 ? seed.content.slice(0, 77) + '...' : seed.content;
+            console.log('  [' + seed.score.toFixed(1) + '] ' + seed.id + ' — ' + preview.replace(/\n/g, ' '));
+          }
+        }
+      } else if (action.subcommand === 'show') {
+        const seedId = action.args?.[0];
+        if (!seedId) {
+          console.log('Usage: liminal compost seeds show <seed-id>');
+          console.log('Run `liminal compost seeds list` to see available seeds.');
+        } else {
+          const seeds = await mill.listSeeds();
+          const match = seeds.find((s: Seed) => s.id === seedId || s.id.startsWith(seedId));
+          if (!match) {
+            console.log('Seed not found: ' + seedId);
+          } else {
+            console.log('# ' + match.id);
+            console.log('Score: ' + match.score);
+            console.log('Domains: ' + match.source.domains.join(', '));
+            console.log('Collision: ' + match.source.collisionType);
+            console.log('Promoted: ' + match.promotedAt);
+            console.log('Used by: ' + (match.usedBy.length > 0 ? match.usedBy.join(', ') : '(none)'));
+            console.log('');
+            console.log(match.content);
+          }
+        }
       }
       break;
 
     case 'status': {
-      const status = mill.status();
+      const status = await mill.statusAsync();
       console.log('Compost Mill Status:');
       console.log('  Heap size: ' + status.heapSize + ' bytes');
       console.log('  Heap files: ' + status.heapFileCount);

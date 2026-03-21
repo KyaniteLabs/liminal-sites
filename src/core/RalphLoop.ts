@@ -41,6 +41,8 @@ import type { DeepCollaborationConfig, CollaborativeConfig, DomainType } from '.
 import { SwarmOrchestrator } from '../swarm/SwarmOrchestrator.js';
 import type { SwarmConfig, SwarmMode } from '../swarm/types.js';
 import { SelfReflectionEngine } from '../improvement/SelfReflection.js';
+import { SeedBank } from '../compost/SeedBank.js';
+import { mergeConfig as mergeCompostConfig } from '../compost/defaults.js';
 
 interface LoopOptions {
   maxIterations?: number;
@@ -187,6 +189,18 @@ export class RalphLoop {
 
         // Generate code via unified registry dispatch
         registerAllGenerators();
+
+        // Inject a random compost seed for creative cross-pollination
+        try {
+          const compostConfig = mergeCompostConfig();
+          const seedBank = new SeedBank(compostConfig);
+          const seedContent = await seedBank.getRandomContent();
+          if (seedContent) {
+            usedPrompt += '\n\n---\nCreative seed from compost:\n' + seedContent;
+          }
+        } catch {
+          // No compost seeds available — continue without
+        }
         const dispatched = generatorRegistry.dispatch(loadedPrompt);
 
         // Check if we should use swarm for this iteration

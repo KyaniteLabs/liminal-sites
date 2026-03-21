@@ -179,17 +179,12 @@ export class CompostShredder {
       }
     }
 
-    // Structured metadata layer
-    fragments.push(...this.shredMetadata(result.metadata, result.filePath));
-
-    // Raw bytes layer
-    fragments.push(...this.shredRawBytes(result.rawBytes, result.filePath));
-
     return fragments;
   }
 
-  /** Process a batch of extraction results into a flat fragment array. */
-  static shredAll(results: ExtractionResult[]): CompostFragment[] {
-    return results.flatMap(r => this.shredFile(r));
+  /** Process a batch of extraction results into a flat fragment array. Caps at maxFragments. */
+  static shredAll(results: ExtractionResult[], maxFragments = 2000): CompostFragment[] {
+    const all = results.flatMap(r => this.shredFile(r));
+    return all.length > maxFragments ? all.slice(0, maxFragments) : all;
   }
 }

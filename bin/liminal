@@ -6,6 +6,9 @@ import { run, PreviewServer, generateMusic, generateVisuals } from '../dist/inde
 import { getEffectiveConfig, saveConfig, loadProjectConfig } from '../dist/config/ConfigLoader.js';
 import { PromptHistory } from '../dist/config/PromptHistory.js';
 import { InteractiveMode } from '../dist/tui/InteractiveMode.js';
+import { CompostMill } from '../dist/compost/CompostMill.js';
+import { parseArgs, execute } from '../dist/compost/cli.js';
+import { LLMClient } from '../dist/llm/LLMClient.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -91,6 +94,7 @@ if (flags.help) {
   console.log('  generate, gen, g <prompt>   Create p5.js art from prompt');
   console.log('  serve, s [port]             Start preview server (default: 3456)');
   console.log('  list, ls                    Show saved sketches');
+  console.log('  compost <subcommand>        Compost Mill: add, digest, soup, seeds, status');
   console.log('');
   console.log('OPTIONS:');
   console.log('  --prompt, -p <text>         Prompt for generation');
@@ -374,6 +378,16 @@ else if (cmd === 'serve' || cmd === 's') {
     console.log('✅ Server running on http://localhost:' + port);
   }).catch(err => {
     console.error('❌ Error starting server:', err.message);
+    process.exit(1);
+  });
+}
+else if (cmd === 'compost') {
+  await initializeConfig();
+  const llm = new LLMClient();
+  const action = parseArgs(process.argv.slice(2));
+  const mill = new CompostMill({ soupEnabled: true }, llm);
+  execute(action, mill).catch(err => {
+    console.error('Compost error:', err.message);
     process.exit(1);
   });
 }

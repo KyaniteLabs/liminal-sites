@@ -10,6 +10,9 @@ import type { RawByteData } from './types.js';
 /** Maximum file size for base64 encoding (100KB). */
 const BASE64_MAX_SIZE = 100 * 1024;
 
+/** Maximum file size for full hex chunking — skip full hex for larger files. */
+const HEX_FULL_MAX_SIZE = 50 * 1024;
+
 /** Chunk size for hex block splitting. */
 const HEX_CHUNK_SIZE = 256;
 
@@ -29,9 +32,10 @@ export class RawByteProcessor {
     const tailSlice = buffer.subarray(tailStart, size);
     const tailHex = tailSlice.toString('hex');
 
-    // Full hex chunked into blocks
-    const fullHex = buffer.toString('hex');
-    const hexChunks = this.chunkHex(fullHex, HEX_CHUNK_SIZE);
+    // Full hex chunked into blocks (skip for large files to avoid memory blowup)
+    const hexChunks = size < HEX_FULL_MAX_SIZE
+      ? this.chunkHex(buffer.toString('hex'), HEX_CHUNK_SIZE)
+      : [];
 
     // Base64 for small files
     const base64 = size < BASE64_MAX_SIZE ? buffer.toString('base64') : null;

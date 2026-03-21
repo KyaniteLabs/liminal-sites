@@ -43,16 +43,30 @@ export class CollisionEngine {
     const pairs: CollisionPair[] = [];
     const threshold = 0.1; // 10% size difference
 
-    for (let i = 0; i < fragments.length; i++) {
-      for (let j = i + 1; j < fragments.length; j++) {
-        if (fragments[i].domain === fragments[j].domain) continue;
-        const sizeA = fragments[i].metadata.size;
-        const sizeB = fragments[j].metadata.size;
-        if (sizeA === 0 || sizeB === 0) continue;
+    // Group by domain first, then only compare across domains via sampling
+    const byDomain = new Map<string, CompostFragment[]>();
+    for (const frag of fragments) {
+      if (!byDomain.has(frag.domain)) byDomain.set(frag.domain, []);
+      byDomain.get(frag.domain)!.push(frag);
+    }
 
-        const ratio = Math.abs(sizeA - sizeB) / Math.max(sizeA, sizeB);
-        if (ratio <= threshold) {
-          pairs.push({ a: fragments[i], b: fragments[j], strategy: 'size' });
+    const domains = [...byDomain.keys()];
+    for (let i = 0; i < domains.length && pairs.length < 200; i++) {
+      for (let j = i + 1; j < domains.length && pairs.length < 200; j++) {
+        const fragsA = byDomain.get(domains[i])!;
+        const fragsB = byDomain.get(domains[j])!;
+        for (const a of fragsA) {
+          if (pairs.length >= 200) break;
+          for (const b of fragsB) {
+            if (pairs.length >= 200) break;
+            const sizeA = a.metadata.size;
+            const sizeB = b.metadata.size;
+            if (sizeA === 0 || sizeB === 0) continue;
+            const ratio = Math.abs(sizeA - sizeB) / Math.max(sizeA, sizeB);
+            if (ratio <= threshold) {
+              pairs.push({ a, b, strategy: 'size' });
+            }
+          }
         }
       }
     }
@@ -150,25 +164,22 @@ export class CollisionEngine {
     return pairs;
   }
 
-  /** Stochastic 10% sampling of all possible pairs. */
+  /** Stochastic sampling of cross-domain pairs without building full O(n^2) array. */
   findRandomCollisions(fragments: CompostFragment[]): CollisionPair[] {
     const pairs: CollisionPair[] = [];
-    const allPairs: [CompostFragment, CompostFragment][] = [];
+    const sampleCount = Math.min(200, fragments.length * 2);
+    const maxAttempts = sampleCount * 10;
+    const seen = new Set<string>();
 
-    for (let i = 0; i < fragments.length; i++) {
-      for (let j = i + 1; j < fragments.length; j++) {
-        if (fragments[i].domain !== fragments[j].domain) {
-          allPairs.push([fragments[i], fragments[j]]);
-        }
-      }
-    }
-
-    // Sample 10%
-    const sampleSize = Math.ceil(allPairs.length * 0.1);
-    for (let i = 0; i < sampleSize && allPairs.length > 0; i++) {
-      const idx = Math.floor(Math.random() * allPairs.length);
-      const [a, b] = allPairs.splice(idx, 1)[0];
-      pairs.push({ a, b, strategy: 'random' });
+    for (let attempt = 0; attempt < maxAttempts && pairs.length < sampleCount; attempt++) {
+      const i = Math.floor(Math.random() * fragments.length);
+      const j = Math.floor(Math.random() * fragments.length);
+      if (i === j) continue;
+      if (fragments[i].domain === fragments[j].domain) continue;
+      const key = [fragments[i].id, fragments[j].id].sort().join('-');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pairs.push({ a: fragments[i], b: fragments[j], strategy: 'random' });
     }
     return pairs;
   }
