@@ -6,7 +6,6 @@ import { run, PreviewServer, generateMusic, generateVisuals } from '../dist/inde
 import { getEffectiveConfig, saveConfig, loadProjectConfig } from '../dist/config/ConfigLoader.js';
 import { PromptHistory } from '../dist/config/PromptHistory.js';
 import { InteractiveMode } from '../dist/tui/InteractiveMode.js';
-import { generateCompletions } from '../dist/cli/Completions.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -67,8 +66,6 @@ for (let i = 0; i < args.length; i++) {
     flags.favorites = true;
   } else if (arg === '--interactive' || arg === '-i') {
     flags.interactive = true;
-  } else if (arg === '--completions') {
-    flags.completions = args[++i];
   } else if (arg === '--mode') {
     flags.mode = args[++i];
   } else if (arg === '--use-swarm') {
@@ -106,7 +103,6 @@ if (flags.help) {
   console.log('  --favorite <prompt>         Add prompt to favorites');
   console.log('  --favorites                 List favorite prompts');
   console.log('  --interactive, -i           Interactive TUI mode');
-  console.log('  --completions <shell>      Generate shell completions (zsh, bash)');
   console.log('  --mode <mode>              Mode: live-music (generate Strudel/Hydra to --output)');
   console.log('  --use-swarm                Use Token Mill swarm (7-persona Ollama) for generation');
   console.log('  --swarm-mode <mode>        Swarm mode: competitive, hybrid, ring, mesh (default: hybrid)');
@@ -170,19 +166,6 @@ if (flags.provider) {
 }
 if (flags.model) {
   process.env.LIMINAL_LLM_MODEL = flags.model;
-}
-
-// Handle --completions flag
-if (flags.completions) {
-  const script = generateCompletions(flags.completions);
-  if (script) {
-    console.log(script);
-    process.exit(0);
-  } else {
-    console.error('Unknown shell:', flags.completions);
-    console.error('Supported: zsh, bash');
-    process.exit(1);
-  }
 }
 
 // Handle --interactive flag

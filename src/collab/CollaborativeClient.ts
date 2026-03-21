@@ -12,7 +12,6 @@
  * strengths through structured interaction.
  */
 
-import { SERVICE_DEFAULTS } from '../constants.js';
 import { DOMAIN_GUIDANCE } from '../prompts/collaboration.js';
 import { quickScore } from './Scoring.js';
 
@@ -39,14 +38,10 @@ export class CollaborativeClient {
 
   constructor(config: CollaborativeConfig) {
     this.config = {
-      localBaseUrl: config.localBaseUrl ?? SERVICE_DEFAULTS.LOCAL_LLM_URL,
-      localModel: config.localModel ?? 'qwen3.5:4b',
       cloudApiKey: config.cloudApiKey ?? '',
       cloudModel: config.cloudModel ?? 'MiniMax-M2.7',
-      cloudBaseUrl: config.cloudBaseUrl ?? SERVICE_DEFAULTS.MINIMAX_URL,
       maxRounds: config.maxRounds ?? 3,
       convergenceThreshold: config.convergenceThreshold ?? 0.85,
-      parallel: config.parallel ?? true,
       callLLM: config.callLLM,
     };
   }
@@ -215,7 +210,7 @@ export class CollaborativeClient {
 
       // Score all outputs from this round
       const outputs = [currentLocal, currentCloud, localRefined, cloudRefined];
-      const scores = await this.scoreOutputs(outputs, prompt, domain);
+      const scores = await this.scoreOutputs(outputs, domain);
       roundResult.scores = scores;
 
       // Select best output
@@ -432,7 +427,6 @@ Create an improved version that addresses this feedback while maintaining your s
    */
   private async scoreOutputs(
     outputs: string[],
-    _prompt: string,
     domain: DomainType
   ): Promise<Record<number, number>> {
     const scores: Record<number, number> = {};

@@ -40,6 +40,7 @@ import { CollaborativeClient } from '../collab/CollaborativeClient.js';
 import type { DeepCollaborationConfig, CollaborativeConfig, DomainType } from '../collab/types.js';
 import { SwarmOrchestrator } from '../swarm/SwarmOrchestrator.js';
 import type { SwarmConfig, SwarmMode } from '../swarm/types.js';
+import { SelfReflectionEngine } from '../improvement/SelfReflection.js';
 
 interface LoopOptions {
   maxIterations?: number;
@@ -150,6 +151,7 @@ export class RalphLoop {
     let finalScore = 0;
     let bestScore = 0;
     let iterationsSinceLastImprovement = 0;
+    const selfReflection = new SelfReflectionEngine();
 
     // Main loop
     while (iteration < normalizedOptions.maxIterations) {
@@ -189,7 +191,7 @@ export class RalphLoop {
 
         // Check if we should use swarm for this iteration
         if (normalizedOptions.useSwarm) {
-          currentCode = await this.generateWithSwarm(usedPrompt, normalizedOptions);
+          currentCode = await this.generateWithSwarm(usedPrompt, normalizedOptions, gallery);
         } else if (normalizedOptions.useDeepCollab || normalizedOptions.useCollab) {
           // Use collaboration for LLM generation
           const shouldUseCollab = !dispatched || dispatched.entry.name === 'llm';
@@ -311,7 +313,18 @@ export class RalphLoop {
         // Update final score
         finalScore = evaluation.score;
 
-        // Stagnation detection
+        // Record score for self-reflection
+        selfReflection.recordScore({
+          iteration,
+          timestamp: Date.now(),
+          overallScore: evaluation.score,
+          technicalScore: evaluation.details?.technical ?? 0,
+          aestheticScore: evaluation.details?.aesthetic ?? evaluation.details?.creative ?? 0,
+          noveltyScore: evaluation.details?.novelty ?? 0,
+          domain: normalizedOptions.collabDomain || 'p5',
+        });
+
+        // Stagnation detection with self-reflection improvement
         if (evaluation.score > bestScore) {
           bestScore = evaluation.score;
           iterationsSinceLastImprovement = 0;
@@ -322,8 +335,35 @@ export class RalphLoop {
             normalizedOptions.stagnationThreshold > 0 &&
             iterationsSinceLastImprovement >= normalizedOptions.stagnationThreshold
           ) {
-            reason = `stagnation detected (${iterationsSinceLastImprovement} iterations without improvement)`;
-            break;
+            // Use self-reflection to check if improvement is possible
+            const suggestions = selfReflection.analyze();
+            const improvementSpec = suggestions.length > 0
+              ? selfReflection.designImprovementSpec(suggestions[0])
+              : null;
+
+            if (improvementSpec) {
+              // Inject improvement suggestion into next iteration's context
+              // instead of breaking — give the loop one more chance
+              if (iterationsSinceLastImprovement === normalizedOptions.stagnationThreshold) {
+                ContextAccumulation.save({
+                  iteration: iteration + 0.5,
+                  prompt,
+                  usedPrompt: improvementSpec,
+                  code: '',
+                  evaluation: { score: 0, issues: [suggestions[0].description] },
+                  timestamp: new Date().toISOString(),
+                  maxIterations: normalizedOptions.maxIterations,
+                });
+                // Reset counter to give improvement a chance
+                iterationsSinceLastImprovement = 0;
+              } else {
+                reason = `stagnation detected (${iterationsSinceLastImprovement} iterations without improvement)`;
+                break;
+              }
+            } else {
+              reason = `stagnation detected (${iterationsSinceLastImprovement} iterations without improvement)`;
+              break;
+            }
           }
         }
 
@@ -489,7 +529,8 @@ export class RalphLoop {
    */
   private static async generateWithSwarm(
     prompt: string,
-    options: ReturnType<typeof RalphLoop.normalizeOptions>
+    options: ReturnType<typeof RalphLoop.normalizeOptions>,
+    gallery: Gallery
   ): Promise<string> {
     const orchestrator = new SwarmOrchestrator(options.swarmConfig, {
       onProgress: (data) => {
@@ -504,6 +545,16 @@ export class RalphLoop {
     });
 
     const result = await orchestrator.run(prompt, options.swarmMode);
+
+    // Save swarm session for provenance
+    if (options.project) {
+      try {
+        await gallery.saveSwarmSession(options.project, result);
+      } catch {
+        // Best-effort — don't fail the loop
+      }
+    }
+
     return result.finalOutput;
   }
 

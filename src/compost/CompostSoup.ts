@@ -1,0 +1,162 @@
+/**
+ * CompostSoup — continuous evolutionary loop on the compost heap.
+ * Picks random fragments, merges via LLM, scores offspring, replaces worst.
+ */
+
+import crypto from 'node:crypto';
+import type { CompostConfig, CompostFragment, SoupState } from './types.js';
+import { SoupStateManager } from './SoupStateManager.js';
+import { SeedBank } from './SeedBank.js';
+import { FragmentScorer } from './FragmentScorer.js';
+
+export class CompostSoup {
+  private config: CompostConfig;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private llm: any;
+  private stateManager: SoupStateManager;
+  private seedBank: SeedBank;
+  private scorer: FragmentScorer;
+  private abortController: AbortController | null = null;
+
+  constructor(config: CompostConfig, llm?: any) {
+    this.config = config;
+    this.llm = llm;
+    this.stateManager = new SoupStateManager(config);
+    this.seedBank = new SeedBank(config);
+    this.scorer = new FragmentScorer(config, llm);
+  }
+
+  /** Run a single soup cycle. */
+  async cycle(fragments: CompostFragment[]): Promise<SoupState> {
+    let state = await this.stateManager.load();
+
+    // Need at least 2 fragments from different domains
+    const domains = [...new Set(fragments.map(f => f.domain))];
+    if (domains.length < 2 || fragments.length < 2) {
+      return state;
+    }
+
+    // Pick 2 random fragments from different domains
+    const domainA = domains[Math.floor(Math.random() * domains.length)];
+    const otherDomains = domains.filter(d => d !== domainA);
+    const domainB = otherDomains[Math.floor(Math.random() * otherDomains.length)];
+
+    const fragsA = fragments.filter(f => f.domain === domainA);
+    const fragsB = fragments.filter(f => f.domain === domainB);
+
+    if (fragsA.length === 0 || fragsB.length === 0) return state;
+
+    const fragA = fragsA[Math.floor(Math.random() * fragsA.length)];
+    const fragB = fragsB[Math.floor(Math.random() * fragsB.length)];
+
+    // Merge via LLM
+    const offspringContent = await this.mergeViaLLM(fragA, fragB);
+
+    // Create offspring fragment
+    const offspring: CompostFragment = {
+      id: `offspring-${crypto.randomBytes(6).toString('hex')}`,
+      source: `soup:${fragA.id}+${fragB.id}`,
+      domain: 'cross-domain',
+      layer: 'semantic',
+      content: offspringContent,
+      metadata: {
+        fileType: 'soup',
+        timestamp: new Date().toISOString(),
+        hash: crypto.createHash('sha256').update(offspringContent).digest('hex'),
+        size: offspringContent.length,
+        extractedAt: new Date().toISOString(),
+      },
+      tags: [domainA, domainB, 'offspring'],
+    };
+
+    // Score offspring
+    const score = await this.scorer.score(offspring);
+    offspring.score = score.total;
+
+    // Update generation
+    state = this.stateManager.updateGeneration(state);
+
+    // Replace worst in population
+    state = this.stateManager.replaceWorst(state, offspring);
+
+    // Update heatmap
+    state = this.stateManager.updateHeatmap(state, domainA, domainB, score.total);
+
+    // Promote to seed bank if score exceeds threshold
+    if (score.total >= this.config.soupSeedPromotionThreshold * 10) {
+      await this.seedBank.add({
+        id: offspring.id,
+        content: offspring.content,
+        score: score.total,
+        source: {
+          fragments: [fragA.id, fragB.id],
+          collisionType: 'soup-offspring',
+          domains: [domainA, domainB],
+        },
+        promotedAt: new Date().toISOString(),
+        usedBy: [],
+        useCount: 0,
+      });
+      state = this.stateManager.recordPromotion(state, offspring);
+    }
+
+    await this.stateManager.save(state);
+    return state;
+  }
+
+  /** Run continuous soup loop with AbortSignal support. */
+  async run(fragments: CompostFragment[], signal?: AbortSignal): Promise<void> {
+    this.abortController = new AbortController();
+    const controller = this.abortController;
+
+    // Listen for external abort
+    if (signal) {
+      signal.addEventListener('abort', () => controller.abort(), { once: true });
+    }
+
+    while (!controller.signal.aborted) {
+      try {
+        await this.cycle(fragments);
+      } catch {
+        // Continue on cycle errors
+      }
+
+      // Wait before next cycle
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(resolve, this.config.soupCycleIntervalMs);
+        controller.signal.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new DOMException('Aborted', 'AbortError'));
+        }, { once: true });
+      }).catch(() => { /* aborted */ });
+    }
+  }
+
+  /** Stop the soup loop. */
+  stop(): void {
+    this.abortController?.abort();
+    this.abortController = null;
+  }
+
+  /** Check if the soup is currently running. */
+  isRunning(): boolean {
+    return this.abortController !== null && !this.abortController.signal.aborted;
+  }
+
+  /** Merge two fragments via LLM. */
+  private async mergeViaLLM(a: CompostFragment, b: CompostFragment): Promise<string> {
+    if (!this.llm) {
+      return `[${a.domain}] ${a.content.slice(0, 100)} + [${b.domain}] ${b.content.slice(0, 100)}`;
+    }
+
+    try {
+      const result = await this.llm.generate(
+        'You are a creative evolution engine. Combine these two fragments from different domains into a novel offspring. Be surprising and specific.',
+        `[Parent A — domain: ${a.domain}]\n${a.content.slice(0, 1000)}\n\n[Parent B — domain: ${b.domain}]\n${b.content.slice(0, 1000)}\n\nCreate a novel offspring idea:`
+      );
+      return result.success ? result.code : `${a.content.slice(0, 50)} + ${b.content.slice(0, 50)}`;
+    } catch {
+      return `${a.content.slice(0, 50)} + ${b.content.slice(0, 50)}`;
+    }
+  }
+}

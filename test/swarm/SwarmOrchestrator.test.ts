@@ -95,6 +95,19 @@ describe('SwarmOrchestrator', () => {
       expect(progressCalls[0].round).toBe(1);
     }, 10000);
 
+    it('should run in mesh mode', async () => {
+      const orchestrator = new SwarmOrchestrator(
+        { maxRounds: 2, musicalChairs: false, streamDir: './test-stream' },
+        { callOllama: createMockOllama() }
+      );
+
+      const result = await orchestrator.run('Test', SwarmMode.MESH);
+
+      expect(result.mode).toBe(SwarmMode.MESH);
+      expect(result.rounds.length).toBe(2);
+      expect(result.finalOutput).toBeTruthy();
+    }, 10000);
+
     it('should detect convergence', async () => {
       // Use a custom 2-persona set where alpha always scores higher on heuristic dimensions.
       // Alpha produces richer output → higher vocabulary, better length, etc.
@@ -163,43 +176,4 @@ describe('SwarmOrchestrator', () => {
     }, 30000);
   });
 
-  describe('checkConvergence', () => {
-    it('should detect convergence with 3 consecutive wins', () => {
-      const rounds = [
-        { roundNum: 1, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'sam', winnerContent: '', constraint: '' },
-        { roundNum: 2, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'sam', winnerContent: '', constraint: '' },
-        { roundNum: 3, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'sam', winnerContent: '', constraint: '' },
-      ];
-
-      expect(SwarmOrchestrator.checkConvergence(rounds, 3)).toBe(true);
-    });
-
-    it('should not detect convergence with different winners', () => {
-      const rounds = [
-        { roundNum: 1, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'sam', winnerContent: '', constraint: '' },
-        { roundNum: 2, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'eve', winnerContent: '', constraint: '' },
-        { roundNum: 3, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'sam', winnerContent: '', constraint: '' },
-      ];
-
-      expect(SwarmOrchestrator.checkConvergence(rounds, 3)).toBe(false);
-    });
-
-    it('should not detect convergence with insufficient rounds', () => {
-      const rounds = [
-        { roundNum: 1, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: 'sam', winnerContent: '', constraint: '' },
-      ];
-
-      expect(SwarmOrchestrator.checkConvergence(rounds, 3)).toBe(false);
-    });
-
-    it('should handle null winner IDs', () => {
-      const rounds = [
-        { roundNum: 1, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: null, winnerContent: '', constraint: '' },
-        { roundNum: 2, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: null, winnerContent: '', constraint: '' },
-        { roundNum: 3, seed: '', outputs: new Map(), votes: new Map(), scores: new Map(), winnerId: null, winnerContent: '', constraint: '' },
-      ];
-
-      expect(SwarmOrchestrator.checkConvergence(rounds, 3)).toBe(true);
-    });
-  });
 });

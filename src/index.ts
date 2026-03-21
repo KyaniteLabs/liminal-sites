@@ -496,9 +496,6 @@ export { P5GeneratorLLM };
 export { LLMError, LLMTimeoutError, LLMRateLimitError, LLMAuthError } from './llm/LLMClient.js';
 export type { LLMConfig, LLMResponse } from './llm/LLMClient.js';
 
-// Fitness Calculator
-export { FitnessCalculator } from './core/FitnessCalculator.js';
-export type { FitnessWeights, DimensionScores } from './core/FitnessCalculator.js';
 export type { PersistedLoopState } from './core/ContextAccumulation.js';
 
 // GLSL Generator
@@ -511,7 +508,8 @@ export { ThreeGenerator };
 export { SwarmOrchestrator } from './swarm/SwarmOrchestrator.js';
 export { VotingEngine } from './swarm/VotingEngine.js';
 export { MiningEngine } from './swarm/MiningEngine.js';
-export { DEFAULT_PERSONAS, DEFAULT_REFINEMENT_CONSTRAINTS } from './swarm/personas.js';
+export { DEFAULT_PERSONAS } from './swarm/personas.js';
+export { DEFAULT_REFINEMENT_CONSTRAINTS } from './swarm/types.js';
 export { SwarmMode } from './swarm/types.js';
 export type { SwarmPersona, SwarmConfig, SwarmOutput, Vote, RoundResult, SwarmResult, MinedFragment } from './swarm/types.js';
 export type { SwarmOrchestratorOptions } from './swarm/SwarmOrchestrator.js';

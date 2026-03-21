@@ -15,7 +15,6 @@ const PROJECT_ROOT = path.resolve(__dirname, "../..");
 // Import v2.0 components
 import { PlayerPiano } from "./components/PlayerPiano";
 import { XRayPanel } from "./components/XRayPanel";
-import { VoiceInputUI } from "./components/VoiceInput";
 import { IterationTimeline } from "./components/IterationTimeline";
 import { TransparencyPanel } from "./components/TransparencyPanel";
 import { TransparencyViewer, type ProcessEvent } from "../ui/TransparencyViewer.js";
@@ -158,7 +157,6 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
   const [playerPianoIndex, setPlayerPianoIndex] = useState(0);
   const [isPlayerPianoPlaying, setIsPlayerPianoPlaying] = useState(false);
   const rawLLMOutput = useState<string[]>([])[0];
-  const [showVoiceInput, setShowVoiceInput] = useState(false);
   const [showTransparency, setShowTransparency] = useState(false);
   const [transparencyEvents, setTransparencyEvents] = useState<ProcessEvent[]>([]);
   const transparencyViewerRef = React.useRef<TransparencyViewer | null>(null);
@@ -320,7 +318,6 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
   useInput((input: string, key: any) => {
     if (input === "q") process.exit(0);
     if (input === "1") setIsPlayerPianoPlaying(prev => !prev);
-    if (input === "v") setShowVoiceInput(prev => !prev);
     if (input === "t") setShowTransparency(prev => !prev);
     if (input === "e" || input === "E") handleExport();
     if (isGenerating && (input === "s" || key.escape)) handleStop();
@@ -363,15 +360,10 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
             height={contentHeight}
           />
         )}
-        {showVoiceInput && (
-          <Box flexDirection="column" borderStyle="single" borderColor={COLORS.border} width="20%" height={contentHeight} paddingX={1}>
-            <VoiceInputUI />
-          </Box>
-        )}
         <GalleryPanel projects={gallery} currentIndex={galleryIndex} onSelect={handleGallerySelect} height={contentHeight} />
       </Box>
       <Box borderStyle="single" borderColor={COLORS.border} paddingX={1} marginTop={1}>
-        <Text color={COLORS.muted}>Status: {isGenerating ? "Generating... [Esc/S] Stop" : "Ready"} | [Enter] Run | [E] Export | [1] PlayerPiano | [T]ransparency | [V]oice | [Q]uit</Text>
+        <Text color={COLORS.muted}>Status: {isGenerating ? "Generating... [Esc/S] Stop" : "Ready"} | [Enter] Run | [E] Export | [1] PlayerPiano | [T]ransparency | [Q]uit</Text>
       </Box>
     </Box>
   );

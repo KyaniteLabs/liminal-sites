@@ -101,22 +101,14 @@ export interface DeepCollaborationResult {
  * Configuration for simpler 2-model collaboration
  */
 export interface CollaborativeConfig {
-  /** Local model URL */
-  localBaseUrl?: string;
-  /** Local model name */
-  localModel?: string;
   /** Cloud API key */
   cloudApiKey?: string;
   /** Cloud model name */
   cloudModel?: string;
-  /** Cloud API base URL */
-  cloudBaseUrl?: string;
   /** Maximum collaboration rounds */
   maxRounds?: number;
   /** Stop when quality reaches this threshold */
   convergenceThreshold?: number;
-  /** Run models in parallel when possible */
-  parallel?: boolean;
   /** LLM caller function */
   callLLM: (prompt: string, systemPrompt?: string) => Promise<string>;
 }

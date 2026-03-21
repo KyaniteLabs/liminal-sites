@@ -47,13 +47,10 @@ describe('CollaborativeClient', () => {
 
     it('should create instance with full config', () => {
       const collab = new CollaborativeClient({
-        localBaseUrl: 'http://localhost:1234/v1',
-        localModel: 'qwen3.5:4b',
         cloudApiKey: 'test-key',
         cloudModel: 'MiniMax-M2.7',
         maxRounds: 3,
         convergenceThreshold: 0.85,
-        parallel: true,
         callLLM: mockCallLLM,
       });
 

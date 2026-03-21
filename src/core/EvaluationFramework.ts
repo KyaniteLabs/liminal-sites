@@ -5,11 +5,10 @@
  * - 'detailed': Full LLM-based evaluation (CreativeEvaluator)
  * - 'fast': Heuristic quick scoring (from collab/Scoring)
  * - 'heuristic': Swarm heuristic scoring (HeuristicScorer)
- * - 'fitness': Multi-dimensional fitness calculation (FitnessCalculator)
+ * - 'fitness': Weighted multi-dimensional fitness calculation
  */
 
 import { CreativeEvaluator } from './CreativeEvaluator.js';
-import { FitnessCalculator, type DimensionScores } from './FitnessCalculator.js';
 import { HeuristicScorer } from '../swarm/HeuristicScorer.js';
 import { quickScore } from '../collab/Scoring.js';
 import type { DomainType } from '../collab/types.js';
@@ -46,9 +45,9 @@ export interface EvaluationContext {
   /** Persona for swarm heuristic scoring (for heuristic strategy) */
   persona?: SwarmPersona;
   /** Pre-computed dimension scores (for fitness strategy) */
-  dimensionScores?: DimensionScores;
+  dimensionScores?: Record<string, number>;
   /** Fitness weights (for fitness strategy) */
-  weights?: { technical?: number; aesthetic?: number; novelty?: number; default?: number };
+  weights?: Record<string, number>;
 }
 
 /**
@@ -63,7 +62,7 @@ export type EvaluationStrategy = 'detailed' | 'fast' | 'heuristic' | 'fitness';
  * - detailed: Uses CreativeEvaluator for comprehensive LLM-based evaluation
  * - fast: Uses quickScore for lightweight heuristic scoring
  * - heuristic: Uses HeuristicScorer for swarm-style multi-dimensional scoring
- * - fitness: Uses FitnessCalculator for weighted aggregation of dimension scores
+ * - fitness: Uses weighted aggregation of dimension scores
  */
 export class EvaluationFramework {
   /**
@@ -178,17 +177,23 @@ export class EvaluationFramework {
       }
 
       case 'fitness': {
-        // FitnessCalculator.calculate() takes DimensionScores and returns weighted average
-        const calc = new FitnessCalculator(context.weights);
+        // Weighted average of dimension scores
+        const weights = context.weights || {};
         const scores = context.dimensionScores || {};
-        const score = calc.calculate(scores);
+        const entries = Object.entries(scores).filter(([, val]) => val !== undefined) as [string, number][];
 
-        // Filter out undefined values for details
+        let totalWeight = 0;
+        let weightedSum = 0;
+        for (const [dimension, score] of entries) {
+          const weight = weights[dimension] ?? weights['default'] ?? 1;
+          weightedSum += score * weight;
+          totalWeight += weight;
+        }
+        const score = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
         const details: Record<string, number> = {};
-        for (const [key, value] of Object.entries(scores)) {
-          if (value !== undefined) {
-            details[key] = value;
-          }
+        for (const [key, value] of entries) {
+          details[key] = value;
         }
 
         return {
@@ -203,61 +208,4 @@ export class EvaluationFramework {
     }
   }
 
-  /**
-   * Evaluate using multiple strategies and return all results.
-   *
-   * @param input - The creative output to evaluate
-   * @param strategies - Array of strategies to use
-   * @param context - Optional context for evaluation
-   * @returns Promise resolving to map of strategy -> result
-   */
-  static async evaluateMulti(
-    input: string,
-    strategies: EvaluationStrategy[] = ['fast', 'detailed'],
-    context: EvaluationContext = {}
-  ): Promise<Map<EvaluationStrategy, EvaluationResult>> {
-    const results = new Map<EvaluationStrategy, EvaluationResult>();
-
-    for (const strategy of strategies) {
-      try {
-        const result = await this.evaluate(input, strategy, context);
-        results.set(strategy, result);
-      } catch (error) {
-        // Log but don't fail entire operation
-        console.warn(`Failed to evaluate with strategy '${strategy}':`, error);
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Get the best score across multiple evaluation strategies.
-   *
-   * @param input - The creative output to evaluate
-   * @param strategies - Array of strategies to use
-   * @param context - Optional context for evaluation
-   * @returns Promise resolving to the best result
-   */
-  static async evaluateBest(
-    input: string,
-    strategies: EvaluationStrategy[] = ['fast', 'detailed'],
-    context: EvaluationContext = {}
-  ): Promise<EvaluationResult> {
-    const results = await this.evaluateMulti(input, strategies, context);
-
-    if (results.size === 0) {
-      throw new Error('All evaluation strategies failed');
-    }
-
-    // Find result with highest score
-    let bestResult: EvaluationResult | null = null;
-    for (const result of Array.from(results.values())) {
-      if (!bestResult || result.score > bestResult.score) {
-        bestResult = result;
-      }
-    }
-
-    return bestResult!;
-  }
 }

@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 
-export interface LiminalConfig {
+export interface UserConfig {
   defaultProvider: string;
   providers: {
     [key: string]: {
@@ -153,13 +153,13 @@ export async function loadProjectConfig(configDirOrPath?: string): Promise<Proje
  * @param configPath Path to config file (defaults to ~/.liminal/config.json)
  * @returns Config object or null if file doesn't exist or is invalid
  */
-export async function loadConfig(configPath: string = DEFAULT_CONFIG_PATH): Promise<LiminalConfig | null> {
+export async function loadConfig(configPath: string = DEFAULT_CONFIG_PATH): Promise<UserConfig | null> {
   // Run migration on first load
   await migrateLegacyConfig();
 
   try {
     const content = await fs.readFile(configPath, 'utf-8');
-    const config = JSON.parse(content) as LiminalConfig;
+    const config = JSON.parse(content) as UserConfig;
     return config;
   } catch {
     return null;
@@ -206,7 +206,7 @@ export async function getEffectiveConfig(configPath?: string, projectConfigPath?
 /**
  * Save config to file
  */
-export async function saveConfig(config: LiminalConfig, configPath: string = DEFAULT_CONFIG_PATH): Promise<void> {
+export async function saveConfig(config: UserConfig, configPath: string = DEFAULT_CONFIG_PATH): Promise<void> {
   const configDir = path.dirname(configPath);
   await fs.mkdir(configDir, { recursive: true });
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));

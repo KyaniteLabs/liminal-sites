@@ -2,7 +2,8 @@
  * Swarm personas tests
  */
 
-import { DEFAULT_PERSONAS, DEFAULT_REFINEMENT_CONSTRAINTS } from '../../src/swarm/personas.js';
+import { DEFAULT_PERSONAS } from '../../src/swarm/personas.js';
+import { DEFAULT_REFINEMENT_CONSTRAINTS } from '../../src/swarm/types.js';
 
 describe('Default Personas', () => {
   it('should have exactly 5 personas', () => {

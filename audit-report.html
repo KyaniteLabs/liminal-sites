@@ -13,6 +13,7 @@
     --hydra: #10b981;
     --tokenmill: #f59e0b;
     --dead: #ef4444;
+    --compost: #84cc16;
     --bg: #0a0a0f;
     --surface: #12121a;
     --surface2: #1a1a2e;
@@ -120,6 +121,7 @@
   .origin-hydra { background: rgba(16,185,129,0.2); color: var(--hydra); border: 1px solid rgba(16,185,129,0.4); }
   .origin-tokenmill { background: rgba(245,158,11,0.2); color: var(--tokenmill); border: 1px solid rgba(245,158,11,0.4); }
   .origin-dead { background: rgba(239,68,68,0.15); color: var(--dead); border: 1px dashed rgba(239,68,68,0.4); }
+  .origin-compost { background: rgba(132,204,22,0.2); color: var(--compost); border: 1px solid rgba(132,204,22,0.4); }
 
   svg text { font-family: 'Inter', sans-serif; }
 
@@ -195,8 +197,9 @@
     Three codebases merged: <span class="text-blue-400 font-medium">Atelier</span> +
     <span class="text-emerald-400 font-medium">Hydra</span> +
     <span class="text-amber-400 font-medium">Token Mill</span> → Liminal
+    + <span class="text-lime-400 font-medium">Compost Mill</span>
   </p>
-  <p class="text-xs text-slate-500 ml-6 mt-1">Generated 2026-03-20 &middot; Updated 2026-03-20 &middot; All findings verified against source code</p>
+  <p class="text-xs text-slate-500 ml-6 mt-1">Generated 2026-03-20 &middot; Updated 2026-03-20 &middot; All findings verified against source code &middot; Compost Mill added (128 tests, 21 modules)</p>
 </div>
 
 <!-- Summary Stats -->
@@ -206,7 +209,7 @@
     <div class="text-xs text-slate-400 mt-1">Dead Code Modules</div>
   </div>
   <div class="stat-card">
-    <div class="text-2xl font-bold text-amber-400">2</div>
+    <div class="text-2xl font-bold text-amber-400">4</div>
     <div class="text-xs text-slate-400 mt-1">Scoring Systems</div>
   </div>
   <div class="stat-card">
@@ -218,7 +221,7 @@
     <div class="text-xs text-slate-400 mt-1">Broken Test Imports</div>
   </div>
   <div class="stat-card">
-    <div class="text-2xl font-bold text-purple-400">90+</div>
+    <div class="text-2xl font-bold text-purple-400">110+</div>
     <div class="text-xs text-slate-400 mt-1">Source Modules</div>
   </div>
 </div>
@@ -242,13 +245,14 @@
         <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-blue-500"></div> Atelier (Core)</div>
         <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-emerald-500"></div> Hydra (Collab)</div>
         <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-amber-500"></div> Token Mill (Swarm)</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-lime-500"></div> Compost Mill</div>
         <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-red-500/50 border border-dashed border-red-400"></div> Dead Code</div>
         <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-slate-500"></div> Shared/Other</div>
       </div>
 
       <!-- SVG Architecture Diagram -->
       <div class="overflow-x-auto">
-        <svg viewBox="0 0 1200 900" class="w-full" style="min-width: 900px;" id="arch-svg">
+        <svg viewBox="0 0 1200 850" class="w-full" style="min-width: 900px;" id="arch-svg">
           <defs>
             <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" fill="#8b5cf6" opacity="0.6"/>
@@ -360,15 +364,6 @@
           <text x="500" y="282" text-anchor="middle" fill="#34d399" font-size="11">Scoring.ts</text>
           <text x="500" y="298" text-anchor="middle" fill="#94a3b8" font-size="10">quickScore()</text>
 
-          <rect x="580" y="260" width="120" height="36" rx="5" fill="#0f2922" stroke="#10b981" stroke-width="1"/>
-          <text x="640" y="283" text-anchor="middle" fill="#34d399" font-size="10">ArtisticCritic</text>
-
-          <rect x="710" y="260" width="120" height="36" rx="5" fill="#0f2922" stroke="#10b981" stroke-width="1"/>
-          <text x="770" y="283" text-anchor="middle" fill="#34d399" font-size="10">TechnicalCritic</text>
-
-          <rect x="580" y="302" width="120" height="36" rx="5" fill="#0f2922" stroke="#10b981" stroke-width="1"/>
-          <text x="640" y="325" text-anchor="middle" fill="#34d399" font-size="10">DomainExpert</text>
-
           <line x1="220" y1="285" x2="240" y2="285" stroke="#10b981" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
           <line x1="420" y1="285" x2="440" y2="285" stroke="#10b981" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
 
@@ -405,18 +400,7 @@
           <line x1="860" y1="125" x2="880" y2="125" stroke="#8b5cf6" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
           <line x1="1040" y1="125" x2="1060" y2="125" stroke="#8b5cf6" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
 
-          <!-- DEAD CODE -->
-          <rect x="20" y="460" width="180" height="44" rx="5" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6 3"/>
-          <text x="110" y="480" text-anchor="middle" fill="#fca5a5" font-size="12">ErrorHandler.ts</text>
-          <text x="110" y="496" text-anchor="middle" fill="#94a3b8" font-size="10">0 imports — DEAD</text>
-
-          <rect x="220" y="460" width="180" height="44" rx="5" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6 3"/>
-          <text x="310" y="480" text-anchor="middle" fill="#fca5a5" font-size="12">UnifiedConfig.ts</text>
-          <text x="310" y="496" text-anchor="middle" fill="#94a3b8" font-size="10">0 imports — DEAD</text>
-
-          <rect x="420" y="460" width="180" height="44" rx="5" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6 3"/>
-          <text x="510" y="480" text-anchor="middle" fill="#fca5a5" font-size="12">EvaluationFramework.ts</text>
-          <text x="510" y="496" text-anchor="middle" fill="#94a3b8" font-size="10">0 active consumers — DEAD</text>
+          <!-- DEAD CODE (all resolved) -->
 
           <!-- UNDERUTILIZED -->
           <rect x="640" y="370" width="150" height="44" rx="5" fill="rgba(148,163,184,0.08)" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 2"/>
@@ -447,11 +431,7 @@
           <!-- CONFIG SECTION -->
           <rect x="700" y="180" width="160" height="50" rx="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
           <text x="780" y="202" text-anchor="middle" fill="#93c5fd" font-size="12">ConfigLoader</text>
-          <text x="780" y="218" text-anchor="middle" fill="#94a3b8" font-size="10">AtelierConfig (active)</text>
-
-          <rect x="880" y="180" width="160" height="50" rx="6" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6 3"/>
-          <text x="960" y="202" text-anchor="middle" fill="#fca5a5" font-size="12">UnifiedConfig</text>
-          <text x="960" y="218" text-anchor="middle" fill="#94a3b8" font-size="10">LiminalConfig (DEAD)</text>
+          <text x="780" y="218" text-anchor="middle" fill="#94a3b8" font-size="10">UserConfig (active)</text>
 
           <line x1="330" y1="140" x2="780" y2="180" stroke="#3b82f6" stroke-width="1" opacity="0.4" marker-end="url(#arrow)"/>
 
@@ -467,11 +447,88 @@
 
           <!-- SCORING SECTION label -->
           <rect x="20" y="530" width="1160" height="40" rx="5" fill="rgba(139,92,246,0.05)" stroke="rgba(139,92,246,0.2)" stroke-width="1"/>
-          <text x="600" y="548" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="600">SCORING SYSTEMS (3 independent implementations — see Findings tab)</text>
-          <text x="600" y="563" text-anchor="middle" fill="#64748b" font-size="10">CreativeEvaluator · HeuristicScorer · Scoring.ts (quickScore)</text>
+          <text x="600" y="548" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="600">SCORING SYSTEMS (4 independent implementations — see Findings tab)</text>
+          <text x="600" y="563" text-anchor="middle" fill="#64748b" font-size="10">CreativeEvaluator · HeuristicScorer · Scoring.ts (quickScore) · FragmentScorer (Compost)</text>
+
+          <!-- COMPOST MILL section -->
+          <rect x="20" y="590" width="1160" height="36" rx="5" fill="rgba(132,204,22,0.05)" stroke="rgba(132,204,22,0.2)" stroke-width="1"/>
+          <text x="600" y="613" text-anchor="middle" fill="#a3e635" font-size="12" font-weight="600">COMPOST MILL — Living Digestion System (21 modules · 128 tests · TDD)</text>
+
+          <!-- CompostMill orchestrator -->
+          <rect x="20" y="640" width="170" height="50" rx="6" fill="#1a2e0a" stroke="#84cc16" stroke-width="2"/>
+          <text x="105" y="662" text-anchor="middle" fill="#a3e635" font-size="13" font-weight="600">CompostMill</text>
+          <text x="105" y="678" text-anchor="middle" fill="#94a3b8" font-size="10">Main orchestrator</text>
+
+          <!-- Pipeline stages -->
+          <rect x="210" y="640" width="130" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="275" y="662" text-anchor="middle" fill="#a3e635" font-size="11">CompostHeap</text>
+          <text x="275" y="678" text-anchor="middle" fill="#64748b" font-size="9">File intake</text>
+
+          <rect x="360" y="640" width="140" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="430" y="655" text-anchor="middle" fill="#a3e635" font-size="10">MetadataExtractor</text>
+          <text x="430" y="670" text-anchor="middle" fill="#64748b" font-size="9">RawByteProcessor</text>
+          <text x="430" y="683" text-anchor="middle" fill="#64748b" font-size="9">SemanticExtractor</text>
+
+          <rect x="520" y="640" width="120" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="580" y="662" text-anchor="middle" fill="#a3e635" font-size="11">CompostShredder</text>
+          <text x="580" y="678" text-anchor="middle" fill="#64748b" font-size="9">Fragment creation</text>
+
+          <rect x="660" y="640" width="130" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="725" y="662" text-anchor="middle" fill="#a3e635" font-size="11">CollisionEngine</text>
+          <text x="725" y="678" text-anchor="middle" fill="#64748b" font-size="9">7 strategies</text>
+
+          <rect x="810" y="640" width="120" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="870" y="662" text-anchor="middle" fill="#a3e635" font-size="11">FragmentScorer</text>
+          <text x="870" y="678" text-anchor="middle" fill="#64748b" font-size="9">5-dim heuristic</text>
+
+          <rect x="950" y="640" width="100" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="1000" y="662" text-anchor="middle" fill="#a3e635" font-size="11">SeedBank</text>
+          <text x="1000" y="678" text-anchor="middle" fill="#64748b" font-size="9">Promoted seeds</text>
+
+          <rect x="1070" y="640" width="110" height="50" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="1125" y="662" text-anchor="middle" fill="#a3e635" font-size="11">DigestGenerator</text>
+          <text x="1125" y="678" text-anchor="middle" fill="#64748b" font-size="9">Markdown output</text>
+
+          <!-- Arrows -->
+          <line x1="190" y1="665" x2="210" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+          <line x1="340" y1="665" x2="360" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+          <line x1="500" y1="665" x2="520" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+          <line x1="640" y1="665" x2="660" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+          <line x1="790" y1="665" x2="810" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+          <line x1="930" y1="665" x2="950" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+          <line x1="1050" y1="665" x2="1070" y2="665" stroke="#84cc16" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
+
+          <!-- Soup row -->
+          <rect x="210" y="710" width="140" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="280" y="728" text-anchor="middle" fill="#a3e635" font-size="11">CompostSoup</text>
+          <text x="280" y="744" text-anchor="middle" fill="#64748b" font-size="9">Evolutionary loop</text>
+
+          <rect x="370" y="710" width="140" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="440" y="728" text-anchor="middle" fill="#a3e635" font-size="11">SoupStateManager</text>
+          <text x="440" y="744" text-anchor="middle" fill="#64748b" font-size="9">Persistent state</text>
+
+          <rect x="530" y="710" width="120" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="590" y="728" text-anchor="middle" fill="#a3e635" font-size="11">HeapMonitor</text>
+          <text x="590" y="744" text-anchor="middle" fill="#64748b" font-size="9">Auto-trigger</text>
+
+          <rect x="670" y="710" width="130" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="735" y="728" text-anchor="middle" fill="#a3e635" font-size="11">DigestScheduler</text>
+          <text x="735" y="744" text-anchor="middle" fill="#64748b" font-size="9">Timed triggers</text>
+
+          <rect x="820" y="710" width="140" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="890" y="728" text-anchor="middle" fill="#a3e635" font-size="11">FragmentArchiveBridge</text>
+          <text x="890" y="744" text-anchor="middle" fill="#64748b" font-size="9">→ Scavenger</text>
+
+          <rect x="980" y="710" width="120" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="1040" y="728" text-anchor="middle" fill="#a3e635" font-size="11">PromptLibraryBridge</text>
+          <text x="1040" y="744" text-anchor="middle" fill="#64748b" font-size="9">→ Prompts</text>
+
+          <rect x="1120" y="710" width="70" height="44" rx="5" fill="#1a2e0a" stroke="#84cc16" stroke-width="1.5"/>
+          <text x="1155" y="728" text-anchor="middle" fill="#a3e635" font-size="11">Swarm</text>
+          <text x="1155" y="744" text-anchor="middle" fill="#64748b" font-size="9">→ Swarm</text>
 
           <!-- Module count -->
-          <text x="600" y="610" text-anchor="middle" fill="#64748b" font-size="11">90+ source modules across 20 directories · Click any module for details below</text>
+          <text x="600" y="790" text-anchor="middle" fill="#64748b" font-size="11">110+ source modules across 21 directories · Click any module for details below</text>
         </svg>
       </div>
 
@@ -485,10 +542,11 @@
       <div class="mt-6">
         <h3 class="text-lg font-bold mb-3">All Source Modules</h3>
         <div class="flex flex-wrap gap-2 mb-3">
-          <button class="filter-btn active" data-filter="all">All (90+)</button>
+          <button class="filter-btn active" data-filter="all">All (110+)</button>
           <button class="filter-btn" data-filter="atelier">Atelier</button>
           <button class="filter-btn" data-filter="hydra">Hydra</button>
           <button class="filter-btn" data-filter="tokenmill">Token Mill</button>
+          <button class="filter-btn" data-filter="compost">Compost Mill</button>
           <button class="filter-btn" data-filter="dead">Dead Code</button>
           <button class="filter-btn" data-filter="other">Other</button>
           <input type="text" class="search-input ml-2" placeholder="Filter modules..." id="module-search"/>
@@ -520,6 +578,7 @@
         <button class="filter-btn" data-flow="music">Music</button>
         <button class="filter-btn" data-flow="visual">Visuals</button>
         <button class="filter-btn" data-flow="m2v">Music → Visual</button>
+        <button class="filter-btn" data-flow="compost">Compost Mill</button>
       </div>
 
       <!-- CLI Generation Flow -->
@@ -914,6 +973,134 @@
           </div>
         </div>
       </div>
+
+      <!-- Compost Mill Flow -->
+      <div class="flow-container" id="flow-compost" style="display:none;">
+        <h3 class="text-lg font-bold mb-4 text-lime-400">Compost Mill — Digestion Pipeline</h3>
+        <p class="text-xs text-slate-400 mb-4">21 files &middot; Entry: bin/liminal compost &rarr; CompostMill</p>
+
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">1</span>
+            <div>
+              <div class="font-semibold mono text-sm">bin/liminal : compost subcommand</div>
+              <div class="text-xs text-slate-400">CLI routing: add, digest, soup, seeds, status</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p>Parses <code>liminal compost &lt;action&gt;</code> arguments. Actions: add (files to heap), digest (run pipeline), soup start/stop/status, seeds list, status (mill state).</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">2</span>
+            <div>
+              <div class="font-semibold mono text-sm">CompostMill : add(paths)</div>
+              <div class="text-xs text-slate-400">Copies files/directories to heap directory</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p><code>CompostHeap.addFile()</code> / <code>addDirectory()</code> copies input files to the heap staging area. <code>HeapMonitor</code> watches heap size and auto-triggers digest when >80% capacity.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">3</span>
+            <div>
+              <div class="font-semibold mono text-sm">Extraction Pipeline (parallel)</div>
+              <div class="text-xs text-slate-400">MetadataExtractor · RawByteProcessor · SemanticExtractor</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p><strong>MetadataExtractor</strong>: file type, LOC, language detection, SHA256 hash, timestamps.<br>
+            <strong>RawByteProcessor</strong>: header/tail hex (4KB each), hex chunks (256-char blocks), base64 for small files.<br>
+            <strong>SemanticExtractor</strong>: text summary, code semantics (via DNAExtractor), image description (via LLM vision). Internal cache for deduplication.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">4</span>
+            <div>
+              <div class="font-semibold mono text-sm">CompostShredder : shredAll()</div>
+              <div class="text-xs text-slate-400">Decomposes extraction results into CompostFragment[]</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p>Layer-specific shredding: semantic (paragraph/heading split), code (function/class split, 1024-byte threshold), metadata (each field = fragment), raw bytes (each 256-char chunk = fragment). Each fragment gets: id, source, domain, layer, content, metadata, tags.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">5</span>
+            <div>
+              <div class="font-semibold mono text-sm">CollisionEngine : runAll(fragments)</div>
+              <div class="text-xs text-slate-400">7 collision strategies → cross-domain LLM merge</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p>Strategies: timestamp (within 1hr, different domains), size (similar bytes, different types), metadata (shared values), hash (SHA256 prefix similarity), tag (shared tags, unrelated domains), domain opposites (most different), random (10% sampling). Pairs merged via LLM prompt.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">6</span>
+            <div>
+              <div class="font-semibold mono text-sm">FragmentScorer : score(fragment)</div>
+              <div class="text-xs text-slate-400">5-dim heuristic (60%) + optional LLM (40%) → 0-10</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p>Dimensions: novelty (unique word ratio), density (ideas/char), crossDomain (distinct source domains), metadataRarity (unusual values), connectionStrength (cross-domain links). <code>shouldPromote()</code> checks against configurable threshold.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">7</span>
+            <div>
+              <div class="font-semibold mono text-sm">SeedBank : add() → DigestGenerator : save()</div>
+              <div class="text-xs text-slate-400">Promotes top fragments → seeds → digest markdown</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p><strong>SeedBank</strong>: persists to <code>seeds.json</code> + <code>latest/*.md</code>. Tracks usage (useCount, usedBy). Prunes old unused seeds by retention days.<br>
+            <strong>DigestGenerator</strong>: saves <code>digest/YYYY-MM-DD.md</code> with sections: Heap Stats, Seeds Promoted, Soup Highlights, Domain Heatmap. Optional LLM synthesis for narrative.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">8</span>
+            <div>
+              <div class="font-semibold mono text-sm">CompostSoup : cycle() / run()</div>
+              <div class="text-xs text-slate-400">Continuous evolutionary loop (optional)</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p>Picks 2 random cross-domain fragments → LLM merge → score offspring → replace worst in population if better → promote to SeedBank if above threshold. Uses NoveltyArchive for tracking, SoupStateManager for persistence. Supports AbortSignal for clean shutdown.</p>
+          </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flex items-center gap-3">
+            <span class="badge origin-compost">9</span>
+            <div>
+              <div class="font-semibold mono text-sm">Integration Bridges</div>
+              <div class="text-xs text-slate-400">FragmentArchiveBridge · PromptLibraryBridge · SwarmBridge</div>
+            </div>
+          </div>
+          <div class="detail-panel">
+            <p><strong>FragmentArchiveBridge</strong>: syncs compost seeds → FragmentArchive (scavenger).<br>
+            <strong>PromptLibraryBridge</strong>: registers 4 compost prompts (collision-merge, offspring-scoring, digest-narrative, seed-extraction).<br>
+            <strong>SwarmBridge</strong>: provides compost seeds as prompt seeds for swarm generation.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -937,43 +1124,52 @@
             Dead Code
           </h3>
 
-          <div class="finding-card" data-severity="critical">
+          <div class="finding-card" data-severity="critical" style="opacity: 0.6;">
             <div class="flex items-center justify-between mb-2">
-              <span class="font-semibold">src/core/ErrorHandler.ts</span>
-              <span class="badge severity-critical">CRITICAL</span>
+              <span class="font-semibold line-through">src/core/ErrorHandler.ts</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
             </div>
-            <p class="text-sm text-slate-300 mb-2">75 lines. Exports <code>Result&lt;T&gt;</code>, <code>ok()</code>, <code>err()</code>, <code>classifyLLMError()</code>, <code>wrapLLM()</code>. Zero imports anywhere in src/, test/, or bin/. Not exported from index.ts.</p>
-            <div class="text-xs text-slate-500">
-              <strong>Verified:</strong> grep for ErrorHandler, wrapLLM, classifyLLMError found no consumers outside the file itself.
-            </div>
-            <div class="mt-2 text-xs">
-              <strong>Recommendation:</strong> <span class="text-emerald-400">Delete file.</span> No migration needed.
-            </div>
+            <p class="text-sm text-slate-400 mb-2">75 lines. Exports <code>Result&lt;T&gt;</code>, <code>ok()</code>, <code>err()</code>, <code>classifyLLMError()</code>, <code>wrapLLM()</code>. Zero imports. Deleted.</p>
           </div>
 
-          <div class="finding-card" data-severity="critical">
+          <div class="finding-card" data-severity="critical" style="opacity: 0.6;">
             <div class="flex items-center justify-between mb-2">
-              <span class="font-semibold">src/config/UnifiedConfig.ts</span>
-              <span class="badge severity-critical">CRITICAL</span>
+              <span class="font-semibold line-through">src/config/UnifiedConfig.ts</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
             </div>
-            <p class="text-sm text-slate-300 mb-2">126 lines. Exports <code>LiminalConfig</code> interface and <code>loadUnifiedConfig()</code>. Zero imports anywhere. Not exported from index.ts. Abandoned attempt to unify config — <code>ConfigLoader.ts</code> is used instead.</p>
-            <div class="text-xs text-slate-500">
-              <strong>Verified:</strong> grep for UnifiedConfig, loadUnifiedConfig, LiminalConfig found no consumers outside the file itself.
-            </div>
-            <div class="mt-2 text-xs">
-              <strong>Recommendation:</strong> <span class="text-emerald-400">Delete file.</span> If any LiminalConfig fields are needed, port them to ConfigLoader.ts first.
-            </div>
+            <p class="text-sm text-slate-400 mb-2">126 lines. Abandoned config unification. Deleted. ConfigLoader.ts is the single source of truth.</p>
           </div>
 
-          <div class="finding-card" data-severity="high">
+          <div class="finding-card" data-severity="high" style="opacity: 0.6;">
             <div class="flex items-center justify-between mb-2">
-              <span class="font-semibold">src/core/EvaluationFramework.ts</span>
-              <span class="badge severity-high">HIGH</span>
+              <span class="font-semibold line-through">src/core/EvaluationFramework.ts</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
             </div>
-            <p class="text-sm text-slate-300 mb-2">Imports Scoring.ts and HeuristicScorer but is itself not imported by any active code. Only referenced by its own test file. Dead intermediary layer.</p>
-            <div class="mt-2 text-xs">
-              <strong>Recommendation:</strong> <span class="text-amber-400">Review and likely delete.</span> Its strategies (fast/fitness/comprehensive) are not wired into RalphLoop.
+            <p class="text-sm text-slate-400 mb-2">Audit incorrectly flagged as dead — EvaluationFramework is actively imported by RalphLoop. Dead methods (evaluateMulti, evaluateBest) removed. FitnessCalculator inlined.</p>
+          </div>
+
+          <div class="finding-card" data-severity="critical" style="opacity: 0.6;">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold line-through">3 Critic classes (ArtisticCritic, TechnicalCritic, DomainExpert)</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
             </div>
+            <p class="text-sm text-slate-400 mb-2">~1,285 lines. Zero imports in src/. DeepCollaboration uses prompt-based critique. All files and tests deleted.</p>
+          </div>
+
+          <div class="finding-card" data-severity="high" style="opacity: 0.6;">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold line-through">P5GeneratorLLM template fallback methods</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
+            </div>
+            <p class="text-sm text-slate-400 mb-2">~200 lines of hardcoded templates removed. generate() now throws clear error when LLM not configured instead of silently falling back to low-quality templates.</p>
+          </div>
+
+          <div class="finding-card" data-severity="high" style="opacity: 0.6;">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold line-through">VoiceInput.tsx + Completions.ts</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
+            </div>
+            <p class="text-sm text-slate-400 mb-2">171 lines. VoiceInput never wired to generators. Completions stub didn't work. Both deleted.</p>
           </div>
         </div>
 
@@ -993,10 +1189,11 @@
               <p><strong>1. CreativeEvaluator</strong> <code class="text-blue-400">src/core/CreativeEvaluator.ts</code> — 7-dim LLM-based evaluation. Used by RalphLoop (17 consumers).</p>
               <p><strong>2. HeuristicScorer</strong> <code class="text-amber-400">src/swarm/HeuristicScorer.ts</code> — 5-dim heuristic (constraint, novelty, length, vocabulary, codeStructure). Used by SwarmOrchestrator.</p>
               <p><strong>3. Scoring.ts</strong> <code class="text-emerald-400">src/collab/Scoring.ts</code> — <code>quickScore()</code> lightweight heuristic. Used by CollaborativeClient, DeepCollaboration, EvaluationFramework.</p>
+              <p><strong>4. FragmentScorer</strong> <code class="text-lime-400">src/compost/FragmentScorer.ts</code> — 5-dim heuristic (novelty, density, crossDomain, metadataRarity, connectionStrength) + optional LLM blend. Used by CompostMill.</p>
               <p class="text-slate-500"><s>4. CollaborativeClient inline — removed, now delegates to Scoring.ts quickScore()</s></p>
             </div>
             <div class="mt-2 text-xs">
-              <strong>Resolution:</strong> Inline LLM scoring in CollaborativeClient.scoreOutputs() replaced with quickScore() from Scoring.ts. 3 scoring systems remain.
+              <strong>Resolution:</strong> Inline LLM scoring in CollaborativeClient.scoreOutputs() replaced with quickScore() from Scoring.ts. 4 scoring systems remain (FragmentScorer added with Compost Mill).
             </div>
           </div>
         </div>
@@ -1008,21 +1205,15 @@
             Duplicate Config Interfaces
           </h3>
 
-          <div class="finding-card" data-severity="high">
+          <div class="finding-card" data-severity="high" style="opacity: 0.6;">
             <div class="flex items-center justify-between mb-2">
-              <span class="font-semibold">3 Config Interfaces with Overlapping Fields</span>
-              <span class="badge severity-high">HIGH</span>
+              <span class="font-semibold line-through">3 Config Interfaces with Overlapping Fields</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">RESOLVED</span>
             </div>
-            <div class="text-sm text-slate-300 space-y-2">
-              <p><strong>1. ConfigLoader.AtelierConfig</strong> <code class="text-blue-400">src/config/ConfigLoader.ts:5</code> — 6 fields: defaultProvider, providers, loop, creative, galleryPath. Used by CLI and LLMClient.</p>
-              <p><strong>2. UnifiedConfig.LiminalConfig</strong> <code class="text-red-400">src/config/UnifiedConfig.ts:14</code> — 20 fields across 7 categories. DEAD CODE, never imported.</p>
-              <p><strong>3. index.ts AtelierConfig</strong> <code class="text-amber-400">src/index.ts:56</code> — 11 fields in 5 nested objects. Same name as #1 but different shape! Includes name, version, completionPromise.</p>
-            </div>
-            <div class="mt-2 text-xs">
-              <strong>Key problem:</strong> Two interfaces named <code>AtelierConfig</code> with incompatible shapes. index.ts version has required fields (name, version) that ConfigLoader version doesn't have.
-            </div>
-            <div class="mt-2 text-xs">
-              <strong>Recommendation:</strong> <span class="text-amber-400">Rename index.ts version to LiminalConfig.</span> Delete UnifiedConfig.ts. Make ConfigLoader.ts the single source of truth.
+            <div class="text-sm text-slate-400 space-y-2">
+              <p><strong>1. ConfigLoader.UserConfig</strong> <code class="text-blue-400">src/config/ConfigLoader.ts</code> — Renamed from AtelierConfig to UserConfig. Used by CLI and LLMClient.</p>
+              <p class="line-through"><strong>2. UnifiedConfig.LiminalConfig</strong> — DEAD CODE, deleted.</p>
+              <p><strong>3. index.ts LiminalConfig</strong> <code class="text-amber-400">src/index.ts</code> — Internal app config (different shape from UserConfig). Kept as-is.</p>
             </div>
           </div>
         </div>
@@ -1127,6 +1318,21 @@
             Architectural Gaps
           </h3>
 
+          <div class="finding-card" data-severity="low">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold">Compost Mill — new module (21 files)</span>
+              <span class="badge severity-low">LOW</span>
+            </div>
+            <div class="text-sm text-slate-300 space-y-2">
+              <p>Added <strong>Compost Mill</strong> — a living digestion system for creative material. Decomposes files into fragments, collides them across domains via 7 strategies, scores on 5 dimensions, promotes best nuggets as seeds.</p>
+              <p><strong>Pipeline:</strong> CompostHeap → MetadataExtractor + RawByteProcessor + SemanticExtractor → CompostShredder → CollisionEngine → FragmentScorer → SeedBank → DigestGenerator</p>
+              <p><strong>Soup:</strong> CompostSoup runs continuous evolutionary loop with NoveltyArchive + MapElites diversity maintenance.</p>
+              <p><strong>Bridges:</strong> FragmentArchiveBridge (→ Scavenger), PromptLibraryBridge (→ PromptLibrary), SwarmBridge (→ SwarmOrchestrator).</p>
+              <p><strong>CLI:</strong> <code>liminal compost add|digest|soup|seeds|status</code></p>
+              <p><strong>Coverage:</strong> 128 tests across 22 test suites. Full TDD Red-Green-Refactor. 0 TypeScript errors.</p>
+            </div>
+          </div>
+
           <div class="finding-card" data-severity="high">
             <div class="flex items-center justify-between mb-2">
               <span class="font-semibold">No CI/CD Pipeline</span>
@@ -1156,7 +1362,7 @@
               <span class="font-semibold">Exported but unwired modules (7)</span>
               <span class="badge severity-medium">MEDIUM</span>
             </div>
-            <p class="text-sm text-slate-300">These are exported from src/index.ts but not used by RalphLoop or any active flow: <code>SoupLoop</code>, <code>DNAExtractor</code>, <code>ArchiveLearning</code>, <code>QualityArchive</code>, <code>AestheticModel</code>, <code>MetaMode</code>, <code>SmartRouter</code>. May be intended for future use or library consumers.</p>
+            <p class="text-sm text-slate-300">These are exported from src/index.ts but not used by RalphLoop or any active flow: <code>DNAExtractor</code>, <code>ArchiveLearning</code>, <code>QualityArchive</code>, <code>AestheticModel</code>, <code>MetaMode</code>, <code>SmartRouter</code>. May be intended for future use or library consumers. <strong>Note:</strong> <code>SoupLoop</code> is now conceptually replaced by <code>CompostSoup</code> in the Compost Mill.</p>
           </div>
         </div>
       </div>
@@ -1218,6 +1424,12 @@
             <td class="py-3 pr-4 mono text-xs">activity.md</td>
             <td class="py-3 pr-4"><span class="badge severity-low">HISTORICAL</span></td>
             <td class="py-3 pr-4 text-xs text-slate-300">Activity log. Keep as-is.</td>
+            <td class="py-3 text-xs text-slate-400">No action needed</td>
+          </tr>
+          <tr>
+            <td class="py-3 pr-4 mono text-xs">docs/plans/2026-03-20-compost-mill-design.md</td>
+            <td class="py-3 pr-4"><span class="badge severity-low">CURRENT</span></td>
+            <td class="py-3 pr-4 text-xs text-slate-300">Compost Mill design document. Covers architecture, pipeline stages, soup loop, seed bank, CLI, and integration bridges. 21 source modules, 128 tests.</td>
             <td class="py-3 text-xs text-slate-400">No action needed</td>
           </tr>
         </tbody>
@@ -1415,6 +1627,23 @@
           <p class="text-xs text-slate-500"><strong>Files:</strong> src/llm/LLMClient.ts:73</p>
         </div>
 
+        <!-- Rec 10 -->
+        <div class="finding-card" style="opacity: 0.6;">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-emerald-400">#10</span>
+              <span class="font-semibold line-through">Implement Compost Mill (living digestion system)</span>
+              <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.4);">DONE</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="badge severity-low">LOW</span>
+              <span class="badge effort-L">L</span>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400 mb-2">Implemented full Compost Mill pipeline: 21 source modules, 128 tests, full TDD Red-Green-Refactor across 10 waves. Includes extraction (metadata, raw bytes, semantic), shredding, 7-strategy collision engine, 5-dim fragment scoring, seed bank with retention, digest generator, evolutionary soup loop, CLI, heap monitor, digest scheduler, and 3 integration bridges (FragmentArchive, PromptLibrary, Swarm).</p>
+          <p class="text-xs text-slate-500"><strong>Files:</strong> src/compost/** (21 files) + test/compost/** (22 test files) + docs/plans/2026-03-20-compost-mill-design.md</p>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1424,8 +1653,8 @@
 <!-- Footer -->
 <div class="max-w-7xl mx-auto mt-8 pb-8 text-center text-xs text-slate-500">
   <p>Liminal Post-Merge Architecture Audit &middot; Generated 2026-03-20 &middot; Updated 2026-03-20 &middot; All findings verified against source code via grep and file reads</p>
-  <p class="mt-1">Three codebases merged: Liminal (core creative loop) + Hydra (collaborative intelligence) + Token Mill (swarm generation)</p>
-  <p class="mt-1">8 of 9 recommendations completed. Remaining: #7 (CI/CD — not in scope).</p>
+  <p class="mt-1">Four codebases merged: Liminal (core creative loop) + Hydra (collaborative intelligence) + Token Mill (swarm generation) + Compost Mill (living digestion system)</p>
+  <p class="mt-1">9 of 10 recommendations completed. Remaining: #7 (CI/CD — not in scope).</p>
 </div>
 
 <script>
@@ -1589,6 +1818,28 @@ const modules = [
   // Root
   { path: 'src/index.ts', origin: 'atelier', status: 'active', consumers: 'bin/liminal, all imports' },
   { path: 'src/constants.ts', origin: 'atelier', status: 'active', consumers: 'LLMClient, ConfigLoader' },
+  // Compost Mill
+  { path: 'src/compost/types.ts', origin: 'compost', status: 'active', consumers: 'All compost modules' },
+  { path: 'src/compost/defaults.ts', origin: 'compost', status: 'active', consumers: 'CompostMill, CompostHeap, tests' },
+  { path: 'src/compost/CompostHeap.ts', origin: 'compost', status: 'active', consumers: 'CompostMill' },
+  { path: 'src/compost/MetadataExtractor.ts', origin: 'compost', status: 'active', consumers: 'CompostMill (extraction)' },
+  { path: 'src/compost/RawByteProcessor.ts', origin: 'compost', status: 'active', consumers: 'CompostMill (extraction)' },
+  { path: 'src/compost/SemanticExtractor.ts', origin: 'compost', status: 'active', consumers: 'CompostMill (extraction)' },
+  { path: 'src/compost/CompostShredder.ts', origin: 'compost', status: 'active', consumers: 'CompostMill' },
+  { path: 'src/compost/FragmentScorer.ts', origin: 'compost', status: 'active', consumers: 'CompostMill, CompostSoup' },
+  { path: 'src/compost/CollisionEngine.ts', origin: 'compost', status: 'active', consumers: 'CompostMill' },
+  { path: 'src/compost/SeedBank.ts', origin: 'compost', status: 'active', consumers: 'CompostMill, CompostSoup, bridges' },
+  { path: 'src/compost/DigestGenerator.ts', origin: 'compost', status: 'active', consumers: 'CompostMill' },
+  { path: 'src/compost/SoupStateManager.ts', origin: 'compost', status: 'active', consumers: 'CompostSoup' },
+  { path: 'src/compost/CompostSoup.ts', origin: 'compost', status: 'active', consumers: 'CompostMill (optional soup)' },
+  { path: 'src/compost/CompostMill.ts', origin: 'compost', status: 'active', consumers: 'cli.ts, bin/liminal' },
+  { path: 'src/compost/cli.ts', origin: 'compost', status: 'active', consumers: 'bin/liminal (compost subcommand)' },
+  { path: 'src/compost/HeapMonitor.ts', origin: 'compost', status: 'active', consumers: 'CompostMill (auto-trigger)' },
+  { path: 'src/compost/DigestScheduler.ts', origin: 'compost', status: 'active', consumers: 'CompostMill (timed trigger)' },
+  { path: 'src/compost/index.ts', origin: 'compost', status: 'active', consumers: 'Barrel exports (21 modules)' },
+  { path: 'src/compost/integration/FragmentArchiveBridge.ts', origin: 'compost', status: 'active', consumers: '→ Scavenger FragmentArchive' },
+  { path: 'src/compost/integration/PromptLibraryBridge.ts', origin: 'compost', status: 'active', consumers: '→ PromptLibrary (4 templates)' },
+  { path: 'src/compost/integration/SwarmBridge.ts', origin: 'compost', status: 'active', consumers: '→ SwarmOrchestrator' },
 ];
 
 function renderModuleTable(filter = 'all', search = '') {
@@ -1609,7 +1860,8 @@ function renderModuleTable(filter = 'all', search = '') {
     const originClass = m.status === 'dead' ? 'origin-dead' :
       m.origin === 'atelier' ? 'origin-atelier' :
       m.origin === 'hydra' ? 'origin-hydra' :
-      m.origin === 'tokenmill' ? 'origin-tokenmill' : 'bg-slate-700/50 text-slate-300 border border-slate-500';
+      m.origin === 'tokenmill' ? 'origin-tokenmill' :
+      m.origin === 'compost' ? 'origin-compost' : 'bg-slate-700/50 text-slate-300 border border-slate-500';
 
     const statusLabel = m.status === 'dead' ? '<span class="text-red-400">DEAD</span>' :
       m.status === 'exported' ? '<span class="text-slate-400">EXPORTED</span>' :

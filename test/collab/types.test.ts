@@ -76,18 +76,15 @@ describe('Collaboration Types', () => {
 
     it('should accept config with optional fields', () => {
       const config: CollaborativeConfig = {
-        localBaseUrl: 'http://localhost:1234/v1',
-        localModel: 'qwen3.5:4b',
         cloudApiKey: 'test-key',
         cloudModel: 'MiniMax-M2.7',
         maxRounds: 3,
         convergenceThreshold: 0.85,
-        parallel: true,
         callLLM: async (_prompt: string, _systemPrompt?: string) => 'test',
       };
 
       expect(config.maxRounds).toBe(3);
-      expect(config.parallel).toBe(true);
+      expect(config.cloudModel).toBe('MiniMax-M2.7');
     });
   });
 

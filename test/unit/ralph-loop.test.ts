@@ -74,7 +74,7 @@ describe('RalphLoop', () => {
   describe('seed and context', () => {
     it('run with seedCode produces iteration 1 context that includes the seed text', async () => {
       const seedCode = 'function setup() { createCanvas(400, 400); }';
-      await RalphLoop.run('make it colorful', {
+      await RalphLoop.run('make particles blue', {
         maxIterations: 1,
         galleryDir: TEST_GALLERY_DIR,
         project: 'seed-test',
@@ -108,7 +108,7 @@ describe('RalphLoop', () => {
 
   describe('no {{context}} placeholder fallback', () => {
     it('prompt with NO {{context}} placeholder still results in usedPrompt containing "Context from previous iterations"', async () => {
-      const promptWithNoPlaceholder = 'Just draw a circle.';
+      const promptWithNoPlaceholder = 'blue particles floating around';
       await RalphLoop.run(promptWithNoPlaceholder, {
         maxIterations: 1,
         galleryDir: TEST_GALLERY_DIR,
@@ -227,7 +227,7 @@ describe('RalphLoop', () => {
     });
 
     it('loop accepts collabDomain option', async () => {
-      const result = await RalphLoop.run('draw a circle', {
+      const result = await RalphLoop.run('blue particles', {
         maxIterations: 1,
         galleryDir: TEST_GALLERY_DIR,
         project: 'collab-domain-test',

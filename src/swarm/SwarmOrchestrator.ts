@@ -1,7 +1,8 @@
 import type { SwarmConfig, SwarmMode, SwarmOutput, SwarmResult, RoundResult, SwarmPersona, Vote } from './types.js';
 import type { ProjectDNA } from '../scavenger/types.js';
 import type { MinedFragment } from './types.js';
-import { DEFAULT_PERSONAS, DEFAULT_REFINEMENT_CONSTRAINTS } from './personas.js';
+import { DEFAULT_PERSONAS } from './personas.js';
+import { DEFAULT_REFINEMENT_CONSTRAINTS } from './types.js';
 import { VotingEngine } from './VotingEngine.js';
 import { HeuristicScorer } from './HeuristicScorer.js';
 import { MiningEngine } from './MiningEngine.js';
@@ -376,16 +377,6 @@ export class SwarmOrchestrator {
     for (let i = 0; i < this.personas.length; i++) {
       this.personas[i] = { ...this.personas[i], model: models[i] };
     }
-  }
-
-  /**
-   * Check if the swarm has converged (3 consecutive wins by same persona).
-   */
-  static checkConvergence(rounds: RoundResult[], threshold: number = 3): boolean {
-    if (rounds.length < threshold) return false;
-
-    const lastNWins = rounds.slice(-threshold).map(r => r.winnerId);
-    return lastNWins.every(id => id === lastNWins[0]);
   }
 
   /**
