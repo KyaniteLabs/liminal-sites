@@ -52,6 +52,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Basic Loop Functionality', () => {
     test('should run single iteration', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate a simple p5.js sketch';
 
       const result = await RalphLoop.run(prompt, {
@@ -67,6 +68,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should run multiple iterations', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate a particle system';
 
       const result = await RalphLoop.run(prompt, {
@@ -94,6 +96,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should terminate on max iterations', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate a sketch but never complete it';
 
       const result = await RalphLoop.run(prompt, {
@@ -110,6 +113,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Context Accumulation', () => {
     test('should pass context between iterations', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate and improve a sketch';
 
       await RalphLoop.run(prompt, {
@@ -131,6 +135,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should include previous code in context', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Iterate on this sketch';
 
       await RalphLoop.run(prompt, {
@@ -152,6 +157,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should maintain context immutability', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test context';
 
       await RalphLoop.run(prompt, {
@@ -170,6 +176,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Safety Mechanisms', () => {
     test('should enforce max iterations limit', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Run forever';
 
       const result = await RalphLoop.run(prompt, {
@@ -181,6 +188,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle empty prompt gracefully', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = '';
 
       const result = await RalphLoop.run(prompt, {
@@ -193,6 +201,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle null/undefined options', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test';
 
       // Should not throw with null options
@@ -202,6 +211,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle generator errors gracefully', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test error handling';
 
       // Mock a scenario where generation might fail
@@ -217,6 +227,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Gallery Integration', () => {
     test('should save iterations to gallery', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Save my iterations';
       const projectName = 'test-project';
 
@@ -238,6 +249,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should create gallery directory structure', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Create directory structure';
       const projectName = 'directory-test';
 
@@ -256,6 +268,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle gallery save failures gracefully', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Handle save failures';
 
       // Use invalid gallery directory to trigger save error
@@ -271,6 +284,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should throw error when gallery save fails and tolerateErrors is false', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Throw on save failure';
 
       // Use invalid gallery directory to trigger save error and expect error to be thrown
@@ -285,6 +299,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Quality Evaluation', () => {
     test('should evaluate each iteration', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate quality code';
 
       const result = await RalphLoop.run(prompt, {
@@ -304,6 +319,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should track quality improvement', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Improve quality over iterations';
 
       const result = await RalphLoop.run(prompt, {
@@ -328,6 +344,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Quality gate', () => {
     test('should break loop when score below minQualityScore', async () => {
+      if (skipIfNoLLM()) return;
       RalphLoop.reset();
       // Mock evaluator to return low score so loop exits on quality gate
       const origAssess = CreativeEvaluator.assess;
@@ -368,6 +385,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should not detect partial promise matches', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Almost complete but not quite promise COMPLETE almost';
 
       const result = await RalphLoop.run(prompt, {
@@ -381,6 +399,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should require exact formatting', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'complete with wrong format PROMISE COMPLETE';
 
       const result = await RalphLoop.run(prompt, {
@@ -396,6 +415,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Prompt Consistency', () => {
     test('should use same prompt every iteration', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Use this exact prompt every time';
 
       await RalphLoop.run(prompt, {
@@ -412,6 +432,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should inject context into prompt', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate {{context}}';
 
       await RalphLoop.run(prompt, {
@@ -435,6 +456,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Result Object', () => {
     test('should return comprehensive result object', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Generate comprehensive result';
 
       const result = await RalphLoop.run(prompt, {
@@ -454,6 +476,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should include final code in result', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Return final code';
 
       const result = await RalphLoop.run(prompt, {
@@ -472,6 +495,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should track completion time', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Track time';
 
       const result = await RalphLoop.run(prompt, {
@@ -487,6 +511,7 @@ describe('RalphLoop Integration Tests', () => {
 
   describe('Edge Cases', () => {
     test('should handle very long prompts', async () => {
+      if (skipIfNoLLM()) return;
       const longPrompt = 'A'.repeat(10000);
 
       const result = await RalphLoop.run(longPrompt, {
@@ -499,6 +524,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle unicode in prompts', async () => {
+      if (skipIfNoLLM()) return;
       const unicodePrompt = 'Generate art with emoji 🎨 and unicode café';
 
       const result = await RalphLoop.run(unicodePrompt, {
@@ -511,6 +537,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle special characters in project name', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test special chars';
 
       const result = await RalphLoop.run(prompt, {
@@ -523,6 +550,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('should handle concurrent loop executions', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Concurrent test';
 
       // Run multiple loops concurrently
@@ -546,6 +574,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('getState should return current loop state', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test getState';
 
       await RalphLoop.run(prompt, {
@@ -568,6 +597,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('reset should clear loop state', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test reset';
 
       await RalphLoop.run(prompt, {
@@ -584,6 +614,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('isRunning should return true when loop has run', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test isRunning';
 
       expect(RalphLoop.isRunning()).toBe(false);
@@ -606,6 +637,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('getProgress should return progress when loop is running', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test getProgress';
 
       await RalphLoop.run(prompt, {
@@ -622,6 +654,7 @@ describe('RalphLoop Integration Tests', () => {
     });
 
     test('getProgress should calculate progress correctly', async () => {
+      if (skipIfNoLLM()) return;
       const prompt = 'Test progress calculation';
       const maxIter = 10;
 

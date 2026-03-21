@@ -104,7 +104,7 @@ if (flags.help) {
   console.log('  --favorites                 List favorite prompts');
   console.log('  --interactive, -i           Interactive TUI mode');
   console.log('  --mode <mode>              Mode: live-music (generate Strudel/Hydra to --output)');
-  console.log('  --use-swarm                Use Token Mill swarm (7-persona Ollama) for generation');
+  console.log('  --use-swarm                Use Liminal swarm (7-persona Ollama) for generation');
   console.log('  --swarm-mode <mode>        Swarm mode: competitive, hybrid, ring, mesh (default: hybrid)');
   console.log('  --swarm-rounds <num>       Max swarm rounds (default: 10)');
   console.log('  --help, -h                  Show this help message');

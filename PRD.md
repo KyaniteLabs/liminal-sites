@@ -23,10 +23,10 @@ Liminal is a **single-purpose creative coding agent** with an **internal Ralph-W
 
 ```
 while true:
-  atelier.generate(prompt)      # Same prompt every iteration
-  atelier.render()              # Preview output
-  atelier.evaluate()            # Creative quality check
-  atelier.accumulate()          # Save state, update context
+  liminal.generate(prompt)      # Same prompt every iteration
+  liminal.render()              # Preview output
+  liminal.evaluate()            # Creative quality check
+  liminal.accumulate()          # Save state, update context
   if "<promise>COMPLETE</promise>" in output: break
   # World changed, loop continues
 ```
@@ -86,7 +86,7 @@ Liminal's substrate = prompt (optional {{context}}) + context injection + evalua
                  │
                  ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  ATELIER RALPH-WIGGUM LOOP (INTERNAL)                      │
+│  LIMINAL RALPH-WIGGUM LOOP (INTERNAL)                      │
 │                                                             │
 │  while iterations < max_iterations:                        │
 │    ├─ PromptStore.load(prompt)                             │
@@ -220,7 +220,7 @@ osc(20, 0.1, 0.8)
 
 ```bash
 # Generate + serve live
-atelier --prompt "ambient glitch set, 20 min" --mode live-music --output ./set
+liminal --prompt "ambient glitch set, 20 min" --mode live-music --output ./set
 
 # Outputs:
 # ./set/strudel.tidal    → Load in strudel.repl.co
@@ -233,14 +233,14 @@ atelier --prompt "ambient glitch set, 20 min" --mode live-music --output ./set
 ```javascript
 // Ralph-Wiggum loop with audio sync
 
-const musicOutput = await atelier.generateMusic({
+const musicOutput = await liminal.generateMusic({
   prompt: "anxious post-rock build",
   bpm: 120,
   duration: "4m",
   platform: "strudel"
 });
 
-const visualOutput = await atelier.generateVisuals({
+const visualOutput = await liminal.generateVisuals({
   prompt: "same mood, audio reactive",
   audioInput: musicOutput.analyze(),  // FFT data, BPM, energy
   platform: "hydra"
@@ -252,7 +252,7 @@ const visualOutput = await atelier.generateVisuals({
 #### Hardware Integration
 
 ```javascript
-// config/atelier.json
+// config/liminal.json
 {
   "live": {
     "midiOutput": "IAC Driver Bus 1",
@@ -270,7 +270,98 @@ const visualOutput = await atelier.generateVisuals({
 - Collaborative live coding (multi-user)
 - Music + ceramics (sonify the wheel)
 
----
+### 4.4 Swarm Generation (7-Persona Ollama)
+
+Liminal can use **multiple local models simultaneously** via Ollama, each playing a creative persona. This produces richer, more diverse output than a single model.
+
+**The 7 Personas:**
+
+| Persona | Role | Default Model |
+|---------|------|---------------|
+| **Kai** (The Architect) | Analytical, structural. Maps hidden architecture | `llama3.2:1b` |
+| **Nova** (The Synthesizer) | Connective, integrative. Finds bridges between worlds | `gemma2:2b` |
+| **Rex** (The Explorer) | Provocative, boundary-pushing. Finds unexpected angles | `phi3:mini` |
+| **Sam** (The Muse) | Warm, sensory, evocative. Makes abstract visceral | `qwen2.5:3b` |
+| **Max** (The Distiller) | Precise, compressed. Every word load-bearing | `qwen2.5:0.5b` |
+
+**Swarm Modes:**
+
+| Mode | Strategy | Best For |
+|------|----------|----------|
+| **competitive** | Winner's output seeds next round | Converging on a single best solution |
+| **hybrid** (default) | Top 2 outputs combined | Balanced exploration + refinement |
+| **ring** | Each persona sees previous output | Progressive refinement chains |
+| **mesh** | All top fragments woven together | Maximum diversity synthesis |
+
+**Usage:**
+```bash
+liminal --prompt "blue particles" --use-swarm --swarm-mode hybrid --swarm-rounds 10
+```
+
+**Key Components:**
+- `SwarmOrchestrator` — runs parallel persona generation per iteration
+- `VotingEngine` — conducts LLM-based or heuristic scoring rounds
+- `MiningEngine` — mines sessions for high-quality fragments
+- `HeuristicScorer` — fast quality scoring for early rounds
+
+### 4.5 Deep Collaboration
+
+Liminal supports **multi-model collaboration** where specialized roles (creator, visionary, critic, integrator) work together across local and cloud models.
+
+**3-Phase Process (DeepCollaboration):**
+
+| Phase | Roles | Purpose |
+|-------|-------|---------|
+| **Divergence** | Creator (local) + Visionary (cloud) | Generate practical + ambitious alternatives |
+| **Analysis** | Technical Critic + Artistic Critic + Domain Expert | Evaluate from multiple perspectives |
+| **Synthesis** | Integrator (cloud) + Refiner (local) | Combine best elements, polish output |
+
+Phases repeat until convergence (default threshold: 0.90) or max phases (default: 4).
+
+**Simpler 2-Model Mode (CollaborativeClient):**
+1. Both models generate independently
+2. Each analyzes the other's work
+3. Each refines based on feedback
+4. Best output selected via quality scoring
+
+**Supported Domains:** `ascii`, `music`, `code`, `p5`, `glsl`, `three`
+
+### 4.6 Compost Mill
+
+The Compost Mill is a **living digestion system** for creative material. Feed it files, directories, or outputs from previous Liminal sessions — it extracts, shreds, scores, and evolves fragments into reusable creative seeds.
+
+**Digestion Pipeline:**
+
+```
+FEED → EXTRACT → SHRED → MIX → MINE → DIGEST → PRUNE
+  │       │        │      │      │       │       │
+  │    3 layers  Fragments  Cross-  Score  Report  Cleanup
+  │  (structured, semantic,  domain  &     with    old
+  │   raw bytes)  collision  promote  stats  material
+  │              via LLM    to bank
+  └─ Files/dirs added to heap
+```
+
+**Key Concepts:**
+- **Heap** — staging area for material awaiting digestion
+- **Fragments** — extracted pieces with multi-dimensional scores (novelty, density, cross-domain potential)
+- **Seed Bank** — persistent store of high-scoring fragments promoted after scoring
+- **Soup** — continuous evolutionary loop: pick 2 random fragments → merge via LLM → score offspring → replace worst in population
+
+**Usage:**
+```javascript
+import { CompostMill } from './src/compost/CompostMill.js';
+
+const mill = new CompostMill(config);
+await mill.add('./gallery/my-project');
+await mill.digest();          // Run full pipeline
+const seeds = mill.seedBank.list();
+```
+
+**Integration Points:**
+- Seeds flow into `PromptLibrary` as reusable generation prompts
+- Mined fragments enhance swarm sessions via `SwarmBridge`
+- Fragment archive preserves provenance and cross-references
 
 ---
 
@@ -389,7 +480,7 @@ After Kai builds, I verify:
 ## 7. File Structure
 
 ```
-~/atelier-workspace/
+~/.liminal/
 ├── src/
 │   ├── core/
 │   │   ├── RalphLoop.js
@@ -425,7 +516,7 @@ After Kai builds, I verify:
 │   └── index.json             # Gallery metadata
 ├── output/                     # Export directory
 ├── config/
-│   └── atelier.json           # Agent configuration
+│   └── liminal.json           # Agent configuration
 ├── package.json
 └── README.md
 ```
@@ -434,11 +525,11 @@ After Kai builds, I verify:
 
 ## 8. Configuration
 
-### 8.1 Agent Config (`atelier.json`)
+### 8.1 Agent Config (`liminal.json`)
 
 ```json
 {
-  "name": "atelier",
+  "name": "liminal",
   "version": "1.0.0",
   "loop": {
     "maxIterations": 20,
@@ -485,7 +576,7 @@ Think of it like **BrainLoop** — a separate tool that agents (or humans, or sc
 
 ```
 ┌─────────────┐     API/CLI      ┌─────────────────────────────┐
-│   OpenClaw  │ ────────────────▶│        ATELIER              │
+│   OpenClaw  │ ────────────────▶│        LIMINAL              │
 │    Agent    │   (HTTP/stdio)   │  ┌─────────────────────┐    │
 │  (optional) │                  │  │  Ralph-Wiggum Loop  │    │
 └─────────────┘                  │  │  ├─ fs (Node.js)    │    │
@@ -509,9 +600,9 @@ Think of it like **BrainLoop** — a separate tool that agents (or humans, or sc
 
 **Programmatic (Node.js):**
 ```javascript
-const atelier = require('atelier');
+const liminal = require('liminal');
 
-const result = await atelier.run({
+const result = await liminal.run({
   prompt: "Make something that feels like Kid A",
   maxIterations: 20,
   framework: 'p5.js'
@@ -522,7 +613,7 @@ const result = await atelier.run({
 
 **CLI:**
 ```bash
-atelier --prompt "Kid A vibes" --max-iterations 20
+liminal --prompt "Kid A vibes" --max-iterations 20
 ```
 
 **HTTP API (optional):**
@@ -543,7 +634,7 @@ const execAsync = promisify(exec);
 
 // Invoke Liminal via CLI
 const { stdout } = await execAsync(
-  `atelier --prompt "${prompt}" --max-iterations 20 --output ./output`
+  `liminal --prompt "${prompt}" --max-iterations 20 --output ./output`
 );
 
 const result = JSON.parse(stdout);
@@ -577,7 +668,7 @@ Liminal uses a **pluggable LLM backend** — swap between cloud (Inception) and 
 **Inception Labs** — diffusion LLMs (dLLMs) with OpenAI-compatible API.
 
 ```javascript
-// config/atelier.json
+// config/liminal.json
 {
   "llm": {
     "provider": "inception",
@@ -601,7 +692,7 @@ Liminal uses a **pluggable LLM backend** — swap between cloud (Inception) and 
 Run fully offline with small OSS models via Ollama:
 
 ```javascript
-// config/atelier.json
+// config/liminal.json
 {
   "llm": {
     "provider": "ollama",
@@ -639,7 +730,7 @@ class OpenAIBackend implements LLMBackend { /* ... */ } // Fallback
 
 ```bash
 # Liminal auto-detects available backends:
-$ atelier --prompt "test"
+$ liminal --prompt "test"
 
 ✓ Inception API available (INCEPTION_API_KEY set)
 ✓ Ollama detected (qwen2.5-coder:7b)
@@ -720,6 +811,9 @@ Output: <promise>COMPLETE</promise> only when all requirements met.
 - [x] Creative evaluator (aesthetic scoring, quality gate)
 - [x] Export (HTML, JS, ZIP)
 - [x] Iteration history visualization (TUI timeline, GUI)
+- [x] Swarm generation (7-persona Ollama, VotingEngine, MiningEngine)
+- [x] Deep collaboration (3-phase DeepCollaboration, CollaborativeClient)
+- [x] Compost Mill (digestion pipeline, seed bank, soup)
 
 ### 10.3 Could Have (Future)
 
@@ -728,7 +822,7 @@ Output: <promise>COMPLETE</promise> only when all requirements met.
 - [ ] Neural CA
 - [ ] Self-modifying code (sandboxed) — sandbox and SelfImprovement implemented; optional further hardening
 - [x] Live Music Coding (Strudel, Hydra, CLI --mode live-music, generateMusic/generateVisuals/generateMusicToVisual)
-- [x] Music-to-visual bridge
+- [x] Music-to-visual bridge (generateMusicToVisual, organism mode)
 - [ ] Hardware MIDI/OSC integration (config placeholders in place)
 - [ ] Collaborative live coding (multi-user)
 
