@@ -1,0 +1,169 @@
+/**
+ * LoopConfig - Configuration types and normalization for RalphLoop
+ *
+ * Extracted from RalphLoop.ts. Contains all interfaces, types,
+ * defaults, and the normalizeOptions function.
+ */
+
+import { MapElites } from '../evolution/MapElites.js';
+import { NoveltyArchive } from '../evolution/NoveltyArchive.js';
+import type { EvaluationStrategy } from './ScoringEngine.js';
+import type { SafetyConfig } from './SafetyGuardrails.js';
+import type { CollaborationMode } from '../collab/CollaborationEngine.js';
+import type { DeepCollaborationConfig, CollaborativeConfig, DomainType } from '../collab/types.js';
+import type { SwarmConfig, SwarmMode } from '../swarm/types.js';
+
+export const DEFAULT_MAX_ITERATIONS = 20;
+export const DEFAULT_TIMEOUT_MINUTES = 30;
+export const DEFAULT_MIN_QUALITY_SCORE = 0.7;
+
+export interface LoopOptions {
+  maxIterations?: number;
+  timeoutMinutes?: number;
+  galleryDir?: string;
+  project?: string;
+  tolerateErrors?: boolean;
+  minQualityScore?: number;
+  /** 'p5' (default) or 'organism' (generateMusicToVisual + saveOrganism per iteration) */
+  mode?: 'p5' | 'organism';
+  /** Optional traits for organism mode (bpm, palette) */
+  traits?: { bpm?: number; palette?: string };
+  /** Optional seed code for iteration 1: "improve this toward [prompt]" */
+  seedCode?: string;
+  /** Optional seed template name or content for iteration 1 */
+  seedTemplate?: string;
+  /** Max characters of context to inject (truncation). PRD: Context bloat. */
+  maxContextLength?: number;
+  /** Include only last K iterations in context (default: all in history up to maxContextLength) */
+  lastKIterations?: number;
+  /** Optional evaluation criteria (e.g. ["aesthetic", "technical", "novelty"]). When provided, passed to ScoringEngine.score(). */
+  evaluationCriteria?: string[];
+  /** Evaluation strategy to use (default: 'detailed') */
+  evaluationStrategy?: EvaluationStrategy;
+  /** Progress callback: called after each iteration with iteration number, score, promiseDetected, code, timestamp */
+  onProgress?: (data: { iteration: number; score: number; promiseDetected: boolean; code: string; timestamp: string }) => void;
+  /** Optional AbortSignal to stop the loop (checked at start of each iteration) */
+  signal?: AbortSignal;
+  /** When set (e.g. 2), every N-th iteration is a merge step: take two from history, produce proposed, call onMergeStep. */
+  mergeEveryN?: number;
+  /** Called when a merge step runs: (codeA, codeB, proposed) from last two in history. */
+  onMergeStep?: (data: { codeA: string; codeB: string; proposed: string }) => void;
+  /** Enable MAP-Elites quality-diversity optimization */
+  useMapElites?: boolean;
+  /** MAP-Elites grid dimensions (default [10, 10]) */
+  mapElitesDims?: [number, number];
+  /** Safety guardrails configuration */
+  safetyConfig?: SafetyConfig;
+  /** Break loop if no fitness improvement for this many iterations (default 7, 0 = disabled) */
+  stagnationThreshold?: number;
+  /** Enable deep collaboration (multi-model specialized roles) */
+  useDeepCollab?: boolean;
+  /** Enable simple 2-model collaboration */
+  useCollab?: boolean;
+  /** Use CollaborationEngine instead of raw DeepCollaboration/CollaborativeClient */
+  collabMode?: CollaborationMode;
+  /** Configuration for collaboration (merged with defaults) */
+  collabConfig?: Partial<DeepCollaborationConfig & CollaborativeConfig>;
+  /** Domain for collaboration quality assessment (default: 'p5') */
+  collabDomain?: DomainType;
+  /** Enable swarm generation (7-persona Ollama swarm) */
+  useSwarm?: boolean;
+  /** Configuration for the swarm */
+  swarmConfig?: Partial<SwarmConfig>;
+  /** Swarm generative mode (default: 'hybrid') */
+  swarmMode?: SwarmMode;
+  /** Enable archive learning — store high-quality outputs for few-shot improvement */
+  useArchiveLearning?: boolean;
+  /** Path for quality archive JSON (default: ~/.liminal/archive/quality_archive.json) */
+  archivePath?: string;
+  /** Enable aesthetic model — predict quality based on behavior vectors */
+  useAestheticModel?: boolean;
+  /** Auto-feed quality outputs to compost heap and trigger digest when full */
+  autoCompost?: boolean;
+}
+
+export interface LoopResult {
+  code: string;
+  iterations: number;
+  completed: boolean;
+  reason: string;
+  timestamp: string;
+  duration: number;
+  finalScore: number;
+  project?: string;
+}
+
+export interface IterationContext {
+  iteration: number;
+  prompt: string;
+  usedPrompt: string;
+  code: string;
+  evaluation: { score: number; issues: string[]; [key: string]: unknown };
+  timestamp: string;
+  maxIterations?: number;
+}
+
+export interface NormalizedLoopOptions extends LoopOptions {
+  maxIterations: number;
+  timeoutMinutes: number;
+  galleryDir: string;
+  project: string;
+  tolerateErrors: boolean;
+  minQualityScore: number;
+  useMapElites: boolean;
+  mapElitesDims: [number, number];
+  safetyConfig: SafetyConfig | undefined;
+  _mapElites?: MapElites;
+  _noveltyArchive?: NoveltyArchive;
+  useDeepCollab: boolean;
+  useCollab: boolean;
+  collabConfig: Partial<DeepCollaborationConfig & CollaborativeConfig>;
+  collabDomain: DomainType;
+  useSwarm: boolean;
+  swarmConfig: Partial<SwarmConfig>;
+  swarmMode: SwarmMode;
+}
+
+/**
+ * Normalize loop options with defaults
+ */
+export function normalizeOptions(options: LoopOptions | null): NormalizedLoopOptions {
+  return {
+    maxIterations: options?.maxIterations || DEFAULT_MAX_ITERATIONS,
+    timeoutMinutes: options?.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES,
+    galleryDir: options?.galleryDir || 'gallery',
+    project: options?.project || `project-${Date.now()}`,
+    tolerateErrors: options?.tolerateErrors ?? false,
+    minQualityScore: options?.minQualityScore ?? DEFAULT_MIN_QUALITY_SCORE,
+    mode: options?.mode ?? 'p5',
+    traits: options?.traits,
+    mergeEveryN: options?.mergeEveryN,
+    onMergeStep: options?.onMergeStep,
+    seedCode: options?.seedCode,
+    seedTemplate: options?.seedTemplate,
+    maxContextLength: options?.maxContextLength,
+    lastKIterations: options?.lastKIterations,
+    evaluationCriteria: options?.evaluationCriteria,
+    evaluationStrategy: options?.evaluationStrategy,
+    onProgress: options?.onProgress,
+    signal: options?.signal,
+    useMapElites: options?.useMapElites ?? false,
+    mapElitesDims: options?.mapElitesDims ?? [10, 10],
+    safetyConfig: options?.safetyConfig,
+    stagnationThreshold: options?.stagnationThreshold ?? 7,
+    useDeepCollab: options?.useDeepCollab ?? false,
+    useCollab: options?.useCollab ?? false,
+    collabConfig: options?.collabConfig || {},
+    collabMode: options?.collabMode,
+    collabDomain: options?.collabDomain || 'p5',
+    useSwarm: options?.useSwarm ?? false,
+    swarmConfig: options?.swarmConfig || {},
+    swarmMode: options?.swarmMode ?? ('hybrid' as SwarmMode),
+    useArchiveLearning: options?.useArchiveLearning ?? false,
+    archivePath: options?.archivePath,
+    useAestheticModel: options?.useAestheticModel ?? false,
+    autoCompost: options?.autoCompost ?? false,
+    _mapElites: options?.useMapElites ? new MapElites(options?.mapElitesDims ?? [10, 10]) : undefined,
+    _noveltyArchive: options?.useMapElites ? new NoveltyArchive() : undefined,
+  };
+}

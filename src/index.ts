@@ -350,16 +350,16 @@ export class Liminal {
 
 // Core Ralph-Wiggum Loop Engine
 export { RalphLoop };
+export { normalizeOptions, DEFAULT_MAX_ITERATIONS, DEFAULT_TIMEOUT_MINUTES, DEFAULT_MIN_QUALITY_SCORE } from './core/LoopConfig.js';
+export type { LoopOptions, LoopResult, IterationContext, NormalizedLoopOptions } from './core/LoopConfig.js';
 import { requestImprovement } from './core/SelfImprovement.js';
 export { requestImprovement, type ImprovementContext, type RequestImprovementOptions, type ImprovementGenerator } from './core/SelfImprovement.js';
 export type { RequestImprovementState } from './improvement/requestImprovement.js';
 
 // Creative Evaluation and Quality Control
 export { CreativeEvaluator };
-export { EvaluationFramework } from './core/EvaluationFramework.js';
-export type { EvaluationResult, EvaluationStrategy, EvaluationContext } from './core/EvaluationFramework.js';
 export { ScoringEngine } from './core/ScoringEngine.js';
-export type { ScoringResult, ScoringInput, ScoringStrategy, ScoreDimension } from './core/ScoringEngine.js';
+export type { ScoringResult, ScoringInput, ScoringStrategy, ScoreDimension, EvaluationResult, EvaluationStrategy, EvaluationContext } from './core/ScoringEngine.js';
 
 // Promise Detection for Loop Termination
 export { PromiseDetector };

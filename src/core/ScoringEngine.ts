@@ -4,8 +4,8 @@
  * All strategies output 0-1 scores on the same dimensions. Register
  * custom strategies or use the built-in ones: comprehensive, fast, keyword.
  *
- * This replaces the hardcoded switch/case in EvaluationFramework while
- * keeping backward compatibility.
+ * Built-in strategies: comprehensive, fast, keyword, fitness.
+ * Legacy aliases: detailed→comprehensive, heuristic→fast, fast→keyword.
  */
 
 import { CreativeEvaluator } from './CreativeEvaluator.js';
@@ -17,6 +17,23 @@ import type { SwarmPersona } from '../swarm/types.js';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+/** Legacy evaluation strategy names (backward-compatible with EvaluationFramework). */
+export type EvaluationStrategy = 'detailed' | 'fast' | 'heuristic' | 'fitness' | 'comprehensive' | 'keyword';
+
+/** Legacy evaluation result shape (backward-compatible with EvaluationFramework). */
+export type EvaluationResult = ScoringResult;
+
+/** Legacy evaluation context shape (backward-compatible with EvaluationFramework). */
+export interface EvaluationContext {
+  prompt?: string;
+  domain?: DomainType;
+  criteria?: string[];
+  previousOutputs?: string[];
+  persona?: SwarmPersona;
+  dimensionScores?: Record<string, number | undefined>;
+  weights?: Record<string, number | undefined>;
+}
 
 /** Normalized dimension names shared across all strategies. */
 export type ScoreDimension =
@@ -167,6 +184,39 @@ class KeywordStrategy implements ScoringStrategy {
   }
 }
 
+/** Fitness strategy — pure weighted-average of pre-computed dimension scores. */
+class FitnessStrategy implements ScoringStrategy {
+  name = 'fitness';
+
+  score(input: ScoringInput): ScoringResult {
+    const weights = (input as FitnessInput).weights ?? {};
+    const scores = (input as FitnessInput).dimensionScores ?? {};
+    const entries = Object.entries(scores).filter(([, val]) => val !== undefined) as [string, number][];
+
+    let totalWeight = 0;
+    let weightedSum = 0;
+    for (const [dimension, score] of entries) {
+      const weight = weights[dimension] ?? weights['default'] ?? 1;
+      weightedSum += score * weight;
+      totalWeight += weight;
+    }
+    const score = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
+    const details: Record<string, number> = {};
+    for (const [key, value] of entries) {
+      details[key] = value;
+    }
+
+    return { score, dimensions: details, strategy: this.name };
+  }
+}
+
+/** Extended input shape for the fitness strategy. */
+export interface FitnessInput extends ScoringInput {
+  dimensionScores?: Record<string, number | undefined>;
+  weights?: Record<string, number | undefined>;
+}
+
 // ---------------------------------------------------------------------------
 // ScoringEngine
 // ---------------------------------------------------------------------------
@@ -180,7 +230,21 @@ export class ScoringEngine {
     this.register(new ComprehensiveStrategy());
     this.register(new FastStrategy());
     this.register(new KeywordStrategy());
+    this.register(new FitnessStrategy());
+
+    // Legacy aliases (backward-compatible names from EvaluationFramework)
+    this.registerAlias('detailed', 'comprehensive');
+    this.registerAlias('heuristic', 'fast');
+    this.registerAlias('fast', 'keyword');
+
     this.defaultStrategyName = defaultStrategy;
+  }
+
+  /** Register an alias name that maps to an existing strategy. */
+  private registerAlias(alias: string, targetName: string): void {
+    const target = this.strategies.get(targetName);
+    if (!target) return;
+    this.strategies.set(alias, target);
   }
 
   /** Register a custom scoring strategy. */
