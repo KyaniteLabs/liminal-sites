@@ -11,12 +11,6 @@ importers:
 
   .:
     dependencies:
-      '@types/archiver':
-        specifier: ^7.0.0
-        version: 7.0.0
-      '@types/react':
-        specifier: ^18.3.28
-        version: 18.3.28
       archiver:
         specifier: ^7.0.1
         version: 7.0.1
@@ -45,12 +39,18 @@ importers:
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react@18.3.28)(react-dom@19.2.4(react@18.3.1))(react@18.3.1)
+      '@types/archiver':
+        specifier: ^7.0.0
+        version: 7.0.0
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
       '@types/node':
         specifier: ^20.11.0
         version: 20.19.35
+      '@types/react':
+        specifier: ^18.3.28
+        version: 18.3.28
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
