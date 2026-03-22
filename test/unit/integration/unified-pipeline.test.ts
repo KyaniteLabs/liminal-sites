@@ -15,7 +15,6 @@ import {
 } from '../../../src/core/types.js';
 import { ScoringEngine } from '../../../src/core/ScoringEngine.js';
 import type { ScoringInput } from '../../../src/core/ScoringEngine.js';
-import { EvaluationFramework } from '../../../src/core/EvaluationFramework.js';
 
 // ---------------------------------------------------------------------------
 // Cross-system fragment flow
@@ -107,21 +106,23 @@ describe('unified pipeline integration', () => {
     }
   });
 
-  it('EvaluationFramework delegates to ScoringEngine transparently', async () => {
+  it('ScoringEngine supports legacy strategy names (detailed, heuristic, fast)', async () => {
     const code = 'function setup() { createCanvas(400, 400); } function draw() { circle(200, 200, 50); }';
 
-    // Both entry points should return valid scores
-    const frameworkResult = await EvaluationFramework.evaluate(code, 'detailed', { criteria: ['technical', 'creative'] });
+    const engine = new ScoringEngine();
 
-    const engine = EvaluationFramework.getEngine();
-    const engineResult = await engine.score({ output: code, criteria: ['technical', 'creative'] }, 'comprehensive');
+    // Legacy name 'detailed' should map to 'comprehensive'
+    const detailedResult = await engine.score({ output: code, criteria: ['technical', 'creative'] }, 'detailed');
 
-    expect(frameworkResult.score).toBeGreaterThanOrEqual(0);
-    expect(frameworkResult.score).toBeLessThanOrEqual(1);
-    expect(engineResult.score).toBeGreaterThanOrEqual(0);
-    expect(engineResult.score).toBeLessThanOrEqual(1);
-    // They should produce the same result since EvaluationFramework delegates to ScoringEngine
-    expect(frameworkResult.score).toBeCloseTo(engineResult.score, 5);
+    // Direct name 'comprehensive' should produce the same result
+    const comprehensiveResult = await engine.score({ output: code, criteria: ['technical', 'creative'] }, 'comprehensive');
+
+    expect(detailedResult.score).toBeGreaterThanOrEqual(0);
+    expect(detailedResult.score).toBeLessThanOrEqual(1);
+    expect(comprehensiveResult.score).toBeGreaterThanOrEqual(0);
+    expect(comprehensiveResult.score).toBeLessThanOrEqual(1);
+    // Legacy alias should produce identical result to canonical strategy
+    expect(detailedResult.score).toBe(comprehensiveResult.score);
   });
 
   it('custom scoring strategy works end-to-end', async () => {

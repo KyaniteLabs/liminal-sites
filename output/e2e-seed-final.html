@@ -23,15 +23,7 @@
 <body>
     <main>
         <script>
-function setup() {
-  createCanvas(800, 600);
-}
-
-function draw() {
-  background(220);
-  fill(100, 150, 200);
-  ellipse(width / 2, height / 2, 100, 100);
-}
+function setup(){ createCanvas(800, 600); } function draw(){ background(0); noStroke(); noiseSeed(1337); let x = map(mouseX, 0, width, 0, 25); let y = map(mouseY, 0, height, 0, 25); for(let i=0; i<200; i++){ let n = noise(x + i*0.1, y + i*0.1, frameCount * 0.01) * 360; // Simulated Cost Growth Curve fill(n, 10); ellipse(i*4, (i%2)*20, 4+n*5, 4+n*3); } for(let j=0; j<100; j++){ let nx = noise(j*0.1, frameCount * 0.005) * width; let ny = noise(j*0.1 + 99, frameCount * 0.005) * height; fill(200); ellipse(nx, ny, 3, 3); } for(let k=0; k<150; k++){ let nk = noise(k*0.05, frameCount * 0.008) * width; let nky = noise(k*0.05 + 77, frameCount * 0.008) * height; fill(255); ellipse(nk, nky, 1.5+nk/500, 1.5+nky/500); } } function windowResized(){ resizeCanvas(windowWidth, windowHeight); }
         </script>
     </main>
 </body>

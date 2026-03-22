@@ -39,17 +39,12 @@ function draw() {
     expect(result.dimensions?.creative).toBeLessThanOrEqual(1);
   });
 
-  it('fast strategy returns 0-1 score with 5 dimensions', async () => {
+  it('fast strategy (legacy alias for keyword) returns 0-1 score', async () => {
     const result = await engine.score(codeInput, 'fast');
 
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(1);
-    expect(result.strategy).toBe('fast');
-    expect(result.dimensions?.constraint).toBeDefined();
-    expect(result.dimensions?.novelty).toBeDefined();
-    expect(result.dimensions?.length).toBeDefined();
-    expect(result.dimensions?.vocabulary).toBeDefined();
-    expect(result.dimensions?.codeStructure).toBeDefined();
+    expect(result.strategy).toBe('keyword'); // 'fast' is a legacy alias for 'keyword'
   });
 
   it('keyword strategy returns 0-1 score', async () => {
@@ -105,7 +100,7 @@ describe('ScoringEngine custom strategies', () => {
     engine.setDefault('fast');
 
     const result = await engine.score({ output: 'test code' });
-    expect(result.strategy).toBe('fast');
+    expect(result.strategy).toBe('keyword'); // 'fast' is a legacy alias for 'keyword'
   });
 
   it('setDefault throws on unknown strategy', () => {
