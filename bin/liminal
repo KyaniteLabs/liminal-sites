@@ -3,12 +3,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { run, PreviewServer, generateMusic, generateVisuals } from '../dist/index.js';
-import { getEffectiveConfig, saveConfig, loadProjectConfig } from '../dist/config/ConfigLoader.js';
+import { getEffectiveConfig, saveConfig, loadProjectConfig, getMultiModelConfig } from '../dist/config/ConfigLoader.js';
 import { PromptHistory } from '../dist/config/PromptHistory.js';
 import { InteractiveMode } from '../dist/tui/InteractiveMode.js';
 import { CompostMill } from '../dist/compost/CompostMill.js';
 import { parseArgs, execute } from '../dist/compost/cli.js';
 import { LLMClient } from '../dist/llm/LLMClient.js';
+import { ModelRouter } from '../dist/compost/ModelRouter.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -77,6 +78,14 @@ for (let i = 0; i < args.length; i++) {
     flags.swarmMode = args[++i];
   } else if (arg === '--swarm-rounds') {
     flags.swarmRounds = parseInt(args[++i]);
+  } else if (arg === '--fast-model') {
+    flags.fastModel = args[++i];
+  } else if (arg === '--powerful-model') {
+    flags.powerfulModel = args[++i];
+  } else if (arg === '--routing-mode') {
+    flags.routingMode = args[++i];
+  } else if (arg === '--confidence-threshold') {
+    flags.confidenceThreshold = parseFloat(args[++i]);
   } else if (!arg.startsWith('-')) {
     if (cmd === null) { cmd = arg; } else { cmdArgs.push(arg); }
   }
@@ -111,6 +120,10 @@ if (flags.help) {
   console.log('  --use-swarm                Use Liminal swarm (7-persona Ollama) for generation');
   console.log('  --swarm-mode <mode>        Swarm mode: competitive, hybrid, ring, mesh (default: hybrid)');
   console.log('  --swarm-rounds <num>       Max swarm rounds (default: 10)');
+  console.log('  --fast-model <name>        Primary/fast model for dual-mode (e.g., qwen3.5:9b)');
+  console.log('  --powerful-model <name>     Secondary/powerful model (e.g., qwen3:30b-a3b)');
+  console.log('  --routing-mode <mode>       Dual-model routing: cascade, speculative, ensemble, specialized');
+  console.log('  --confidence-threshold <n>  Cascade escalation threshold (0-1, default: 0.8)');
   console.log('  --help, -h                  Show this help message');
   console.log('  --version                   Show version');
   console.log('');
@@ -381,11 +394,75 @@ else if (cmd === 'serve' || cmd === 's') {
   });
 }
 else if (cmd === 'compost') {
-  const llm = new LLMClient();
-  // Fast local LLM for high-volume extraction/scoring (bypasses hybrid cloud fallback overhead)
-  const fastLLM = new LLMClient({ provider: 'lmstudio' });
+  // Check for dual-model configuration
+  let llm: LLMClient | ModelRouter;
+  let fastLLM: LLMClient;
+  let modelRouter: ModelRouter | undefined;
+
+  // Check if dual-model flags are provided
+  const hasDualModelFlags = flags.fastModel || flags.powerfulModel || flags.routingMode;
+
+  if (hasDualModelFlags) {
+    // Dual-model mode: create ModelRouter with two LLM clients
+    const fastModelName = flags.fastModel || 'qwen3.5:9b';
+    const powerfulModelName = flags.powerfulModel || 'qwen3:30b-a3b';
+    const routingMode = flags.routingMode || 'cascade';
+    const confidenceThreshold = flags.confidenceThreshold ?? 0.8;
+
+    console.log(`[Compost] Dual-model mode:`);
+    console.log(`  Fast model: ${fastModelName}`);
+    console.log(`  Powerful model: ${powerfulModelName}`);
+    console.log(`  Routing mode: ${routingMode}`);
+    console.log(`  Confidence threshold: ${confidenceThreshold}`);
+    console.log('');
+
+    // Create primary (fast) LLM client
+    const primaryLLM = new LLMClient({
+      provider: 'ollama',
+      baseUrl: process.env.LIMINAL_LLM_BASE_URL || 'http://localhost:11434',
+      model: fastModelName,
+    });
+
+    // Create secondary (powerful) LLM client
+    const secondaryLLM = new LLMClient({
+      provider: 'ollama',
+      baseUrl: process.env.LIMINAL_LLM_BASE_URL || 'http://localhost:11434',
+      model: powerfulModelName,
+    });
+
+    // Create ModelRouter
+    modelRouter = new ModelRouter(primaryLLM, secondaryLLM, {
+      primary: {
+        provider: 'ollama',
+        model: fastModelName,
+        temperature: 0.7,
+        maxTokens: 2000,
+      },
+      secondary: {
+        provider: 'ollama',
+        model: powerfulModelName,
+        temperature: 0.7,
+        maxTokens: 2000,
+      },
+      routing: {
+        mode: routingMode as any,
+        confidenceThreshold,
+        primaryConcurrency: 8,
+        secondaryConcurrency: 4,
+      },
+    });
+
+    // Use the router as the main LLM
+    llm = modelRouter;
+    fastLLM = primaryLLM; // For backward compatibility with fastLLM parameter
+  } else {
+    // Single-model mode (original behavior)
+    llm = new LLMClient();
+    fastLLM = new LLMClient({ provider: 'lmstudio' });
+  }
+
   const action = parseArgs(process.argv.slice(2));
-  const mill = new CompostMill(llm, { soupEnabled: true, fastLLM });
+  const mill = new CompostMill(llm, { soupEnabled: true, fastLLM, modelRouter });
   await execute(action, mill).catch(err => {
     console.error('Compost error:', err.message);
     process.exit(1);

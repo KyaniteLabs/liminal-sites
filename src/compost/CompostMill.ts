@@ -24,6 +24,7 @@ import type { ProjectDNA } from '../scavenger/types.js';
 import { RetryManager } from '../llm/RetryManager.js';
 import { eventBus, EventTypes } from '../core/EventBus.js';
 import type { LLMClientLike } from './SemanticExtractor.js';
+import { ModelRouter, type TaskType } from './ModelRouter.js';
 import { CompostParser } from '../core/parsing/CompostParser.js';
 import type { LIRToken } from '../core/lir/types.js';
 import { formatSeedForPrompt } from '../core/lir/LIRPromptFormatter.js';
@@ -40,33 +41,52 @@ export class CompostMill {
   private llm: LLMClientLike;
   /** Fast local LLM for high-volume tasks (extraction, scoring). Falls back to main llm. */
   private fastLLM: LLMClientLike;
+  /** Optional model router for dual-model architecture */
+  private modelRouter?: ModelRouter;
 
   constructor(
     llm: LLMClientLike,
-    overrides?: Partial<CompostConfig> & { soupStatePath?: string; fastLLM?: LLMClientLike; parser?: CompostParser },
+    overrides?: Partial<CompostConfig> & { soupStatePath?: string; fastLLM?: LLMClientLike; parser?: CompostParser; modelRouter?: ModelRouter },
   ) {
     const config = mergeConfig(overrides as Partial<CompostConfig>);
     this.config = config;
     this.llm = llm;
     this.fastLLM = overrides?.fastLLM ?? llm;
+    this.modelRouter = overrides?.modelRouter;
 
     this.heap = new CompostHeap(config);
     // Auto-create CompostParser when LIR is enabled and no parser was provided
     const parser = overrides?.parser ?? (config.lirEnabled ? new CompostParser(config.digestDir) : undefined);
-    this.semanticExtractor = new SemanticExtractor(config, this.fastLLM, parser);
-    this.collisionEngine = new CollisionEngine(config, llm);
-    this.fragmentScorer = new FragmentScorer(config, this.fastLLM);
+
+    // Use specialized routing if ModelRouter is available
+    const extractionLLM = this.modelRouter ?? this.fastLLM;
+    const collisionLLM = this.modelRouter ?? llm;
+    const scoringLLM = this.modelRouter ?? this.fastLLM;
+    const soupLLM = this.modelRouter ?? llm;
+    const digestLLM = this.modelRouter ?? llm;
+
+    this.semanticExtractor = new SemanticExtractor(config, extractionLLM, parser);
+    this.collisionEngine = new CollisionEngine(config, collisionLLM);
+    this.fragmentScorer = new FragmentScorer(config, scoringLLM);
     this.seedBank = new SeedBank(config);
-    this.digestGenerator = new DigestGenerator(config, llm);
+    this.digestGenerator = new DigestGenerator(config, digestLLM);
 
     if (config.soupEnabled) {
-      this.soup = new CompostSoup(config, llm);
+      this.soup = new CompostSoup(config, soupLLM);
     }
   }
 
   /** Set the CompostParser for LIR extraction (allows post-construction injection). */
   setParser(parser: CompostParser): void {
     this.semanticExtractor.setParser(parser);
+  }
+
+  /** Set the ModelRouter for dual-model routing (allows post-construction injection). */
+  setModelRouter(router: ModelRouter): void {
+    this.modelRouter = router;
+    // Note: Re-initializing components would require access to internal parser
+    // For now, the router is used for new LLM calls. Components retain their original LLM client.
+    // To fully switch to router, re-create CompostMill with the modelRouter override.
   }
 
   /** Add files or directories to the heap. */
