@@ -39,6 +39,11 @@ export interface CompostConfig {
   seedPromotionThreshold: number;
   maxSeedsPerDigest: number;
   nuggetRetentionDays: number;
+  /** LIR (Large Input Reduction) module configuration. */
+  lirEnabled: boolean;
+  lirSummaryBudget: number;
+  lirBatchSize: number;
+  lirMaxSymbolsPerFile: number;
 }
 
 /** File-level metadata extracted from the structured layer. */
