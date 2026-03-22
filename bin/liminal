@@ -382,8 +382,10 @@ else if (cmd === 'serve' || cmd === 's') {
 }
 else if (cmd === 'compost') {
   const llm = new LLMClient();
+  // Fast local LLM for high-volume extraction/scoring (bypasses hybrid cloud fallback overhead)
+  const fastLLM = new LLMClient({ provider: 'lmstudio' });
   const action = parseArgs(process.argv.slice(2));
-  const mill = new CompostMill(llm, { soupEnabled: true });
+  const mill = new CompostMill(llm, { soupEnabled: true, fastLLM });
   await execute(action, mill).catch(err => {
     console.error('Compost error:', err.message);
     process.exit(1);

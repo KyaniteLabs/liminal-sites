@@ -268,7 +268,7 @@ export class CollisionEngine {
     const merged = await RetryManager.mapSettled(
       pairsToProcess,
       p => this.mergePair(p.a, p.b),
-      3, // max 3 concurrent collision merges
+      5, // max 5 concurrent collision merges
     );
 
     for (let i = 0; i < merged.length; i++) {
