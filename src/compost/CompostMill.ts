@@ -35,19 +35,22 @@ export class CompostMill {
   private digestGenerator: DigestGenerator;
   private soup: CompostSoup | null = null;
   private llm: LLMClientLike;
+  /** Fast local LLM for high-volume tasks (extraction, scoring). Falls back to main llm. */
+  private fastLLM: LLMClientLike;
 
   constructor(
     llm: LLMClientLike,
-    overrides?: Partial<CompostConfig> & { soupStatePath?: string },
+    overrides?: Partial<CompostConfig> & { soupStatePath?: string; fastLLM?: LLMClientLike },
   ) {
     const config = mergeConfig(overrides as Partial<CompostConfig>);
     this.config = config;
     this.llm = llm;
+    this.fastLLM = overrides?.fastLLM ?? llm;
 
     this.heap = new CompostHeap(config);
-    this.semanticExtractor = new SemanticExtractor(config, llm);
+    this.semanticExtractor = new SemanticExtractor(config, this.fastLLM);
     this.collisionEngine = new CollisionEngine(config, llm);
-    this.fragmentScorer = new FragmentScorer(config, llm);
+    this.fragmentScorer = new FragmentScorer(config, this.fastLLM);
     this.seedBank = new SeedBank(config);
     this.digestGenerator = new DigestGenerator(config, llm);
 
@@ -124,7 +127,7 @@ export class CompostMill {
         const promote = await this.fragmentScorer.shouldPromote(frag);
         return promote ? frag : null;
       },
-      5,
+      8, // scoring concurrency (local LLM)
     );
     for (const entry of scored) {
       if (entry.status === 'fulfilled' && entry.value) {
@@ -173,7 +176,7 @@ export class CompostMill {
         const promote = await this.fragmentScorer.shouldPromote(frag);
         return promote ? frag : null;
       },
-      5,
+      10, // collision scoring concurrency (local LLM)
     );
     for (const entry of scoredCollisions) {
       if (entry.status === 'fulfilled' && entry.value) {
@@ -259,7 +262,7 @@ export class CompostMill {
         const semantic = await this.semanticExtractor.extract(filePath);
         return { filePath, semantic, metadata, rawBytes };
       },
-      5, // max 5 concurrent extractions
+      8, // max 8 concurrent extractions (local LLM sweet spot for 9B model)
     );
 
     for (const entry of settled) {

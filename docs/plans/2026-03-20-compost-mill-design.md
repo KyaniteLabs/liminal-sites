@@ -504,7 +504,7 @@ interface Seed {
 
 ## 8. LLM Provider Strategy
 
-Every stage that requires LLM access supports both local and cloud providers.
+Every stage that requires LLM access supports both local and cloud providers. The `CompostMill` supports **tiered routing** — a fast local LLM for high-volume tasks and a primary (potentially cloud) LLM for creative-quality tasks.
 
 ### 8.1 Provider Modes
 
@@ -518,85 +518,62 @@ type LLMProvider = 'local' | 'cloud' | 'auto';
 | `cloud` | Always use cloud LLM. Requires API key. |
 | `auto` | Try local first (with timeout). Fall back to cloud on failure or timeout. |
 
-### 8.2 Stages and Their LLM Requirements
+### 8.2 Tiered Routing (Implemented)
+
+The `CompostMill` constructor accepts an optional `fastLLM` parameter. When provided, high-volume stages use the fast LLM while creative stages use the primary LLM.
+
+```typescript
+// bin/liminal — CLI wiring
+const llm = new LLMClient();                          // primary (hybrid: MiniMax → LM Studio fallback)
+const fastLLM = new LLMClient({ provider: 'lmstudio' }); // fast local for bulk work
+const mill = new CompostMill(llm, { soupEnabled: true, fastLLM });
+```
+
+| Stage | LLM Client | Concurrency | Rationale |
+|---|---|---|---|
+| Extract: Semantic (text) | `fastLLM` (local) | 8 | Direct read, no LLM needed for text |
+| Extract: Semantic (code) | `fastLLM` (local) | 8 | Simple summarization — local 9B model sufficient |
+| Mix: Collision prompts | `llm` (primary) | 5 | Creative cross-domain reasoning — quality matters |
+| Mine: Fragment scoring | `fastLLM` (local) | 8 | Heuristic-dominant scoring — local is fine |
+| Mine: Collision scoring | `fastLLM` (local) | 8 | Same as fragment scoring |
+| Digest: Idea synthesis | `llm` (primary) | — | Creative writing — quality matters |
+| Soup: Merge offspring | `llm` (primary) | — | Creative combination |
+| Soup: Score offspring | `fastLLM` (local) | — | Quality evaluation |
+
+### 8.3 Concurrency Tuning
+
+Current concurrency limits (tuned for LM Studio with qwen3.5 9B):
+
+| Stage | Concurrency | Notes |
+|---|---|---|
+| Extraction (`extractAll`) | 8 | Sweet spot for 9B local model. 15x caused latency spike, 5x was underutilized |
+| Scoring (`mapSettled`) | 8 | Same reasoning |
+| Collisions (`runAll`) | 5 | Lower — creative prompts are longer, more memory-intensive |
+
+### 8.4 Performance Benchmarks
+
+Measured with qwen3.5 9B via LM Studio on 3,019 heap files:
+
+| Config | Per-request latency | Throughput | Est. time for 2,589 code files |
+|---|---|---|---|
+| 5x concurrency, hybrid | 7-14s | ~0.5/sec | ~86 min |
+| 15x concurrency, hybrid | 25-35s | ~0.5/sec | ~86 min (saturated) |
+| **8x concurrency, local direct** | **10-13s** | **~2/sec** | **~22 min** |
+
+Key insight: Bypassing the hybrid provider's MiniMax-then-fallback overhead for extraction matters more than raw concurrency. Direct local routing eliminates the failed cloud attempt latency.
+
+### 8.5 Stages and Their LLM Requirements
 
 | Stage | LLM Usage | Local Capable | Cloud Recommended |
 |---|---|---|---|
 | Extract: Semantic (images) | Vision model | If local model supports vision | Yes — better vision quality |
 | Extract: Semantic (audio) | Audio transcription | Via Whisper locally | Via cloud Whisper |
-| Extract: Semantic (text/code) | Summarization | Yes | Yes |
-| Mix: Collision prompts | Cross-domain reasoning | Yes (small models OK) | Yes (better reasoning) |
-| Mine: LLM-assisted scoring | Quality evaluation | Yes | Yes |
+| Extract: Semantic (text/code) | Summarization | Yes (fastLLM) | Not needed |
+| Mix: Collision prompts | Cross-domain reasoning | Yes (small models OK) | Yes (better reasoning, ~3x faster) |
+| Mine: LLM-assisted scoring | Quality evaluation | Yes (fastLLM) | Not needed |
 | Digest: Idea synthesis | Creative writing | Yes | Yes |
 | Soup: Merge offspring | Creative combination | Yes | Yes |
-| Soup: Score offspring | Quality evaluation | Yes | Yes |
-
-### 8.3 Local LLM Setup (LM Studio)
-
-```json
-// compost/config.json
-{
-  "llm": {
-    "provider": "auto",
-    "localBaseUrl": "http://100.66.225.85:1234/v1",
-    "localModel": "auto",
-    "localTimeoutMs": 30000
-  }
-}
-```
-
-- Works with LM Studio's OpenAI-compatible API
-- `localModel: "auto"` uses whatever model is loaded in LM Studio
-- For vision: requires a multimodal model loaded (e.g., LLaVA, Qwen-VL)
-- For audio: requires Whisper running locally or audio-capable model
-
-### 8.4 Cloud LLM Setup
-
-```json
-{
-  "llm": {
-    "provider": "auto",
-    "cloudProvider": "anthropic",
-    "cloudApiKeyEnvVar": "ANTHROPIC_API_KEY",
-    "cloudModel": "claude-sonnet-4-20250514"
-  }
-}
-```
-
-Supported cloud providers:
-- `anthropic` — Claude models via Anthropic API
-- `openrouter` — Multi-model via OpenRouter
-- `openai` — GPT-4o via OpenAI API
-
-### 8.5 Auto Mode Fallback Logic
-
-```typescript
-async function llmCall(prompt: string, options?: { vision?: boolean }): Promise<string> {
-  if (config.llm.provider === 'local') {
-    return callLocal(prompt, options);
-  }
-  if (config.llm.provider === 'cloud') {
-    return callCloud(prompt, options);
-  }
-
-  // Auto mode: try local first
-  try {
-    return await Promise.race([
-      callLocal(prompt, options),
-      timeout(config.llm.localTimeoutMs)
-    ]);
-  } catch {
-    // Local unavailable or timed out → fall back to cloud
-    return callCloud(prompt, options);
-  }
-}
-```
-
-### 8.6 Quality Considerations
-
-- **Local models** (0.5B-7B): Good enough for shredding, basic merging, scoring. May produce lower-quality collision results but higher novelty (small models are weirder).
-- **Cloud models** (Claude, GPT-4): Better reasoning, better vision, better creative writing. Use for digest generation and final seed scoring.
-- **Recommendation**: Run the Soup on local (cheap, continuous, weird). Run the Digest on cloud (weekly, high quality).
+| Soup: Score offspring | Quality evaluation | Yes | Not needed |
 
 ---
 
