@@ -54,6 +54,10 @@ export function buildDefaults(projectCompost?: {
   seedPromotionThreshold: projectCompost?.seedPromotionThreshold ?? 0.4,
   maxSeedsPerDigest: 20,
   nuggetRetentionDays: projectCompost?.nuggetRetentionDays ?? 90,
+  lirEnabled: false,
+  lirSummaryBudget: 500,
+  lirBatchSize: 10,
+  lirMaxSymbolsPerFile: 200,
   };
 
   return base;
