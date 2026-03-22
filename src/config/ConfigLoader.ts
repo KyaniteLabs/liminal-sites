@@ -42,6 +42,32 @@ export interface ProjectConfig {
     maxTokens?: number;
     localFallback?: boolean;
   };
+  /** Dual-model configuration for cascade/specialized routing */
+  multiModel?: {
+    /** Primary/fast model configuration */
+    primary?: {
+      provider?: string;
+      baseUrl?: string;
+      model?: string;
+      temperature?: number;
+      maxTokens?: number;
+    };
+    /** Secondary/powerful model configuration */
+    secondary?: {
+      provider?: string;
+      baseUrl?: string;
+      model?: string;
+      temperature?: number;
+      maxTokens?: number;
+    };
+    /** Routing configuration */
+    routing?: {
+      mode?: RoutingMode;
+      confidenceThreshold?: number;
+      primaryConcurrency?: number;
+      secondaryConcurrency?: number;
+    };
+  };
   creative?: {
     defaultFramework?: string;
     evaluationCriteria?: string[];
@@ -98,6 +124,37 @@ export interface EffectiveConfig {
   baseUrl?: string;
   model: string;
   apiKey?: string;
+}
+
+/** Routing mode for dual-model architecture */
+export type RoutingMode = 'cascade' | 'speculative' | 'ensemble' | 'specialized';
+
+/** Individual model configuration */
+export interface ModelConfig {
+  provider: 'ollama' | 'openai' | 'minimax' | 'lmstudio';
+  baseUrl?: string;
+  model: string;
+  apiKey?: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+/** Multi-model router configuration */
+export interface MultiModelConfig {
+  /** Primary/fast model (e.g., Qwen3.5-9B for speed) */
+  primary: ModelConfig;
+  /** Secondary/powerful model (e.g., Qwen3-30B-A3B for reasoning) */
+  secondary?: ModelConfig;
+  /** How to route requests between models */
+  routing: {
+    mode: RoutingMode;
+    /** Confidence threshold for cascade escalation (0-1) */
+    confidenceThreshold?: number;
+    /** Maximum concurrent requests for primary model */
+    primaryConcurrency?: number;
+    /** Maximum concurrent requests for secondary model */
+    secondaryConcurrency?: number;
+  };
 }
 
 function env(key: string): string | undefined {
@@ -221,6 +278,47 @@ export async function getEffectiveConfig(configPath?: string, projectConfigPath?
     baseUrl: env('LLM_BASE_URL') || projectLlm.baseUrl || fileProviderConfig.baseUrl,
     model: env('LLM_MODEL') || projectLlm.model || fileProviderConfig.model || 'local-model',
     apiKey: env('LLM_API_KEY') || projectLlm.apiKey || fileProviderConfig.apiKey || process.env.OPENAI_API_KEY || process.env.MINIMAX_API_KEY,
+  };
+}
+
+/**
+ * Get effective multi-model configuration for dual-model routing.
+ * Merges project config, user config, and environment variables.
+ * @param projectConfigPath - Optional directory or path to load config/liminal.json from
+ */
+export async function getMultiModelConfig(projectConfigPath?: string): Promise<MultiModelConfig | null> {
+  const projectConfig = projectConfigPath ? await loadProjectConfig(projectConfigPath) : await loadProjectConfig();
+  const multiModel = projectConfig?.multiModel;
+
+  if (!multiModel) {
+    return null;
+  }
+
+  // Helper to build model config from partial config
+  const buildModelConfig = (
+    partial?: { provider?: string; baseUrl?: string; model?: string; temperature?: number; maxTokens?: number },
+    envSuffix?: string
+  ): ModelConfig => {
+    const suffix = envSuffix ? `_${envSuffix}` : '';
+    return {
+      provider: (partial?.provider || env(`LLM_PROVIDER${suffix}`) || 'ollama') as ModelConfig['provider'],
+      baseUrl: partial?.baseUrl || env(`LLM_BASE_URL${suffix}`),
+      model: partial?.model || env(`LLM_MODEL${suffix}`) || 'local-model',
+      apiKey: env(`LLM_API_KEY${suffix}`) || process.env.OPENAI_API_KEY || process.env.MINIMAX_API_KEY,
+      temperature: partial?.temperature ?? 0.7,
+      maxTokens: partial?.maxTokens ?? 2000,
+    };
+  };
+
+  return {
+    primary: buildModelConfig(multiModel.primary, 'PRIMARY'),
+    secondary: multiModel.secondary ? buildModelConfig(multiModel.secondary, 'SECONDARY') : undefined,
+    routing: {
+      mode: multiModel.routing?.mode || 'cascade',
+      confidenceThreshold: multiModel.routing?.confidenceThreshold ?? 0.8,
+      primaryConcurrency: multiModel.routing?.primaryConcurrency ?? 8,
+      secondaryConcurrency: multiModel.routing?.secondaryConcurrency ?? 4,
+    },
   };
 }
 
