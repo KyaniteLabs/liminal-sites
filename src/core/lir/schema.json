@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LIR Token Schema",
+  "description": "JSON Schema for Liminal Intermediate Representation (LIR) tokens. LIR tokens are the atomic units of code, documentation, and text representation used throughout the Liminal system.",
+  "definitions": {
+    "LIRTokenBase": {
+      "type": "object",
+      "required": ["id", "domain", "layer", "metadata", "tags"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this token"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Domain/category this token belongs to (e.g., 'data-processing', 'ui-components')"
+        },
+        "layer": {
+          "type": "string",
+          "description": "Architectural layer (e.g., 'presentation', 'business-logic', 'data-access')"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Arbitrary metadata for extensibility"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "User-defined tags for categorization and filtering"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Optional relevance score (0-1) for ranking"
+        }
+      }
+    },
+    "SymbolKind": {
+      "type": "string",
+      "enum": ["function", "class", "method", "interface", "variable", "property", "enum", "type"],
+      "description": "Kind of code symbol"
+    },
+    "Location": {
+      "type": "object",
+      "required": ["file", "startLine", "endLine"],
+      "properties": {
+        "file": { "type": "string" },
+        "startLine": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "CodeRelationships": {
+      "type": "object",
+      "required": ["calls", "imports", "exports", "extends", "importGraph"],
+      "properties": {
+        "calls": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs of functions/methods called by this symbol"
+        },
+        "imports": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Module/dependency names imported"
+        },
+        "exports": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Exported symbols"
+        },
+        "extends": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs of parent classes/interfaces extended"
+        },
+        "importGraph": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["callee", "module"],
+            "properties": {
+              "callee": { "type": "string", "description": "Function/symbol being imported" },
+              "module": { "type": "string", "description": "Module the symbol comes from" }
+            }
+          },
+          "description": "Detailed import graph: callee to module mapping"
+        }
+      }
+    },
+    "CodeMetrics": {
+      "type": "object",
+      "required": ["loc", "cyclomaticComplexity", "paramCount", "importCount", "exportCount", "callCount", "classDepth", "nestingDepth"],
+      "properties": {
+        "loc": { "type": "integer", "minimum": 0, "description": "Lines of code (excluding whitespace/comments)" },
+        "cyclomaticComplexity": { "type": "integer", "minimum": 1, "description": "Cyclomatic complexity (decision points + 1)" },
+        "paramCount": { "type": "integer", "minimum": 0, "description": "Number of function/method parameters" },
+        "importCount": { "type": "integer", "minimum": 0, "description": "Number of import statements" },
+        "exportCount": { "type": "integer", "minimum": 0, "description": "Number of export statements" },
+        "callCount": { "type": "integer", "minimum": 0, "description": "Number of function/method calls within" },
+        "classDepth": { "type": "integer", "minimum": 0, "description": "Depth in class inheritance hierarchy" },
+        "nestingDepth": { "type": "integer", "minimum": 0, "description": "Maximum nesting depth of control structures" }
+      }
+    },
+    "LIRCodeToken": {
+      "allOf": [
+        {
+          "type": "object",
+          "required": ["type", "name", "kind", "signature", "summary", "source", "language", "location", "relationships", "metrics"],
+          "properties": {
+            "type": { "const": "code" },
+            "name": { "type": "string", "description": "Symbol name" },
+            "kind": { "$ref": "#/definitions/SymbolKind" },
+            "signature": { "type": "string", "description": "Function/class signature" },
+            "summary": { "type": "string", "description": "AI-generated summary" },
+            "source": { "type": "string", "description": "Full source code" },
+            "language": { "type": "string", "description": "Programming language" },
+            "location": { "$ref": "#/definitions/Location" },
+            "relationships": { "$ref": "#/definitions/CodeRelationships" },
+            "metrics": { "$ref": "#/definitions/CodeMetrics" }
+          }
+        },
+        { "$ref": "#/definitions/LIRTokenBase" }
+      ]
+    },
+    "DocHierarchy": {
+      "type": "object",
+      "required": ["parent", "children", "path"],
+      "properties": {
+        "parent": { "type": ["string", "null"], "description": "ID of parent section (null for top-level)" },
+        "children": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs of child sections"
+        },
+        "path": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs of sections in path from root to this section"
+        }
+      }
+    },
+    "DocMetrics": {
+      "type": "object",
+      "required": ["wordCount", "codeBlockCount", "linkCount", "depth"],
+      "properties": {
+        "wordCount": { "type": "integer", "minimum": 0, "description": "Total word count" },
+        "codeBlockCount": { "type": "integer", "minimum": 0, "description": "Number of code blocks" },
+        "linkCount": { "type": "integer", "minimum": 0, "description": "Number of links/references" },
+        "depth": { "type": "integer", "minimum": 0, "description": "Depth from document root" }
+      }
+    },
+    "LIRDocToken": {
+      "allOf": [
+        {
+          "type": "object",
+          "required": ["type", "heading", "level", "summary", "content", "hierarchy", "codeReferences", "metrics"],
+          "properties": {
+            "type": { "const": "doc" },
+            "heading": { "type": "string", "description": "Section heading text" },
+            "level": { "type": "integer", "minimum": 1, "description": "Heading level (1 = top-level)" },
+            "summary": { "type": "string", "description": "AI-generated or first-sentence summary" },
+            "content": { "type": "string", "description": "Full content of this section" },
+            "hierarchy": { "$ref": "#/definitions/DocHierarchy" },
+            "codeReferences": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "IDs of code symbols referenced"
+            },
+            "metrics": { "$ref": "#/definitions/DocMetrics" }
+          }
+        },
+        { "$ref": "#/definitions/LIRTokenBase" }
+      ]
+    },
+    "TextStructure": {
+      "type": "object",
+      "required": ["headings", "codeBlocks"],
+      "properties": {
+        "headings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["level", "text"],
+            "properties": {
+              "level": { "type": "integer", "minimum": 1 },
+              "text": { "type": "string" }
+            }
+          },
+          "description": "Headings found in text"
+        },
+        "codeBlocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["language", "code"],
+            "properties": {
+              "language": { "type": "string" },
+              "code": { "type": "string" }
+            }
+          },
+          "description": "Code blocks found in text"
+        }
+      }
+    },
+    "TextMetrics": {
+      "type": "object",
+      "required": ["wordCount", "paragraphCount", "headingCount"],
+      "properties": {
+        "wordCount": { "type": "integer", "minimum": 0, "description": "Total word count" },
+        "paragraphCount": { "type": "integer", "minimum": 0, "description": "Estimated paragraph count" },
+        "headingCount": { "type": "integer", "minimum": 0, "description": "Total heading count" }
+      }
+    },
+    "LIRTextToken": {
+      "allOf": [
+        {
+          "type": "object",
+          "required": ["type", "content", "structure", "metrics"],
+          "properties": {
+            "type": { "const": "text" },
+            "content": { "type": "string", "description": "Full text content" },
+            "structure": { "$ref": "#/definitions/TextStructure" },
+            "metrics": { "$ref": "#/definitions/TextMetrics" }
+          }
+        },
+        { "$ref": "#/definitions/LIRTokenBase" }
+      ]
+    },
+    "LIRToken": {
+      "anyOf": [
+        { "$ref": "#/definitions/LIRCodeToken" },
+        { "$ref": "#/definitions/LIRDocToken" },
+        { "$ref": "#/definitions/LIRTextToken" }
+      ]
+    }
+  },
+  "anyOf": [
+    { "$ref": "#/definitions/LIRCodeToken" },
+    { "$ref": "#/definitions/LIRDocToken" },
+    { "$ref": "#/definitions/LIRTextToken" }
+  ]
+}
