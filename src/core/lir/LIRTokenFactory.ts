@@ -22,6 +22,7 @@ const DEFAULT_MAX_SYMBOLS_PER_FILE = 200;
  * Generate a deterministic ID from input data
  *
  * Uses a simple hash function to create consistent IDs for the same input.
+ * Identical inputs will always produce the same ID.
  */
 function generateId(...parts: (string | number | object)[]): string {
   const str = parts
@@ -41,7 +42,9 @@ function generateId(...parts: (string | number | object)[]): string {
     hash = hash & hash; // Convert to 32-bit integer
   }
 
-  return Math.abs(hash).toString(36) + Date.now().toString(36);
+  // Use only the hash for deterministic IDs (no timestamp)
+  // This ensures identical inputs produce identical IDs
+  return Math.abs(hash).toString(36);
 }
 
 /**

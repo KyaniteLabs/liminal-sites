@@ -66,12 +66,13 @@ describe('ArtKnowledgeGraph', () => {
       const fromConcept = graph.getConcept(fromId);
       const toConcept = graph.getConcept(toId);
 
-      expect(fromConcept?.related.get('related-to')?.to).toBe(toId);
-      expect(fromConcept?.related.get('related-to')?.weight).toBe(0.8);
+      // related is now Map<string, Relation[]>, so we access [0] for the first relation
+      expect(fromConcept?.related.get('related-to')?.[0]?.to).toBe(toId);
+      expect(fromConcept?.related.get('related-to')?.[0]?.weight).toBe(0.8);
 
       // Should be bidirectional
-      expect(toConcept?.related.get('related-to')?.to).toBe(fromId);
-      expect(toConcept?.related.get('related-to')?.weight).toBe(0.8);
+      expect(toConcept?.related.get('related-to')?.[0]?.to).toBe(fromId);
+      expect(toConcept?.related.get('related-to')?.[0]?.weight).toBe(0.8);
     });
 
     it('creates multiple relationships from same concept', () => {
@@ -83,8 +84,8 @@ describe('ArtKnowledgeGraph', () => {
       graph.relate(fromId, toId2, 'inspired-by', 0.7);
 
       const concept = graph.getConcept(fromId);
-      expect(concept?.related.get('related-to')?.to).toBe(toId1);
-      expect(concept?.related.get('inspired-by')?.to).toBe(toId2);
+      expect(concept?.related.get('related-to')?.[0]?.to).toBe(toId1);
+      expect(concept?.related.get('inspired-by')?.[0]?.to).toBe(toId2);
     });
 
     it('defaults weight to 1.0 if not specified', () => {
@@ -94,7 +95,7 @@ describe('ArtKnowledgeGraph', () => {
       graph.relate(fromId, toId, 'related-to');
 
       const concept = graph.getConcept(fromId);
-      expect(concept?.related.get('related-to')?.weight).toBe(1.0);
+      expect(concept?.related.get('related-to')?.[0]?.weight).toBe(1.0);
     });
   });
 
