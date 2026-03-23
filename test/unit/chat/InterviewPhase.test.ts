@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   getNextQuestion,
   getAllQuestions,
-  getPhaseOrder
+  getPhaseOrder,
+  generateSummary
 } from '../../../dist/chat/InterviewPhase.js';
 import type { InterviewQuestion, InterviewPhase } from '../../../dist/chat/types.js';
 
@@ -113,7 +114,7 @@ describe('InterviewPhase', () => {
       expect(question?.phase).toBe('generating');
     });
 
-    it('should return null after generating phase', () => {
+    it('should return null after all phases complete', () => {
       const answers = new Map<string, any>([
         ['intent', 'Create a particle system'],
         ['context', 'Web background'],
@@ -121,10 +122,12 @@ describe('InterviewPhase', () => {
         ['references', []],
         ['constraints', []],
         ['confirmed', true],
-        ['generating_complete', true]
+        ['generating', 'complete']
       ]);
+      // After generating phase, there are no more phases
       const question = getNextQuestion('generating', answers);
 
+      // Should return null since generating is the last phase and all its questions are answered
       expect(question).toBeNull();
     });
 
@@ -199,7 +202,7 @@ describe('InterviewPhase', () => {
 
     it('should include confirm question in confirm phase', () => {
       const questions = getAllQuestions();
-      const confirmQuestion = questions.find(q => q.id === 'confirm');
+      const confirmQuestion = questions.find(q => q.id === 'confirmed');
 
       expect(confirmQuestion).toBeDefined();
       expect(confirmQuestion?.phase).toBe('confirm');
@@ -213,6 +216,41 @@ describe('InterviewPhase', () => {
       expect(generatingQuestion).toBeDefined();
       expect(generatingQuestion?.phase).toBe('generating');
       expect(generatingQuestion?.required).toBe(false);
+    });
+  });
+
+  describe('generateSummary', () => {
+    it('should generate summary from collected answers', () => {
+      const answers = new Map<string, any>([
+        ['intent', 'Create a particle system'],
+        ['context', 'Web background'],
+        ['mood', 'Dreamy']
+      ]);
+
+      const summary = generateSummary(answers);
+
+      expect(summary).toContain('Create a particle system');
+      expect(summary).toContain('Web background');
+      expect(summary).toContain('Dreamy');
+    });
+
+    it('should handle empty answers gracefully', () => {
+      const answers = new Map<string, any>();
+      const summary = generateSummary(answers);
+
+      expect(summary).toBe('');
+    });
+
+    it('should format array values as comma-separated', () => {
+      const answers = new Map<string, any>([
+        ['references', ['Artist A', 'Artist B']],
+        ['constraints', ['file size', 'performance']]
+      ]);
+
+      const summary = generateSummary(answers);
+
+      expect(summary).toContain('Artist A, Artist B');
+      expect(summary).toContain('file size, performance');
     });
   });
 });

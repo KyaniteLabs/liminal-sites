@@ -51,7 +51,7 @@ const QUESTIONS_BY_PHASE: Record<InterviewPhase, InterviewQuestion[]> = {
 
   confirm: [
     {
-      id: 'confirm',
+      id: 'confirmed',
       phase: 'confirm',
       question: "Ready to generate?",
       type: 'choice',
@@ -111,11 +111,6 @@ export function getNextQuestion(
     return null;
   }
 
-  // Special case: if we're in generating phase and generation is complete
-  if (currentPhase === 'generating' && answers.has('generating_complete')) {
-    return null;
-  }
-
   // Get questions for current phase
   const phaseQuestions = QUESTIONS_BY_PHASE[currentPhase];
 
@@ -133,4 +128,32 @@ export function getNextQuestion(
   }
 
   return null;
+}
+
+/**
+ * Generate a summary of collected answers for the confirm phase
+ *
+ * @param answers - Map of answer IDs to their values
+ * @returns A formatted summary string of what was learned
+ */
+export function generateSummary(answers: Map<string, any>): string {
+  const summary: string[] = [];
+
+  // Get all questions to map IDs to questions
+  const allQuestions = getAllQuestions();
+  const questionMap = new Map(allQuestions.map(q => [q.id, q]));
+
+  // Build summary for each answered question (excluding confirm/generating phases)
+  const displayIds = ['intent', 'context', 'mood', 'references', 'constraints'];
+
+  for (const id of displayIds) {
+    const value = answers.get(id);
+    if (value && questionMap.has(id)) {
+      const question = questionMap.get(id)!;
+      const displayValue = Array.isArray(value) ? value.join(', ') : value;
+      summary.push(`${question.question} ${displayValue}`);
+    }
+  }
+
+  return summary.join('\n');
 }
