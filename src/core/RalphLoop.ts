@@ -304,10 +304,10 @@ export class RalphLoop {
           durationMs: Date.now() - startTime,
         });
 
-        // Quality gate: break if below threshold
-        if (evaluation.score < normalizedOptions.minQualityScore) {
-          completed = false;
-          reason = 'quality threshold not met';
+        // Success gate: break if promise detected (indicates completion)
+        if (promiseDetected) {
+          completed = true;
+          reason = 'promise detected in generated code';
           break;
         }
 
