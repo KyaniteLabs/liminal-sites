@@ -27,7 +27,8 @@ interface ScoreHistory {
 export class GuidanceEngine {
   artBrain: SemanticArtMemory;
   private compostMill?: CompostMill;
-  private swarmOrchestrator?: SwarmOrchestrator;
+  // TODO: Use swarmOrchestrator for swarm-based suggestions
+  // private swarmOrchestrator?: SwarmOrchestrator;
   private scoreHistory: ScoreHistory;
   private currentIteration: number = 0;
 
@@ -44,11 +45,12 @@ export class GuidanceEngine {
   constructor(
     artBrain: SemanticArtMemory,
     compostMill?: CompostMill,
-    swarmOrchestrator?: SwarmOrchestrator
+    _swarmOrchestrator?: SwarmOrchestrator
   ) {
     this.artBrain = artBrain;
     this.compostMill = compostMill;
-    this.swarmOrchestrator = swarmOrchestrator;
+    // TODO: Store swarmOrchestrator when implementing swarm suggestions
+    // this.swarmOrchestrator = _swarmOrchestrator;
     this.scoreHistory = { scores: [], maxLength: 10 };
   }
 
