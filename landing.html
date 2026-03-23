@@ -14,17 +14,13 @@
         :root {
             --bg-dark: #0a0a0f;
             --bg-card: #12121a;
-            --bg-card-hover: #1a1a25;
             --text-primary: #ffffff;
             --text-secondary: #a0a0b0;
             --accent-purple: #8b5cf6;
             --accent-blue: #3b82f6;
             --accent-cyan: #06b6d4;
             --accent-pink: #ec4899;
-            --accent-green: #10b981;
             --border-color: #2a2a3a;
-            --glow-purple: 0 0 30px rgba(139, 92, 246, 0.3);
-            --glow-blue: 0 0 30px rgba(59, 130, 246, 0.3);
         }
 
         body {
@@ -32,10 +28,8 @@
             background: var(--bg-dark);
             color: var(--text-primary);
             line-height: 1.6;
-            overflow-x: hidden;
         }
 
-        /* Animated Background */
         .hero-bg {
             position: fixed;
             top: 0;
@@ -45,8 +39,7 @@
             z-index: -1;
             background:
                 radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+                radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
             animation: pulse-bg 8s ease-in-out infinite;
         }
 
@@ -70,7 +63,6 @@
             align-items: center;
             text-align: center;
             padding: 4rem 2rem;
-            position: relative;
         }
 
         .hero-badge {
@@ -96,14 +88,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: gradient-shift 5s ease infinite;
-            background-size: 200% 200%;
-        }
-
-        @keyframes gradient-shift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         .hero-subtitle {
@@ -134,7 +118,7 @@
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
             color: white;
-            box-shadow: var(--glow-purple);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
         }
 
         .btn-primary:hover {
@@ -169,13 +153,6 @@
             background: var(--bg-card);
             border-radius: 16px;
             border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-purple);
-            box-shadow: var(--glow-purple);
         }
 
         .stat-number {
@@ -190,7 +167,6 @@
         .stat-label {
             color: var(--text-secondary);
             margin-top: 0.5rem;
-            font-size: 1rem;
         }
 
         /* Section Styles */
@@ -215,7 +191,7 @@
             margin-right: auto;
         }
 
-        /* Live Demo Section */
+        /* Live Examples Section */
         .demo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
@@ -233,7 +209,7 @@
 
         .demo-card:hover {
             border-color: var(--accent-purple);
-            box-shadow: var(--glow-purple);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
         }
 
         .demo-header {
@@ -245,7 +221,6 @@
         .demo-tag {
             display: inline-block;
             padding: 0.25rem 0.75rem;
-            background: var(--accent-purple);
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -254,7 +229,7 @@
 
         .demo-tag.p5 { background: var(--accent-pink); }
         .demo-tag.shader { background: var(--accent-cyan); }
-        .demo-tag.three { background: var(--accent-green); }
+        .demo-tag.three { background: var(--accent-green); color: #000; }
         .demo-tag.music { background: var(--accent-blue); }
         .demo-tag.hydra { background: var(--accent-purple); }
 
@@ -270,49 +245,34 @@
             margin-top: 0.5rem;
         }
 
-        .demo-code {
-            padding: 2rem;
-            background: #0a0a0f;
-            overflow-x: auto;
+        .demo-image {
+            width: 100%;
+            height: auto;
+            display: block;
         }
 
-        .demo-code pre {
-            margin: 0;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.875rem;
-            line-height: 1.6;
-        }
-
-        .demo-code code {
-            color: #e0e0e0;
-        }
-
-        .demo-code .keyword { color: var(--accent-purple); }
-        .demo-code .function { color: var(--accent-cyan); }
-        .demo-code .string { color: var(--accent-green); }
-        .demo-code .comment { color: var(--text-secondary); }
-        .demo-code .number { color: var(--accent-pink); }
-
-        .demo-output {
+        .demo-code-preview {
             padding: 1.5rem 2rem;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+            background: #0a0a0f;
             border-top: 1px solid var(--border-color);
         }
 
-        .demo-output h4 {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .demo-code-preview pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            color: #a0a0b0;
         }
 
-        .demo-output p {
-            font-size: 0.95rem;
-            color: var(--text-primary);
+        .demo-code-preview code {
+            display: block;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
-        /* Features Grid */
+        /* Features Section */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -325,13 +285,6 @@
             border-radius: 16px;
             padding: 2rem;
             border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            border-color: var(--accent-blue);
-            transform: translateY(-5px);
-            box-shadow: var(--glow-blue);
         }
 
         .feature-icon {
@@ -350,71 +303,32 @@
             line-height: 1.6;
         }
 
-        /* CLI Section */
-        .cli-section {
+        /* Code Example Section */
+        .code-example {
             background: var(--bg-card);
-            border-radius: 20px;
-            padding: 3rem;
+            border-radius: 16px;
+            padding: 2rem;
             border: 1px solid var(--border-color);
-        }
-
-        .cli-command {
-            background: #0a0a0f;
-            padding: 1.5rem;
-            border-radius: 12px;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .cli-command .prompt {
-            color: var(--accent-green);
-        }
-
-        .cli-command .command {
-            color: var(--accent-cyan);
-        }
-
-        .cli-command .flag {
-            color: var(--accent-purple);
-        }
-
-        /* Swarm Section */
-        .swarm-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
             margin-top: 2rem;
         }
 
-        .persona-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .persona-card:hover {
-            border-color: var(--accent-purple);
-            transform: scale(1.05);
-        }
-
-        .persona-emoji {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .persona-name {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .persona-style {
+        .code-example h4 {
             color: var(--text-secondary);
+            margin-bottom: 1rem;
             font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .code-example pre {
+            background: #0a0a0f;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #e0e0e0;
         }
 
         /* Footer */
@@ -430,22 +344,9 @@
             text-decoration: none;
         }
 
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
             .demo-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .stats-bar {
-                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -455,14 +356,14 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-badge">✨ Now with Phase 4: Creative Knowledge</div>
+        <div class="hero-badge">✨ Real Outputs from Real Generations</div>
         <h1>LIMINAL</h1>
         <p class="hero-subtitle">
             The AI-powered creative coding agent that generates, iterates, and improves
-            generative art across p5.js, shaders, Three.js, Strudel, and Hydra.
+            generative art. See what it actually creates.
         </p>
         <div class="hero-cta">
-            <a href="#examples" class="btn btn-primary">See Live Examples</a>
+            <a href="#examples" class="btn btn-primary">See Real Outputs</a>
             <a href="https://github.com/Pastorsimon1798/liminal" class="btn btn-secondary">View on GitHub</a>
         </div>
     </section>
@@ -492,217 +393,249 @@
     <!-- Live Examples Section -->
     <section id="examples">
         <div class="container">
-            <h2 class="section-title">🎨 Live Generation Examples</h2>
+            <h2 class="section-title">🎨 Real Generated Outputs</h2>
             <p class="section-subtitle">
-                Real outputs from Liminal across different creative domains.
-                Each example shows the prompt and the generated code.
+                These are actual screenshots from Liminal-generated code.
+                What you see is exactly what the AI created.
             </p>
 
             <div class="demo-grid">
-                <!-- P5.js Example -->
+                <!-- P5.js Particles -->
                 <div class="demo-card">
                     <div class="demo-header">
                         <span class="demo-tag p5">p5.js</span>
                         <h3 class="demo-title">Flowing Particle Field</h3>
                         <p class="demo-prompt">Prompt: "calming blue particles flowing like water"</p>
                     </div>
-                    <div class="demo-code">
-                        <pre><code><span class="comment">// P5.js generative art with Perlin noise flow field</span>
-<span class="keyword">function</span> <span class="function">setup</span>() {
-  <span class="function">createCanvas</span>(<span class="number">800</span>, <span class="number">600</span>);
-  <span class="function">background</span>(<span class="number">5</span>, <span class="number">10</span>, <span class="number">30</span>);
-}
-
-<span class="keyword">function</span> <span class="function">draw</span>() {
-  <span class="keyword">for</span> (<span class="keyword">let</span> x = <span class="number">0</span>; x &lt; width; x += <span class="number">20</span>) {
-    <span class="keyword">for</span> (<span class="keyword">let</span> y = <span class="number">0</span>; y &lt; height; y += <span class="number">20</span>) {
-      <span class="keyword">let</span> n = <span class="function">noise</span>(x * <span class="number">0.01</span>, y * <span class="number">0.01</span>, frameCount * <span class="number">0.01</span>);
-      <span class="keyword">let</span> angle = n * <span class="function">TWO_PI</span> * <span class="number">2</span>;
-      <span class="keyword">let</span> px = x + <span class="function">cos</span>(angle) * <span class="number">15</span>;
-      <span class="keyword">let</span> py = y + <span class="function">sin</span>(angle) * <span class="number">15</span>;
-
-      <span class="function">stroke</span>(<span class="number">100</span> + n * <span class="number">100</span>, <span class="number">150</span> + n * <span class="number">80</span>, <span class="number">255</span>, <span class="number">150</span>);
-      <span class="function">line</span>(x, y, px, py);
+                    <img src="landing-assets/p5-1-particles.png" alt="P5.js particles output" class="demo-image">
+                    <div class="demo-code-preview">
+                        <pre><code>// P5.js generative art with Perlin noise flow field
+function draw() {
+  for (let x = 0; x < width; x += 20) {
+    for (let y = 0; y < height; y += 20) {
+      let n = noise(x * 0.01, y * 0.01, frameCount * 0.01);
+      let angle = n * TWO_PI * 2;
+      let px = x + cos(angle) * 15;
+      let py = y + sin(angle) * 15;
+      stroke(100 + n * 100, 150 + n * 80, 255, 150);
+      line(x, y, px, py);
     }
   }
 }</code></pre>
                     </div>
-                    <div class="demo-output">
-                        <h4>Visual Output</h4>
-                        <p>A flowing field of blue particles that move organically using Perlin noise. The particles create wave-like patterns that mimic water flowing across the canvas.</p>
+                </div>
+
+                <!-- P5.js Geometric -->
+                <div class="demo-card">
+                    <div class="demo-header">
+                        <span class="demo-tag p5">p5.js</span>
+                        <h3 class="demo-title">Geometric Transparency</h3>
+                        <p class="demo-prompt">Prompt: "colorful geometric shapes with overlapping transparency"</p>
+                    </div>
+                    <img src="landing-assets/p5-2-geometric.png" alt="P5.js geometric output" class="demo-image">
+                    <div class="demo-code-preview">
+                        <pre><code>// Colorful geometric shapes with alpha blending
+function setup() {
+  createCanvas(800, 600);
+  colorMode(HSB, 360, 100, 100, 100);
+}
+
+function draw() {
+  clear();
+  for (let i = 0; i < 15; i++) {
+    let x = random(width);
+    let y = random(height);
+    let size = random(50, 150);
+    fill(random(255), random(255), random(255), 50);
+    noStroke();
+    ellipse(x, y, size, size);
+  }
+}</code></pre>
                     </div>
                 </div>
 
-                <!-- Shader Example -->
+                <!-- P5.js Organic -->
+                <div class="demo-card">
+                    <div class="demo-header">
+                        <span class="demo-tag p5">p5.js</span>
+                        <h3 class="demo-title">Organic Noise Patterns</h3>
+                        <p class="demo-prompt">Prompt: "organic patterns with Perlin noise and soft colors"</p>
+                    </div>
+                    <img src="landing-assets/p5-3-organic.png" alt="P5.js organic output" class="demo-image">
+                    <div class="demo-code-preview">
+                        <pre><code>// Soft organic patterns using noise
+function draw() {
+  loadPixels();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let n = noise(x * 0.005, y * 0.005, frameCount * 0.01);
+      let c = color(n * 255, n * 200 + 50, n * 150 + 100, 255);
+      set(x, y, c);
+    }
+  }
+  updatePixels();
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Shader Circles -->
                 <div class="demo-card">
                     <div class="demo-header">
                         <span class="demo-tag shader">GLSL Shader</span>
-                        <h3 class="demo-title">Raymarched Landscape</h3>
-                        <p class="demo-prompt">Prompt: "alien landscape with fog and glowing orbs"</p>
+                        <h3 class="demo-title">Animated Concentric Circles</h3>
+                        <p class="demo-prompt">Real-time WebGL fragment shader</p>
                     </div>
-                    <div class="demo-code">
-                        <pre><code><span class="comment">// GLSL fragment shader with raymarching</span>
-<span class="keyword">uniform</span> <span class="keyword">vec2</span> u_resolution;
-<span class="keyword">uniform float</span> u_time;
+                    <img src="landing-assets/shader-1-circles.png" alt="GLSL shader output" class="demo-image">
+                    <div class="demo-code-preview">
+                        <pre><code>// GLSL fragment shader
+precision mediump float;
+uniform float u_time;
 
-<span class="keyword">float</span> <span class="function">sdSphere</span>(<span class="keyword">vec3</span> p, <span class="keyword">float</span> r) {
-  <span class="keyword">return</span> <span class="function">length</span>(p) - r;
-}
+void main() {
+  vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution)
+              / min(u_resolution.x, u_resolution.y);
+  float d = length(p);
+  vec3 color = vec3(0.0);
 
-<span class="keyword">float</span> <span class="function">map</span>(<span class="keyword">vec3</span> p) {
-  <span class="keyword">vec3</span> q = p;
-  q.xz *= <span class="function">mat2</span>(<span class="number">0.8</span>, -<span class="number">0.6</span>, <span class="number">0.6</span>, <span class="number">0.8</span>);
-  <span class="keyword">float</span> terrain = p.y + <span class="number">0.5</span> * <span class="function">sin</span>(q.x * <span class="number">2.0</span>) * <span class="function">cos</span>(q.z * <span class="number">2.0</span>);
-  <span class="keyword">float</span> orbs = <span class="number">1e9</span>;
-  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) {
-    <span class="keyword">vec3</span> orbPos = <span class="keyword">vec3</span>(
-      <span class="function">sin</span>(u_time + <span class="keyword">float</span>(i) * <span class="number">1.5</span>) * <span class="number">3.0</span>,
-      <span class="number">1.5</span> + <span class="function">sin</span>(u_time * <span class="number">2.0</span> + <span class="keyword">float</span>(i)),
-      <span class="function">cos</span>(u_time + <span class="keyword">float</span>(i) * <span class="number">1.3</span>) * <span class="number">3.0</span>
-    );
-    orbs = <span class="function">min</span>(orbs, <span class="function">sdSphere</span>(p - orbPos, <span class="number">0.3</span>));
+  for (float i = 1.0; i < 5.0; i++) {
+    float circle = smoothstep(0.02, 0.0,
+      abs(d - i * 0.2 + sin(u_time + i) * 0.05));
+    vec3 circleColor = 0.5 + 0.5 *
+      cos(u_time * 0.5 + i + vec3(0.0, 2.0, 4.0));
+    color += circleColor * circle;
   }
-  <span class="keyword">return</span> <span class="function">min</span>(terrain, orbs);
+
+  gl_FragColor = vec4(color, 1.0);
 }</code></pre>
-                    </div>
-                    <div class="demo-output">
-                        <h4>Visual Output</h4>
-                        <p>An alien terrain with undulating hills and 5 glowing orbs that float above the surface. Fog creates depth and the orbs pulse with an ethereal glow.</p>
                     </div>
                 </div>
 
-                <!-- Three.js Example -->
+                <!-- Shader Noise -->
+                <div class="demo-card">
+                    <div class="demo-header">
+                        <span class="demo-tag shader">GLSL Shader</span>
+                        <h3 class="demo-title">Multilayer Noise Landscape</h3>
+                        <p class="demo-prompt">Procedural noise with color gradients</p>
+                    </div>
+                    <img src="landing-assets/shader-2-noise.png" alt="GLSL noise shader output" class="demo-image">
+                    <div class="demo-code-preview">
+                        <pre><code>// Noise-based color gradients
+float noise(vec2 st) {
+  vec2 i = floor(st);
+  vec2 f = fract(st);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+void main() {
+  vec2 p = uv * 3.0;
+  float n = noise(p + u_time * 0.2);
+  n += 0.5 * noise(p * 2.0 - u_time * 0.3);
+
+  vec3 color = mix(
+    vec3(0.1, 0.0, 0.3),
+    vec3(0.0, 0.5, 0.8),
+    n
+  );
+  gl_FragColor = vec4(color, 1.0);
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Three.js -->
                 <div class="demo-card">
                     <div class="demo-header">
                         <span class="demo-tag three">Three.js</span>
                         <h3 class="demo-title">Interactive 3D Geometry</h3>
-                        <p class="demo-prompt">Prompt: "rotating icosahedron with wireframe and particles"</p>
+                        <p class="demo-prompt">Animated icosahedron with particles</p>
                     </div>
-                    <div class="demo-code">
-                        <pre><code><span class="comment">// Three.js 3D scene with animated geometry</span>
-<span class="keyword">import</span> * <span class="keyword">as</span> THREE <span class="keyword">from</span> <span class="string">'three'</span>;
+                    <img src="landing-assets/three-1-geometry.png" alt="Three.js 3D output" class="demo-image">
+                    <div class="demo-code-preview">
+                        <pre><code>// Three.js 3D scene
+import * as THREE from 'three';
 
-<span class="keyword">const</span> scene = <span class="keyword">new</span> <span class="function">THREE.Scene</span>();
-<span class="keyword">const</span> camera = <span class="keyword">new</span> <span class="function">THREE.PerspectiveCamera</span>(<span class="number">75</span>, w / h);
-<span class="keyword">const</span> renderer = <span class="keyword">new</span> <span class="function">THREE.WebGLRenderer</span>();
-
-<span class="comment">// Main geometry</span>
-<span class="keyword">const</span> geometry = <span class="keyword">new</span> <span class="function">THREE.IcosahedronGeometry</span>(<span class="number">1</span>, <span class="number">1</span>);
-<span class="keyword">const</span> material = <span class="keyword">new</span> <span class="function">THREE.MeshBasicMaterial</span>({
-  color: <span class="number">0x8b5cf6</span>,
-  wireframe: <span class="keyword">true</span>
+const geometry = new THREE.IcosahedronGeometry(1, 1);
+const material = new THREE.MeshBasicMaterial({
+  color: 0x8b5cf6,
+  wireframe: true
 });
-<span class="keyword">const</span> mesh = <span class="keyword">new</span> <span class="function">THREE.Mesh</span>(geometry, material);
-scene.<span class="function">add</span>(mesh);
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
 
-<span class="comment">// Particle system</span>
-<span class="keyword">const</span> particlesGeom = <span class="keyword">new</span> <span class="function">THREE.BufferGeometry</span>();
-<span class="keyword">const</span> positions = <span class="keyword">new</span> <span class="function">Float32Array</span>(<span class="number">3000</span>);
-<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; <span class="number">3000</span>; i++) {
-  positions[i] = (<span class="function">Math.random</span>() - <span class="number">0.5</span>) * <span class="number">10</span>;
-}</code></pre>
-                    </div>
-                    <div class="demo-output">
-                        <h4>Visual Output</h4>
-                        <p>A purple wireframe icosahedron rotating at the center, surrounded by 3000 particles floating in space. Mouse interaction rotates the camera around the scene.</p>
+// Particles
+const positions = [];
+for (let i = 0; i < 500; i++) {
+  positions.push(
+    (Math.random() - 0.5) * 8,
+    (Math.random() - 0.5) * 8,
+    (Math.random() - 0.5) * 8
+  );
+}
+const particles = new THREE.Points(
+  geometry, material
+);
+scene.add(particles);</code></pre>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
 
-                <!-- Strudel Example -->
+    <!-- Music Section -->
+    <section>
+        <div class="container">
+            <h2 class="section-title">🎵 Live Coding Patterns</h2>
+            <p class="section-subtitle">
+                Strudel and Hydra patterns you can run live in your browser
+            </p>
+
+            <div class="demo-grid">
                 <div class="demo-card">
                     <div class="demo-header">
                         <span class="demo-tag music">Strudel</span>
-                        <h3 class="demo-title">Generative Music Pattern</h3>
-                        <p class="demo-prompt">Prompt: "hypnotic minimal techno with evolving patterns"</p>
+                        <h3 class="demo-title">Hypnotic Minimal Techno</h3>
+                        <p class="demo-prompt">Copy paste into <a href="https://strudel.tidalcycles.org" target="_blank" style="color: var(--accent-cyan);">strudel.tidalcycles.org</a></p>
                     </div>
-                    <div class="demo-code">
-                        <pre><code><span class="comment">// Strudel live coding pattern</span>
-<span class="function">stack</span>(
-  <span class="function">s</span>(<span class="string">"hh ~ hh ~"</span>, <span class="string">"<10 8>"</span>),
-  <span class="function">s</span>(<span class="string">"bd ~ sd bd ~"</span>, <span class="string">"<4>"</span>),
-  <span class="function">iter</span>(<span class="number">4</span>, <span class="function">s</span>(<span class="string">"amaj chords"</span>, <span class="string">"<8 6 4 6>"</span>)),
-  <span class="function">s</span>(<span class="string">"[c2 eb2 g2]*8"</span>, <span class="string">"<16>"</span>, <span class="string">"0.5"</span>)
-    .<span class="function">slow</span>(<span class="number">2</span>)
-    .<span class="function">room</span>(<span class="number">0.6</span>)
-)
-.<span class="function">slow</span>(<span class="number">2</span>)
-.<span class="function">sound</span>(<span class="string">"polytribe"</span>)</code></pre>
-                    </div>
-                    <div class="demo-output">
-                        <h4>Audible Output</h4>
-                        <p>A hypnotic techno pattern with hi-hats, kick/snare drums, evolving A-major chords, and a deep bassline. Patterns shift every cycle creating endless variations.</p>
+                    <div class="code-example">
+                        <h4>Pattern Code:</h4>
+                        <pre><code>stack(
+  s("hh ~ hh ~", 1/4, gain=0.4).slow(2),
+  s("bd ~ sd bd ~", 1, gain=0.8),
+  s("[c2 c2 eb2]*8", 1/8, gain=0.6)
+    .room(0.5).slow(2),
+  iter(8, s("amaj7", 1/2, gain=0.5)
+    .room(0.6).slow(2))
+).slow(2)</code></pre>
+                        <p style="margin-top: 1rem; color: var(--text-secondary);">
+                            🎧 <strong>What it sounds like:</strong> Fast hi-hats, kick-snare drum pattern, rolling bassline, and A-major 7th chord stabs every 8 bars. Hypnotic and minimal.
+                        </p>
                     </div>
                 </div>
 
-                <!-- Hydra Example -->
                 <div class="demo-card">
                     <div class="demo-header">
                         <span class="demo-tag hydra">Hydra</span>
-                        <h3 class="demo-title">Video Synthesis</h3>
-                        <p class="demo-prompt">Prompt: "kaleidoscopic patterns with audio reactivity"</p>
+                        <h3 class="demo-title">Kaleidoscopic Video</h3>
+                        <p class="demo-prompt">Copy paste into <a href="https://hydra.ojack.xyz" target="_blank" style="color: var(--accent-purple);">hydra.ojack.xyz</a></p>
                     </div>
-                    <div class="demo-code">
-                        <pre><code><span class="comment">// Hydra visual synthesis</span>
-<span class="function">osc</span>(<span class="number">30</span>, <span class="number">0.1</span>)
-  .<span class="function">color</span>(<span class="number">1.5</span>)
-  .<span class="function">kaleid</span>(<span class="number">4</span>)
-  .<span class="function">scale</span>(<span class="number">0.8</span>)
-  .<span class="function">modulate</span>(
-    <span class="function">osc</span>(<span class="number">20</span>, <span class="number">0.05</span>)
-      .<span class="function">rotate</span>(<span class="number">0.5</span>),
-    <span class="number">0.4</span>
+                    <div class="code-example">
+                        <h4>Pattern Code:</h4>
+                        <pre><code>osc(30, 0.1)
+  .color(1.5)
+  .kaleid(4)
+  .scale(0.8)
+  .modulate(
+    osc(20, 0.05).rotate(0.5),
+    0.4
   )
-  .<span class="function">modulate</span>(
-    <span class="function">src</span>(<span class="number">0</span>).<span class="function">scale</span>(<span class="number">0.5</span>),
-    <span class="function">a</span>(<span class="string">"<0.1 0.2>"</span>)
+  .modulate(
+    src(0).scale(0.5),
+    a("<0.1 0.2>")
   )
-  .<span class="function">out</span>()</code></pre>
-                    </div>
-                    <div class="demo-output">
-                        <h4>Visual Output</h4>
-                        <p>Mesmerizing kaleidoscopic patterns that rotate and shift colors. Audio reactivity makes the patterns pulse and breathe with the beat, creating an immersive visual experience.</p>
-                    </div>
-                </div>
-
-                <!-- Swarm Example -->
-                <div class="demo-card">
-                    <div class="demo-header">
-                        <span class="demo-tag swarm">Swarm Generation</span>
-                        <h3 class="demo-title">7-Persona Parallel Generation</h3>
-                        <p class="demo-prompt">Prompt: "geometric abstraction with bold colors"</p>
-                    </div>
-                    <div class="demo-code">
-                        <pre><code><span class="comment">// Swarm: 7 AI personas generate in parallel</span>
-<span class="comment">// Results voted on by the swarm</span>
-
-<span class="comment">🎨 Minimalist:</span> Clean lines, primary colors only
-<span class="keyword">function</span> <span class="function">draw</span>() {
-  <span class="function">background</span>(<span class="number">255</span>);
-  <span class="function">noFill</span>();
-  <span class="function">stroke</span>(<span class="number">0</span>);
-  <span class="function">rect</span>(<span class="number">100</span>, <span class="number">100</span>, <span class="number">200</span>, <span class="number">200</span>);
-}
-
-<span class="comment">🌈 Colorist:</span> Vibrant gradients everywhere
-<span class="keyword">const</span> gradient = drawingContext.<span class="function">createLinearGradient</span>(<span class="number">0</span>, <span class="number">0</span>, width, height);
-gradient.<span class="function">addColorStop</span>(<span class="number">0</span>, <span class="string">'#ff006e'</span>);
-gradient.<span class="function">addColorStop</span>(<span class="number">1</span>, <span class="string">'#8338ec'</span>);
-
-<span class="comment">⚡ Experimental:</span> Unconventional approach
-<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) {
-  <span class="keyword">if</span> (<span class="function">random</span>() &gt; <span class="number">0.5</span>) {
-    <span class="function">point</span>(<span class="function">random</span>(width), <span class="function">random</span>(height));
-  }
-}
-
-<span class="comment">... 4 more persona variations</span>
-
-<span class="comment">⭐ Swarm Winner: Geometric Harmony</span>
-<span class="comment">// Voted best by swarm consensus</span></code></pre>
-                    </div>
-                    <div class="demo-output">
-                        <h4>Swarm Process</h4>
-                        <p>7 specialized AI personas generate variations simultaneously. The swarm votes on the best approach, then collaboratively refines the winner. Final result combines geometric precision with bold color contrasts.</p>
+  .out()</code></pre>
+                        <p style="margin-top: 1rem; color: var(--text-secondary);">
+                            📺 <strong>What it looks like:</strong> Mesmerizing kaleidoscopic patterns that rotate and shift colors. Audio reactivity makes patterns pulse with the beat.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -712,9 +645,9 @@ gradient.<span class="function">addColorStop</span>(<span class="number">1</span
     <!-- Features Section -->
     <section>
         <div class="container">
-            <h2 class="section-title">⚡ Powerful Features</h2>
+            <h2 class="section-title">⚡ Why Liminal Is Different</h2>
             <p class="section-subtitle">
-                Everything you need to create stunning generative art
+                Not just code generation—real creative intelligence
             </p>
 
             <div class="features-grid">
@@ -759,83 +692,11 @@ gradient.<span class="function">addColorStop</span>(<span class="number">1</span
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">🎨</div>
-                    <h3 class="feature-title">12+ Style Categories</h3>
-                    <p class="feature-desc">
-                        From minimalism to glitch art, procedural generation to live coding—comprehensive artistic knowledge.
-                    </p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Smart Model Routing</h3>
-                    <p class="feature-desc">
-                        Automatically chooses the best AI model for your domain. Local models for p5, cloud for complex shaders.
-                    </p>
-                </div>
-
-                <div class="feature-card">
                     <div class="feature-icon">🔄</div>
                     <h3 class="feature-title">Evolutionary Optimization</h3>
                     <p class="feature-desc">
                         MAP-Elites diversity maintenance ensures exploration of the entire creative space, not just local optima.
                     </p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">Live Preview Rendering</h3>
-                    <p class="feature-desc">
-                        Every generation includes an HTML preview. See your art rendered instantly in the browser.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Swarm Personas Section -->
-    <section>
-        <div class="container">
-            <h2 class="section-title">🎭 Swarm AI Personas</h2>
-            <p class="section-subtitle">
-                7 specialized creative minds working together
-            </p>
-
-            <div class="swarm-grid">
-                <div class="persona-card">
-                    <div class="persona-emoji">🎨</div>
-                    <h3 class="persona-name">Minimalist</h3>
-                    <p class="persona-style">Clean, simple, essential elements only</p>
-                </div>
-                <div class="persona-card">
-                    <div class="persona-emoji">🌈</div>
-                    <h3 class="persona-name">Colorist</h3>
-                    <p class="persona-style">Vibrant colors, bold gradients</p>
-                </div>
-                <div class="persona-card">
-                    <div class="persona-emoji">⚡</div>
-                    <h3 class="persona-name">Experimental</h3>
-                    <p class="persona-style">Avant-garde, unconventional</p>
-                </div>
-                <div class="persona-card">
-                    <div class="persona-emoji">🔮</div>
-                    <h3 class="persona-name">Mystic</h3>
-                    <p class="persona-style">Ethereal, spiritual, cosmic</p>
-                </div>
-                <div class="persona-card">
-                    <div class="persona-emoji">🤖</div>
-                    <h3 class="persona-name">Technicist</h3>
-                    <p class="persona-style">Precise, algorithmic, mathematical</p>
-                </div>
-                <div class="persona-card">
-                    <div class="persona-emoji">🌊</div>
-                    <h3 class="persona-name">Organic</h3>
-                    <p class="persona-style">Natural, flowing, biomimetic</p>
-                </div>
-                <div class="persona-card">
-                    <div class="persona-emoji">🎭</div>
-                    <h3 class="persona-name">Narrator</h3>
-                    <p class="persona-style">Storytelling, conceptual, meaningful</p>
                 </div>
             </div>
         </div>
@@ -844,91 +705,27 @@ gradient.<span class="function">addColorStop</span>(<span class="number">1</span
     <!-- CLI Section -->
     <section>
         <div class="container">
-            <h2 class="section-title">💻 Command Line Interface</h2>
+            <h2 class="section-title">💻 Get Started</h2>
             <p class="section-subtitle">
-                Simple, powerful commands for every creative task
+                Simple commands for creative coding
             </p>
 
-            <div class="cli-section">
-                <div class="cli-command">
-                    <span class="prompt">$</span>
-                    <span class="command">liminal</span>
-                    <span class="flag">generate</span>
-                    <span class="string">"blue particles flowing like water"</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-top: 3rem;">
+                <div class="code-example">
+                    <h4>Generate p5.js art:</h4>
+                    <pre><code>liminal generate "blue particles flowing like water"</code></pre>
                 </div>
-                <div class="cli-command">
-                    <span class="prompt">$</span>
-                    <span class="command">liminal</span>
-                    <span class="flag">generate</span>
-                    <span class="string">"abstract geometric shapes"</span>
-                    <span class="flag">--use-swarm</span>
+                <div class="code-example">
+                    <h4>Start chat mode:</h4>
+                    <pre><code>liminal chat</code></pre>
                 </div>
-                <div class="cli-command">
-                    <span class="prompt">$</span>
-                    <span class="command">liminal</span>
-                    <span class="flag">chat</span>
-                    <span class="comment"># Start interview mode</span>
+                <div class="code-example">
+                    <h4>Use swarm generation:</h4>
+                    <pre><code>liminal generate "abstract art" --use-swarm</code></pre>
                 </div>
-                <div class="cli-command">
-                    <span class="prompt">$</span>
-                    <span class="command">liminal</span>
-                    <span class="flag">compost</span>
-                    <span class="string">digest</span>
-                    <span class="comment"># Learn from past work</span>
-                </div>
-                <div class="cli-command">
-                    <span class="prompt">$</span>
-                    <span class="command">liminal</span>
-                    <span class="flag">serve</span>
-                    <span class="comment"># Preview on localhost:3456</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Knowledge Section -->
-    <section>
-        <div class="container">
-            <h2 class="section-title">📚 Built-In Artistic Knowledge</h2>
-            <p class="section-subtitle">
-                Liminal understands art theory, techniques, and style across all domains
-            </p>
-
-            <div class="demo-grid">
-                <div class="demo-card">
-                    <div class="demo-header">
-                        <span class="demo-tag p5">P5.js Techniques</span>
-                    </div>
-                    <div class="demo-code" style="padding: 1.5rem;">
-                        <p style="margin: 0;">Coordinate Systems • Shape Primitives • Color Modes • Perlin Noise • Animation Basics • Interaction Events • Image Processing • Typography • WebGL Mode • Sound Synthesis • Camera Control • Particle Systems • Flow Fields • Cellular Automata • L-Systems • Recursive Patterns • Physics Simulation • Data Visualization • Procedural Terrain • Interactive Typography • Shader Integration • Video Processing</p>
-                    </div>
-                </div>
-
-                <div class="demo-card">
-                    <div class="demo-header">
-                        <span class="demo-tag shader">Shader Techniques</span>
-                    </div>
-                    <div class="demo-code" style="padding: 1.5rem;">
-                        <p style="margin: 0;">Raymarching • SDFs • Noise Functions • Color Grading • Post-Processing • Glow Effects • Chromatic Aberration • Texture Generation • Pattern Generation • Geometric Primitives • Lighting Models • Material Systems • Animation Techniques • Performance Optimization</p>
-                    </div>
-                </div>
-
-                <div class="demo-card">
-                    <div class="demo-header">
-                        <span class="demo-tag swarm">Style Categories</span>
-                    </div>
-                    <div class="demo-code" style="padding: 1.5rem;">
-                        <p style="margin: 0;">Generative Art Pioneer Style • Interactive Installation Style • Data Visualization Style • Live Coding Performance • Shader Art Style • Procedural Generation Style • Minimalist Conceptual Style • Optical Pattern Style • Mathematical Art Style • ML-Generated Art Style • Light Installation Style • Immersive Digital Style</p>
-                    </div>
-                </div>
-
-                <div class="demo-card">
-                    <div class="demo-header">
-                        <span class="demo-tag music">Music Techniques</span>
-                    </div>
-                    <div class="demo-code" style="padding: 1.5rem;">
-                        <p style="margin: 0;">Pattern Sequencing • Live Coding • Algorithmic Composition • Audio Reactivity • Sound Synthesis • Rhythm Generation • Melody Construction • Harmony Systems • Bassline Patterns • Textural Layers • Temporal Modulation • Polyrhythms • Microtiming • Spatial Audio</p>
-                    </div>
+                <div class="code-example">
+                    <h4>Preview your art:</h4>
+                    <pre><code>liminal serve</code></pre>
                 </div>
             </div>
         </div>
@@ -941,7 +738,7 @@ gradient.<span class="function">addColorStop</span>(<span class="number">1</span
                 <h2 style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1.5rem;">
                     Ready to Create?
                 </h2>
-                <p style="color: var(--text-secondary); font-size: 1.25rem; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <p style="color: var(--text-secondary); font-size: 1.25rem; margin-bottom: 3rem;">
                     Install Liminal and start generating beautiful generative art in minutes.
                 </p>
                 <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
