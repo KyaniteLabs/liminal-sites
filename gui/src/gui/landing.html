@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liminal — Creative Coding Agent</title>
+    <meta name="description" content="A sophisticated generative art system with self-recursive iteration, comprehensive artistic knowledge, and intelligent guidance.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #0a0a0a;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-bottom: 1px solid #1a1a2e;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #7c3aed, #00d4ff);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            border: 2px solid #7c3aed;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 40px 20px;
+            background: #0f0f1a;
+            margin-top: -1px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Sections */
+        section {
+            padding: 80px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #e2e8f0;
+        }
+
+        /* Quick Start */
+        .code-block {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 30px 0;
+            overflow-x: auto;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .code-block code {
+            color: #a5b4fc;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Diagram Box */
+        .diagram {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #7c3aed;
+        }
+
+        .feature-card h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-card li {
+            padding: 8px 0;
+            color: #94a3b8;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .feature-card li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #7c3aed;
+        }
+
+        /* What Liminal Can Do */
+        .capabilities {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .capability {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(0, 212, 255, 0.05));
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .capability .emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .capability h3 {
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .capability ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .capability li {
+            color: #94a3b8;
+            padding: 5px 0;
+            font-size: 0.95rem;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            background: rgba(124, 58, 237, 0.2);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        td {
+            color: #94a3b8;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Swarm Personas */
+        .personas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .persona {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .persona-name {
+            font-weight: 700;
+            color: #f472b6;
+            margin-bottom: 5px;
+        }
+
+        .persona-role {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .persona-model {
+            font-family: 'Monaco', monospace;
+            color: #00d4ff;
+            font-size: 0.85rem;
+        }
+
+        /* Artists Grid */
+        .artists-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .artist-category h4 {
+            color: #7c3aed;
+            margin-bottom: 15px;
+        }
+
+        .artist-category ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .artist-category li {
+            color: #94a3b8;
+            padding: 4px 0;
+        }
+
+        /* Why Different */
+        .different-list {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+
+        .different-list ol {
+            counter-reset: item;
+            list-style: none;
+            padding: 0;
+        }
+
+        .different-list li {
+            counter-increment: item;
+            padding: 15px 15px 15px 50px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            color: #94a3b8;
+            position: relative;
+        }
+
+        .different-list li:before {
+            content: counter(item);
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #7c3aed, #00d4ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #0a0a0a;
+        }
+
+        /* CLI Commands */
+        .cli-section {
+            background: #0f0f1a;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 40px 0;
+        }
+
+        .cli-category {
+            margin-bottom: 30px;
+        }
+
+        .cli-category h4 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 20px;
+            background: #0a0a0a;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        footer p {
+            color: #64748b;
+        }
+
+        footer .version {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .diagram {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Liminal — Creative Coding Agent</h1>
+            <p class="tagline">"The code evolves. You curate. The system learns."</p>
+            <div class="cta-buttons">
+                <a href="#quick-start" class="btn">Get Started</a>
+                <a href="#capabilities" class="btn secondary">Explore Features</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-number">2220</div>
+            <div class="stat-label">Tests Passing</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">100+</div>
+            <div class="stat-label">Techniques</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">30+</div>
+            <div class="stat-label">Artists</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Creative Domains</div>
+        </div>
+    </div>
+
+    <!-- Quick Start -->
+    <section id="quick-start">
+        <div class="container">
+            <h2>🚀 Quick Start</h2>
+            <div class="code-block">
+                <code># Install
+pnpm install
+
+# Configure LM Studio (recommended)
+liminal --configure
+
+# Or set environment variables
+export LIMINAL_LLM_PROVIDER=lmstudio
+export LIMINAL_LLM_MODEL=qwen2.5-coder-7b-instruct
+
+# Generate art
+liminal --prompt "Create a calming blue particle system"
+
+# Start creative chat session
+liminal chat</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section>
+        <div class="container">
+            <h2>⚙️ How Liminal Works</h2>
+            <p style="text-align: center; color: #94a3b8; max-width: 700px; margin: 0 auto 40px;">
+                Liminal generates emergent generative art through self-recursive iteration with intelligent context enhancement. The same prompt runs repeatedly, but the "world" (files, context, artistic knowledge, guidance) changes each time.
+            </p>
+
+            <div class="diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│                     RALPH-WIGGUM LOOP                              │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. GENERATE   → LLM creates code based on prompt + enhanced context  │
+│  2. EVALUATE   → Quality gate (aesthetic + technical dimensions)   │
+│  3. ACCUMULATE → Save iteration, build context, learn from output    │
+│  4. GUIDANCE   → Proactive suggestions based on current state       │
+│  5. ENHANCE    → Inject compost DNA, archive examples, aesthetic hints │
+│  6. CHECK      → Stagnation detection? Promise detected?          │
+│                                                                     │
+│  Repeat until: promise detected OR max-iterations OR timeout       │
+└─────────────────────────────────────────────────────────────────────┘
+            </div>
+
+            <h3 style="color: #00d4ff; margin-top: 50px; margin-bottom: 20px;">Context Enhancement Pipeline</h3>
+            <div class="diagram">
+Base Prompt
+    ↓
+┌──────────────────────────────────────────────────────┐
+│              ARTISTIC KNOWLEDGE BASE                │
+│  • 100+ techniques across p5, shader, three, music    │
+│  • 30+ notable artists with their contributions       │
+│  • Art movements, design principles, color theory      │
+│  • Domain-specific vocabulary and terminology          │
+└──────────────────────────────────────────────────────┘
+    ↓
+┌──────────────────────────────────────────────────────┐
+│              COMPOST SEED INJECTION                  │
+│  • Quality DNA from past successful generations       │
+│  • Multi-domain fragments (code, docs, textures)     │
+│  • Style patterns and technique signatures           │
+└──────────────────────────────────────────────────────┘
+    ↓
+┌──────────────────────────────────────────────────────┐
+│              ARCHIVE LEARNING                      │
+│  • Semantic few-shot examples from high-quality     │
+│  • Keyword overlap matching                        │
+│  • Budget-conscious injection (2000 chars)          │
+└──────────────────────────────────────────────────────┘
+    ↓
+Enhanced Prompt → Better Generation → Improved Quality
+            </div>
+        </div>
+    </section>
+
+    <!-- Capabilities -->
+    <section id="capabilities">
+        <div class="container">
+            <h2>🎯 What Liminal Can Do</h2>
+            <div class="capabilities">
+                <div class="capability">
+                    <div class="emoji">🎨</div>
+                    <h3>Generate Art</h3>
+                    <ul>
+                        <li>p5.js sketches: Particle systems, flow fields, fractals, cellular automata</li>
+                        <li>GLSL shaders: Raymarching, SDFs, noise, domain warping</li>
+                        <li>Three.js scenes: 3D compositions, animations, interactive experiences</li>
+                        <li>Live music: Strudel patterns, Hydra visuals with audio reactivity</li>
+                        <li>Hybrid works: Music-to-visual pipelines, cross-domain compositions</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">🧠</div>
+                    <h3>Think Like An Artist</h3>
+                    <ul>
+                        <li>100+ techniques across all creative domains</li>
+                        <li>30+ artists with their signature approaches</li>
+                        <li>Design principles automatically applied</li>
+                        <li>Color theory integration</li>
+                        <li>Composition rules (golden ratio, rule of thirds)</li>
+                        <li>Mood enhancement (calm, energetic, mysterious, playful)</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">🔄</div>
+                    <h3>Improve Iteratively</h3>
+                    <ul>
+                        <li>Self-critique on aesthetic and technical dimensions</li>
+                        <li>Stagnation detection with alternative suggestions</li>
+                        <li>Quality gates filter out poor outputs</li>
+                        <li>Promise detection stops when complete</li>
+                        <li>Progressive refinement builds on successes</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">👥</div>
+                    <h3>Collaborate With You</h3>
+                    <ul>
+                        <li>7-question creative brief interview</li>
+                        <li>Proactive guidance at right moments</li>
+                        <li>Real-time feedback shows what it's thinking</li>
+                        <li>Interactive suggestions you can accept/decline</li>
+                        <li>Session memory remembers preferences</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">🌱</div>
+                    <h3>Learn From Experience</h3>
+                    <ul>
+                        <li>Compost Mill digests past work into reusable DNA</li>
+                        <li>Seed bank with quality fragments</li>
+                        <li>Evolutionary soup for continuous improvement</li>
+                        <li>Archive learning from high-quality examples</li>
+                        <li>Semantic search by concept, mood, technique</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">🎭</div>
+                    <h3>Multiple Creative Personas</h3>
+                    <ul>
+                        <li>Kai (Architect): Structural, analytical</li>
+                        <li>Nova (Synthesizer): Connective, integrative</li>
+                        <li>Rex (Explorer): Provocative, boundary-pushing</li>
+                        <li>Sam (Muse): Sensory, evocative</li>
+                        <li>Max (Distiller): Precise, compressed</li>
+                        <li>7-persona swarm with parallel generation</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">🎵</div>
+                    <h3>Make Live Music & Visuals</h3>
+                    <ul>
+                        <li>Strudel patterns: Rhythmic, harmonic compositions</li>
+                        <li>Hydra visuals: Audio-reactive graphics</li>
+                        <li>Pattern algebra: Mathematical approaches</li>
+                        <li>Temporal modulation: Time-based evolution</li>
+                        <li>Microtiming & polyrhythms</li>
+                    </ul>
+                </div>
+
+                <div class="capability">
+                    <div class="emoji">📊</div>
+                    <h3>Track & Optimize</h3>
+                    <ul>
+                        <li>MAP-Elites: Performance archive with diversity</li>
+                        <li>Novelty archive: Tracks unique behaviors</li>
+                        <li>Aesthetic model: Predicts quality</li>
+                        <li>Score tracking: Iteration-by-iteration</li>
+                        <li>Performance metrics for model routing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Generation Modes -->
+    <section>
+        <div class="container">
+            <h2>⚡ Generation Modes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mode</th>
+                        <th>Flag</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Single LLM</strong></td>
+                        <td><code>default</code></td>
+                        <td>One model generates, evaluates, iterates</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Swarm</strong></td>
+                        <td><code>--use-swarm</code></td>
+                        <td>7 Ollama personas generate in parallel, vote on best</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deep Collab</strong></td>
+                        <td><code>useDeepCollab</code></td>
+                        <td>3-phase: Diverge → Analyze → Synthesize</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Live Music</strong></td>
+                        <td><code>--mode live-music</code></td>
+                        <td>Generate Strudel + Hydra code, write to disk</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Swarm Personas -->
+    <section>
+        <div class="container">
+            <h2>🎭 Swarm Generation Personas</h2>
+            <div class="personas">
+                <div class="persona">
+                    <div class="persona-name">Kai</div>
+                    <div class="persona-role">Architect — Structural, analytical</div>
+                    <div class="persona-model">llama3.2:1b</div>
+                </div>
+                <div class="persona">
+                    <div class="persona-name">Nova</div>
+                    <div class="persona-role">Synthesizer — Connective, integrative</div>
+                    <div class="persona-model">gemma2:2b</div>
+                </div>
+                <div class="persona">
+                    <div class="persona-name">Rex</div>
+                    <div class="persona-role">Explorer — Provocative, boundary-ping</div>
+                    <div class="persona-model">phi3:mini</div>
+                </div>
+                <div class="persona">
+                    <div class="persona-name">Sam</div>
+                    <div class="persona-role">Muse — Sensory, evocative</div>
+                    <div class="persona-model">qwen2.5:3b</div>
+                </div>
+                <div class="persona">
+                    <div class="persona-name">Max</div>
+                    <div class="persona-role">Distiller — Precise, compressed</div>
+                    <div class="persona-model">qwen2.5:0.5b</div>
+                </div>
+            </div>
+            <p style="text-align: center; color: #94a3b8; margin-top: 30px;">
+                <strong>Swarm Modes:</strong> competitive (winner seeds next round) • hybrid (top 2 combined, default) • ring (sequential pass) • mesh (all woven together)
+            </p>
+        </div>
+    </section>
+
+    <!-- Techniques by Domain -->
+    <section>
+        <div class="container">
+            <h2>📚 Artistic Knowledge Base</h2>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>p5.js (25 techniques)</h3>
+                    <ul>
+                        <li>Coordinate Systems, Shape Primitives, Color Modes</li>
+                        <li>Animation Basics, Interaction Events, Image Processing</li>
+                        <li>Particle Systems, Flow Fields, Cellular Automata</li>
+                        <li>L-Systems, Recursion, Physics, Data Visualization</li>
+                        <li>Terrain Generation, Grid Systems, Mathematical Patterns</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Shader/GLSL (20 techniques)</h3>
+                    <ul>
+                        <li>Raymarching, Signed Distance Functions (SDFs)</li>
+                        <li>Noise Functions (Perlin, Simplex, Worley, FBM)</li>
+                        <li>Domain Warping, Color Palettes</li>
+                        <li>Post-Processing (Bloom, Chromatic Aberration)</li>
+                        <li>Normal Mapping, Shadow Mapping</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Three.js (25 techniques)</h3>
+                    <ul>
+                        <li>Scene Graph, Geometries, Materials</li>
+                        <li>Lighting, Cameras, Loaders (GLTF, OBJ)</li>
+                        <li>Animation, Tweening, Post-Processing</li>
+                        <li>InstancedMesh, LOD (Level of Detail)</li>
+                        <li>Physics, Particles, VR/AR support</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Strudel/Music (18 techniques)</h3>
+                    <ul>
+                        <li>Pattern Sequencing, Temporal Modulation</li>
+                        <li>Polyrhythms, Metric Modulation</li>
+                        <li>Melody Generation, Harmonic Progression</li>
+                        <li>Timbre Design, Spatial Audio</li>
+                        <li>Microtiming, Sample Manipulation</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Hydra/Visuals (20 techniques)</h3>
+                    <ul>
+                        <li>Source Creation (osc, src, noise, s0-s3)</li>
+                        <li>Texture Modulation (mod, scroll, kaleid, pixel)</li>
+                        <li>Color Manipulation (color, colorama, saturate)</li>
+                        <li>Blending (blend, layer, mult, diff, add)</li>
+                        <li>Feedback and Recursion, Audio Reactivity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notable Artists -->
+    <section>
+        <div class="container">
+            <h2>👨‍🎨 Notable Artists</h2>
+            <div class="artists-section">
+                <div class="artist-category">
+                    <h4>P5.js/Creative Coding</h4>
+                    <ul>
+                        <li>Casey Reas, Ben Fry (Processing co-founders)</li>
+                        <li>Daniel Shiffman (Coding Train)</li>
+                        <li>Tyler Hobbs (Quil, generative art educator)</li>
+                        <li>Golan Levin, Zach Lieberman (interactive art)</li>
+                        <li>Vera Molnar, Manfred Mohr (generative art pioneers)</li>
+                    </ul>
+                </div>
+
+                <div class="artist-category">
+                    <h4>Shader/WebGL</h4>
+                    <ul>
+                        <li>Inigo Quilez (raymarching, SDFs, Shadertoy)</li>
+                        <li>Simon Green, Patricio Gonzalez Vivo (The Book of Shaders)</li>
+                        <li>Martijn Steinrucken (shader techniques)</li>
+                    </ul>
+                </div>
+
+                <div class="artist-category">
+                    <h4>Music/Live Coding</h4>
+                    <ul>
+                        <li>Timothy Heckmann (Strudel creator)</li>
+                        <li>Alex McLean (TidalCycles)</li>
+                        <li>Ellen Band, Mikael Jazuli, Claude Heiland-Allen</li>
+                    </ul>
+                </div>
+
+                <div class="artist-category">
+                    <h4>Generative Art Pioneers</h4>
+                    <ul>
+                        <li>Sol LeWitt (minimalism, conceptual art)</li>
+                        <li>Bridget Riley (Op Art, perception)</li>
+                        <li>M.C. Escher (tessellations, impossible geometry)</li>
+                        <li>John Whitney Sr., Lillian Schwartz (computer art pioneers)</li>
+                        <li>Refik Anadol, TeamLab (contemporary digital art)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Different -->
+    <section>
+        <div class="container">
+            <h2>💡 Why Liminal Is Different</h2>
+            <div class="different-list">
+                <ol>
+                    <li><strong>Self-Recursive:</strong> The system critiques its own output and improves iteratively</li>
+                    <li><strong>Knowledge-Rich:</strong> 100+ techniques, 30+ artists, design principles, color theory embedded</li>
+                    <li><strong>Context-Aware:</strong> Understands mood, intent, domain, and adjusts accordingly</li>
+                    <li><strong>Guidance-Driven:</strong> Proactively suggests next actions based on current state</li>
+                    <li><strong>Memory-Enhanced:</strong> Learns from your past work via Compost Mill</li>
+                    <li><strong>Multi-Modal:</strong> p5, shaders, Three.js, Strudel, Hydra — all integrated</li>
+                    <li><strong>Collaborative:</strong> Swarm of personas, deep collaboration with specialized roles</li>
+                    <li><strong>Transparent:</strong> Shows thoughts, suggestions, and reasoning in real-time</li>
+                </ol>
+                <p style="text-align: center; margin-top: 40px; color: #00d4ff; font-size: 1.2rem;">
+                    <strong>Most AI art tools generate once. Liminal generates, evaluates, critiques, learns, and improves — until the work is complete or it discovers something new.</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CLI Commands -->
+    <section>
+        <div class="container">
+            <h2>💻 CLI Commands</h2>
+            <div class="cli-section">
+                <div class="cli-category">
+                    <h4>Generation</h4>
+                    <div class="code-block">
+                        <code>liminal --prompt "Create a particle system"</code>
+                        <br><code>liminal -p "sketch" -m 10 -o ./output</code>
+                        <br><code>liminal --prompt "idea" --use-swarm --swarm-mode hybrid</code>
+                        <br><code>liminal --prompt "music" --mode live-music</code>
+                    </div>
+                </div>
+
+                <div class="cli-category">
+                    <h4>Chat Mode</h4>
+                    <div class="code-block">
+                        <code>liminal chat</code>
+                    </div>
+                </div>
+
+                <div class="cli-category">
+                    <h4>Compost System</h4>
+                    <div class="code-block">
+                        <code>liminal compost add &lt;path&gt;</code>
+                        <br><code>liminal compost digest</code>
+                        <br><code>liminal compost soup start</code>
+                        <br><code>liminal compost seeds list</code>
+                        <br><code>liminal compost status</code>
+                    </div>
+                </div>
+
+                <div class="cli-category">
+                    <h4>Project Management</h4>
+                    <div class="code-block">
+                        <code>liminal list</code>
+                        <br><code>liminal serve 3456</code>
+                        <br><code>liminal --recent 10</code>
+                        <br><code>liminal --interactive</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p class="version">Liminal v1.0</p>
+            <p>"The code evolves. You curate. The system learns."</p>
+            <p style="margin-top: 20px; color: #475569;">
+                <a href="https://github.com/Pastorsimon1798/liminal" target="_blank" style="color: #7c3aed; text-decoration: none;">View on GitHub</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
