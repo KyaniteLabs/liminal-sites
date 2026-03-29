@@ -93,7 +93,7 @@ export class LLMClient {
       baseUrl: config?.baseUrl || env('LLM_BASE_URL'),
       model: config?.model || env('LLM_MODEL') || 'qwen2.5-coder-7b-instruct',
       temperature: config?.temperature ?? 0.7,
-      maxTokens: config?.maxTokens ?? 2000,
+      maxTokens: config?.maxTokens ?? 8000,
       useReasoningTransfer: config?.useReasoningTransfer ?? false,
       reasoningBaseUrl: config?.reasoningBaseUrl || env('REASONING_URL') || SERVICE_DEFAULTS.REASONING_URL,
     };
@@ -207,6 +207,7 @@ export class LLMClient {
     const message = data.choices?.[0]?.message;
     const content = message?.content || '';
     const reasoning = message?.reasoning_content || undefined;
+<<<<<<< HEAD
 
     // Multi-pass code extraction strategy
     let cleanCode = '';
@@ -296,12 +297,46 @@ export class LLMClient {
       ? finalLines.slice(finalCodeStart).join('\n')
       : cleanCode;
 
+    // Validate code completeness
+    if (finalCode && !this.isCodeComplete(finalCode)) {
+      console.warn('[LLMClient] Generated code appears incomplete (cutoff mid-function)');
+    }
+
     return {
       code: finalCode,
       explanation: content,
       reasoning,
       success: true,
     };
+  }
+
+  /**
+   * Validate that code is complete (not cut off mid-function)
+   */
+  private isCodeComplete(code: string): boolean {
+    // Count opening and closing braces
+    const openBraces = (code.match(/\{/g) || []).length;
+    const closeBraces = (code.match(/\}/g) || []).length;
+
+    // Count opening and closing parentheses
+    const openParens = (code.match(/\(/g) || []).length;
+    const closeParens = (code.match(/\)/g) || []).length;
+
+    // Count opening and closing brackets
+    const openBrackets = (code.match(/\[/g) || []).length;
+    const closeBrackets = (code.match(/\]/g) || []).length;
+
+    // Check for common cutoff patterns
+    const hasCutoffPattern = /\n\s{0,4}$/m.test(code.slice(-100)); // Ends with whitespace only
+    const endsMidFunction = /function\s+\w+\s*\([^)]*\)\s*\{[^}]*$/.test(code.slice(-200));
+    const endsMidClass = /class\s+\w+.*\{[^}]*$/.test(code.slice(-200));
+
+    return openBraces === closeBraces &&
+           openParens === closeParens &&
+           openBrackets === closeBrackets &&
+           !hasCutoffPattern &&
+           !endsMidFunction &&
+           !endsMidClass;
   }
 
   private async callProvider(
