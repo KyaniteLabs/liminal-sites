@@ -8,6 +8,8 @@ import type { CompostConfig, CompostFragment, SoupState } from './types.js';
 import { SoupStateManager } from './SoupStateManager.js';
 import { SeedBank } from './SeedBank.js';
 import { FragmentScorer } from './FragmentScorer.js';
+import { FitnessCombiner, type FitnessComponents } from '../evolution/FitnessCombiner.js';
+import { MapElites } from '../evolution/MapElites.js';
 import { eventBus, EventTypes } from '../core/EventBus.js';
 import type { LLMClientLike } from './SemanticExtractor.js';
 
@@ -17,6 +19,8 @@ export class CompostSoup {
   private stateManager: SoupStateManager;
   private seedBank: SeedBank;
   private scorer: FragmentScorer;
+  private fitnessCombiner: FitnessCombiner;
+  private mapElites: MapElites;
   private abortController: AbortController | null = null;
 
   constructor(config: CompostConfig, llm: LLMClientLike) {
@@ -25,6 +29,8 @@ export class CompostSoup {
     this.stateManager = new SoupStateManager(config);
     this.seedBank = new SeedBank(config);
     this.scorer = new FragmentScorer(config, llm);
+    this.fitnessCombiner = new FitnessCombiner(config.fitnessWeights);
+    this.mapElites = new MapElites(config.mapElitesDims ?? [10, 10]);
   }
 
   /** Run a single soup cycle. */
