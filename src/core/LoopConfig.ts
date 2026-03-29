@@ -92,6 +92,12 @@ export interface LoopOptions {
   onSuggestion?: (suggestion: any) => void;
   /** Guidance engine for proactive suggestions during generation */
   guidanceEngine?: any;
+  /** Enable aesthetic guardrails in the quality gate */
+  useAestheticGuardrails?: boolean;
+  /** Configuration for aesthetic critics */
+  aestheticConfig?: { preset?: string; strictness?: 'lenient' | 'moderate' | 'strict'; constraints?: Record<string, unknown> };
+  /** Audio-derived visual parameters for prompt injection */
+  visualMappingParams?: Record<string, unknown>;
 }
 
 export interface LoopResult {
@@ -140,6 +146,9 @@ export interface NormalizedLoopOptions extends LoopOptions {
   onThought?: (thought: string) => void;
   onSuggestion?: (suggestion: any) => void;
   guidanceEngine?: any;
+  useAestheticGuardrails: boolean;
+  aestheticConfig: Record<string, unknown>;
+  visualMappingParams?: Record<string, unknown>;
 }
 
 /**
@@ -191,6 +200,9 @@ export function normalizeOptions(options: LoopOptions | null): NormalizedLoopOpt
     onThought: options?.onThought,
     onSuggestion: options?.onSuggestion,
     guidanceEngine: options?.guidanceEngine,
+    useAestheticGuardrails: options?.useAestheticGuardrails ?? false,
+    aestheticConfig: (options?.aestheticConfig ?? {}) as Record<string, unknown>,
+    visualMappingParams: options?.visualMappingParams,
     _mapElites: options?.useMapElites ? new MapElites(options?.mapElitesDims ?? [10, 10]) : undefined,
     _noveltyArchive: options?.useMapElites ? new NoveltyArchive() : undefined,
   };
