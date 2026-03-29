@@ -210,6 +210,7 @@ export class RalphLoop {
           const promptLower = prompt.toLowerCase();
           if (promptLower.includes('ascii') || promptLower.includes('text art')) domain = 'ascii';
           else if (promptLower.includes('music') || promptLower.includes('strudel') || promptLower.includes('hydra')) domain = 'music';
+          else if (promptLower.includes('remotion') || promptLower.includes('video') || promptLower.includes('motion graphics') || promptLower.includes('title sequence')) domain = 'remotion';
           // Keep 'p5' for visual/shader/three since they're handled by the same generator
         }
         const qualityThreshold = normalizedOptions.domainQualityThresholds?.[domain] ?? normalizedOptions.minQualityScore;
@@ -294,7 +295,7 @@ export class RalphLoop {
 
         // Record routing outcome for dynamic routing
         recordRoutingOutcome({
-          domain: (normalizedOptions.collabDomain || 'p5') as 'ascii' | 'music' | 'code' | 'visual',
+          domain: (normalizedOptions.collabDomain || 'p5') as 'ascii' | 'music' | 'code' | 'visual' | 'remotion',
           model: normalizedOptions.useSwarm ? 'hybrid' : 'local',
           qualityScore: evaluation.score,
           timestamp: new Date().toISOString(),
