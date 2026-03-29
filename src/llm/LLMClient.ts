@@ -207,7 +207,6 @@ export class LLMClient {
     const message = data.choices?.[0]?.message;
     const content = message?.content || '';
     const reasoning = message?.reasoning_content || undefined;
-<<<<<<< HEAD
 
     // Multi-pass code extraction strategy
     let cleanCode = '';
@@ -240,7 +239,7 @@ export class LLMClient {
         // Patterns that indicate reasoning/commentary to skip
         const skipPatterns = [
           /^(\/\/\s*)?(The user wants?|I need to|I'll create|I will create|Let me create|Based on|Here's a|This sketch|Creating a|Generating a|I'm going to|The previous|Looking at|To improve|For this|Key elements|I'll write)/i,
-          /^[\d\.\-\s]+/, // Numbered list items like "1. ", "2. ", "- ", etc.
+          /^[\d.\-\s]+/, // Numbered list items like "1. ", "2. ", "- ", etc.
           /^(Has|Uses|Responds|I'll|I'll create|Maybe|Let me|I should|The code|This will)/i, // Common reasoning phrases
         ];
 
