@@ -12,6 +12,8 @@ import path from 'path';
 import archiver from 'archiver';
 import { createWriteStream } from 'fs';
 import { HTMLWrapper } from '../utils/htmlWrapper.js';
+import { RemotionRenderer } from '../render/RemotionRenderer.js';
+import { CanvasRecorder } from '../render/CanvasRecorder.js';
 
 export interface ProjectIteration {
   version: number;
@@ -22,6 +24,14 @@ export interface ProjectIteration {
 export interface Project {
   name: string;
   iterations: ProjectIteration[];
+}
+
+export interface VideoExportOptions {
+  domain: string;
+  fps?: number;      // default 30
+  duration?: number; // default 10 (seconds)
+  width?: number;    // default 1920
+  height?: number;   // default 1080
 }
 
 export class Exporter {
@@ -180,6 +190,56 @@ export class Exporter {
       // Finalize the archive
       archive.finalize();
     });
+  }
+
+  /**
+   * Export creative code as a video file.
+   * Uses RemotionRenderer for the 'remotion' domain, CanvasRecorder for all others.
+   * @param code - Creative code to render (must be non-empty string)
+   * @param outputPath - Path where video file will be saved
+   * @param options - Video export options including domain, fps, duration, width, height
+   * @throws Error if validation fails or rendering fails
+   */
+  async exportVideo(code: string, outputPath: string, options: VideoExportOptions): Promise<void> {
+    // Validate code
+    if (!code || typeof code !== 'string' || code.trim() === '') {
+      throw new Error('Code is required');
+    }
+
+    // Validate output path
+    if (!outputPath || typeof outputPath !== 'string' || outputPath.trim() === '') {
+      throw new Error('Output path is required');
+    }
+
+    // Validate domain
+    if (!options?.domain) {
+      throw new Error('VideoExportOptions domain is required');
+    }
+
+    const {
+      domain,
+      fps = 30,
+      duration = 10,
+      width = 1920,
+      height = 1080,
+    } = options;
+
+    // Create output directory if it doesn't exist
+    const dir = path.dirname(outputPath);
+    try {
+      await fs.mkdir(dir, { recursive: true });
+    } catch (error) {
+      throw new Error(`Failed to create directory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    if (domain === 'remotion') {
+      const renderer = new RemotionRenderer();
+      const projectDir = await renderer.writeEntryPoint(code);
+      await renderer.renderToVideo({ projectDir, outputPath, codec: 'h264' });
+    } else {
+      const recorder = new CanvasRecorder({ fps, duration, width, height });
+      await recorder.record(code, domain as any, outputPath);
+    }
   }
 
   /**
