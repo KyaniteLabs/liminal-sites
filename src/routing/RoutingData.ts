@@ -211,7 +211,9 @@ export const OVERALL_FITNESS = {
  * Keyword detection patterns for domain classification.
  */
 export const DOMAIN_KEYWORDS: Record<DomainType, string[]> = {
-  music: ['music', 'song', 'melody', 'rhythm', 'chord', 'piano', 'guitar', 'beat', 'harmony', 'tempo', 'audio'],
+  // Music domain includes Strudel (pattern-based) and Hydra (visual synthesis)
+  // Note: Local models show +121% advantage for music but contamination risk with <think> tags
+  music: ['music', 'song', 'melody', 'rhythm', 'chord', 'piano', 'guitar', 'beat', 'harmony', 'tempo', 'audio', 'strudel', 'hydra', 'synth', 'pattern', 'drone', 'techno'],
   ascii: ['ascii', 'art', 'draw', 'picture', 'cat face', 'spaceship', 'text art', 'character'],
   code: ['code', 'function', 'class', 'algorithm', 'generate', 'fractal', 'animation', 'script', 'program'],
   visual: ['visual', 'image', 'graphic', 'design', 'color', 'shape', 'pattern', 'render', 'shader', '3d', 'scene'],

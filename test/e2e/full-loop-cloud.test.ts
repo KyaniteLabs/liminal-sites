@@ -18,7 +18,7 @@ async function isLLMAvailable() {
   }
 }
 
-const E2E_TIMEOUT_MS = 120000; // 2 iterations + LLM calls over network
+const E2E_TIMEOUT_MS = 300000; // 5 minutes - 2 iterations with slow local models
 
 function restoreEnv(backup: Record<string, string | undefined>) {
   for (const key of Object.keys(backup)) {
@@ -40,12 +40,11 @@ function backupEnv(keys: string[]): Record<string, string | undefined> {
 
 describe('E2E full loop (cloud LLM)', () => {
   const envKeys = [
-    'LIMINAL_LLM_PROVIDER',
+    // Provider is no longer used - baseUrl + model is all that's needed
     'LIMINAL_LLM_BASE_URL',
     'LIMINAL_LLM_MODEL',
     'LIMINAL_LLM_API_KEY',
     'OPENAI_API_KEY',
-    'MINIMAX_API_KEY',
   ];
   let envBackup: Record<string, string | undefined>;
 
@@ -69,9 +68,9 @@ describe('E2E full loop (cloud LLM)', () => {
       return;
     }
 
-    process.env.LIMINAL_LLM_PROVIDER = 'lmstudio';
+    // Provider is no longer used - baseUrl + model is all that's needed
     process.env.LIMINAL_LLM_BASE_URL = process.env.LIMINAL_LLM_BASE_URL || 'http://localhost:1234/v1';
-    process.env.LIMINAL_LLM_MODEL = process.env.LIMINAL_LLM_MODEL || 'local-model';
+    process.env.LIMINAL_LLM_MODEL = process.env.LIMINAL_LLM_MODEL || 'qwen3.5-9b';  // Use actual model from LM Studio
 
     const stamp = Date.now();
     const projectName = `e2e-cloud-${stamp}`;

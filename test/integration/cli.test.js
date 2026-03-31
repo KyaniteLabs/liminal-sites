@@ -55,6 +55,11 @@ describe('CLI Integration Tests', () => {
         '--output', testOutputDir,
         '--max-iterations', '1'
       ]);
+      // Debug output
+      if (result.exitCode !== 0) {
+        console.log('[DEBUG] stdout:', result.stdout);
+        console.log('[DEBUG] stderr:', result.stderr);
+      }
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Liminal');
     }, TEST_TIMEOUT);
@@ -86,9 +91,9 @@ async function runCLI(args) {
     const cliProcess = spawn('node', [cliPath, ...args], {
       env: {
         ...process.env,
-        LIMINAL_LLM_PROVIDER: 'lmstudio',
+        // Provider is no longer used - baseUrl + model is all that's needed
         LIMINAL_LLM_BASE_URL: 'http://localhost:1234/v1',
-        LIMINAL_LLM_MODEL: 'local-model'
+        LIMINAL_LLM_MODEL: 'qwen3.5-9b'  // Use actual model name from LM Studio
       }
     });
     let stdout = '';

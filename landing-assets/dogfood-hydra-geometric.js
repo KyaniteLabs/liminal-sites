@@ -1,13 +1,3 @@
-<think>
-The user wants a geometric pattern with a rotating grid effect in Hydra. Let me create something visually interesting with:
-
-1. A geometric base (shapes)
-2. A grid-like structure
-3. Rotation animation
-4. Some modulation for visual richness
-
-I'll use multiple sources and combine them creatively. Let me make a nice rotating grid pattern with geometric elements.
-</think>
 
 osc(3, 0.1, 0.5)
   .rotate(() => time * 0.3)

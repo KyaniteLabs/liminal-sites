@@ -1,17 +1,3 @@
-<think>
-The user wants me to generate Strudel music at 120 BPM. The input says "undefined" but I should still create a good piece of music. Let me create an interesting, varied pattern with multiple layers.
-
-Let me create something with:
-- A kick drum pattern
-- A hi-hat pattern
-- A bass pattern
-- Maybe some melodic elements
-- Good use of effects like delay, reverb, distortion
-
-I'll set the BPM to 120 using the `bpm` or `setc` function.
-
-Let me create something engaging with multiple patterns stacked together.
-</think>
 
 setc({ bpm: 120 })
 

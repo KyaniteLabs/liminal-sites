@@ -120,7 +120,8 @@ export interface ProjectConfig {
 }
 
 export interface EffectiveConfig {
-  provider: 'ollama' | 'openai' | 'minimax' | 'lmstudio' | 'hybrid';
+  /** @deprecated Provider is no longer used - baseUrl determines the endpoint */
+  provider?: 'ollama' | 'openai' | 'minimax' | 'lmstudio' | 'hybrid';
   baseUrl?: string;
   model: string;
   apiKey?: string;
@@ -131,7 +132,8 @@ export type RoutingMode = 'cascade' | 'speculative' | 'ensemble' | 'specialized'
 
 /** Individual model configuration */
 export interface ModelConfig {
-  provider: 'ollama' | 'openai' | 'minimax' | 'lmstudio';
+  /** @deprecated Provider is no longer used - baseUrl determines the endpoint */
+  provider?: 'ollama' | 'openai' | 'minimax' | 'lmstudio';
   baseUrl?: string;
   model: string;
   apiKey?: string;

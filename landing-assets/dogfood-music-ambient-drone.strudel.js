@@ -1,26 +1,3 @@
-<think>
-The user wants me to generate Strudel code for music at 120 BPM. They said "undefined" which likely means they want me to come up with something creative/interesting.
-
-Let me create a dynamic, layered Strudel pattern at 120 BPM with rich patterns, effects, and variation.
-
-Key constraints:
-- 120 BPM
-- Use Strudel syntax (JavaScript-based)
-- Include sound sources
-- Rich patterns with stack, variation, effects
-- NO markdown fences, NO explanatory text
-- Just runnable Strudel code
-
-Let me create something with:
-- A kick drum pattern
-- A bassline
-- Some melodic elements
-- Effects like delay, reverb, distortion
-- Variation and polyrhythm
-
-120 BPM in Strudel is set with `.bps(2)` since 120 BPM = 2 beats per second.
-
-</think>
 
 bps(2)
 

@@ -45,17 +45,41 @@ import { eventBus, EventTypes } from '../core/EventBus.js';
 import { validateUrl, getAllowedHostsFromEnv, SSRFError } from '../security/UrlValidator.js';
 
 export interface LLMConfig {
-  provider: 'ollama' | 'openai' | 'minimax' | 'lmstudio' | 'hybrid';
+  /** Base URL for the LLM API (OpenAI-compatible) */
+  baseUrl: string;
+  /** API key (optional for local endpoints) */
   apiKey?: string;
-  baseUrl?: string;
+  /** Model name to use */
   model: string;
+  /** Temperature for generation (0-2) */
   temperature?: number;
+  /** Maximum tokens to generate */
   maxTokens?: number;
-  costPerToken?: { input?: number; output?: number };
-  /** When true, call the reasoning service /reason endpoint to enhance prompts before generation */
-  useReasoningTransfer?: boolean;
-  /** Base URL for reasoning service (default http://localhost:8000) */
-  reasoningBaseUrl?: string;
+  /** 
+   * API style - affects request/response format
+   * - 'openai': Standard OpenAI chat completions (/chat/completions)
+   * - 'ollama': Ollama native API (/api/generate)
+   * - 'anthropic': Anthropic Claude API (/v1/messages)
+   * Auto-detected from baseUrl if not specified
+   */
+  apiStyle?: 'openai' | 'ollama' | 'anthropic';
+  /** 
+   * Custom endpoint path (overrides defaults)
+   * e.g., '/v1/chat/completions', '/api/generate'
+   */
+  endpointPath?: string;
+  /** Custom headers to add to requests */
+  headers?: Record<string, string>;
+  /** 
+   * Custom request body transformation
+   * Allows adapting to any provider's specific requirements
+   */
+  transformRequest?: (body: unknown) => unknown;
+  /** 
+   * Custom response parsing
+   * Allows extracting content from any provider's response format
+   */
+  parseResponse?: (data: unknown) => { content: string; reasoning?: string } | null;
 }
 
 export interface LLMResponse {
@@ -64,67 +88,76 @@ export interface LLMResponse {
   reasoning?: string;
   success: boolean;
   error?: string;
-  fromCache?: boolean;  // Track if response was from cache
-  isComplete?: boolean; // Whether code is structurally complete (not cut off)
+  fromCache?: boolean;
+  isComplete?: boolean;
 }
 
 function env(key: string): string | undefined {
   return process.env[`LIMINAL_${key}`];
 }
 
+/**
+ * Universal LLM Client - model agnostic, provider agnostic
+ * 
+ * Works with any OpenAI-compatible endpoint:
+ * - Ollama (http://localhost:11434/v1)
+ * - LM Studio (http://localhost:1234/v1)
+ * - OpenAI (https://api.openai.com/v1)
+ * - OpenRouter (https://openrouter.ai/api/v1)
+ * - Any other compatible API
+ * 
+ * Philosophy: Clean the output, don't choose the model.
+ */
 export class LLMClient {
   private config: LLMConfig;
   private cache = new CacheManager({ enabled: true });
 
-  private static readonly COST_ESTIMATES: Record<string, { input: number; output: number }> = {
-    openai: { input: 0.00001, output: 0.00003 },
-    ollama: { input: 0, output: 0 },
-    minimax: { input: 0.000001, output: 0.000002 },
-    lmstudio: { input: 0, output: 0 },
-  };
-
-  static estimatedCost(provider: string, inputTokens: number = 1000, outputTokens: number = 500): number {
-    const rates = this.COST_ESTIMATES[provider] || { input: 0, output: 0 };
-    return rates.input * inputTokens + rates.output * outputTokens;
-  }
-
   constructor(config?: Partial<LLMConfig>) {
+    const baseUrl = config?.baseUrl || env('LLM_BASE_URL') || SERVICE_DEFAULTS.LOCAL_LLM_URL;
+    
     this.config = {
-      provider: config?.provider || (env('LLM_PROVIDER') as LLMConfig['provider']) || 'lmstudio',
-      apiKey: config?.apiKey ?? process.env.MINIMAX_API_KEY ?? env('LLM_API_KEY') ?? process.env.OPENAI_API_KEY,
-      baseUrl: config?.baseUrl || env('LLM_BASE_URL'),
+      baseUrl,
+      apiKey: config?.apiKey ?? env('LLM_API_KEY') ?? process.env.OPENAI_API_KEY,
       model: config?.model || env('LLM_MODEL') || 'qwen2.5-coder-7b-instruct',
       temperature: config?.temperature ?? 0.7,
       maxTokens: config?.maxTokens ?? 8000,
-      useReasoningTransfer: config?.useReasoningTransfer ?? false,
-      reasoningBaseUrl: config?.reasoningBaseUrl || env('REASONING_URL') || SERVICE_DEFAULTS.REASONING_URL,
+      apiStyle: config?.apiStyle || this.detectApiStyle(baseUrl),
+      endpointPath: config?.endpointPath,
+      headers: config?.headers,
+      transformRequest: config?.transformRequest,
+      parseResponse: config?.parseResponse,
     };
   }
 
-  /** Enable response caching. Disabled by default for single-shot generation. */
+  /** Detect API style from baseUrl */
+  private detectApiStyle(baseUrl: string): 'openai' | 'ollama' {
+    // Ollama's native API is at /api/generate, not /v1/chat/completions
+    // But Ollama also has OpenAI-compatible mode at /v1
+    // If URL ends with /v1, use OpenAI style
+    if (baseUrl.endsWith('/v1')) {
+      return 'openai';
+    }
+    // Otherwise assume Ollama native
+    return 'ollama';
+  }
+
+  /** Enable response caching */
   enableCache(options?: { ttlMs?: number; maxEntries?: number }): void {
     this.cache = new CacheManager({ enabled: true, ...options });
   }
 
-  /**
-   * Clear the LLM response cache.
-   * Useful for forcing fresh generation in iterative contexts like Ralph Loop.
-   */
+  /** Clear the LLM response cache */
   clearCache(): void {
     this.cache = new CacheManager({ enabled: false });
     this.enableCache();
   }
 
-  /**
-   * Disable caching entirely for this LLMClient instance.
-   */
+  /** Disable caching entirely */
   disableCache(): void {
     this.cache = new CacheManager({ enabled: false });
   }
 
-  /**
-   * Get cache statistics for debugging.
-   */
+  /** Get cache statistics */
   getCacheStats(): { size: number; enabled: boolean } {
     return {
       size: (this.cache as any).cache?.size ?? 0,
@@ -133,57 +166,52 @@ export class LLMClient {
   }
 
   /**
-   * Generic LLM generation method.
-   * Routes to the configured provider (lmstudio, ollama, openai, minimax, hybrid).
-   * Used by generateP5Sketch, improveP5Sketch, and domain-specific generators.
+   * Generate code from prompts
+   * Universal interface - works with any OpenAI-compatible endpoint
    */
   async generate(systemPrompt: string, userPrompt: string, signal?: AbortSignal, bypassCache?: boolean): Promise<LLMResponse> {
     const llmStartTime = Date.now();
     try {
-
-      // Optionally enhance prompt via reasoning transfer
-      let enhancedUserPrompt = userPrompt;
-      if (this.config.useReasoningTransfer) {
-        enhancedUserPrompt = await this.enhanceWithReasoning(userPrompt, systemPrompt);
-      }
-
-      // Check cache (only if not bypassing)
-      const cached = bypassCache ? null : this.cache.get(systemPrompt, enhancedUserPrompt);
+      // Check cache
+      const cached = bypassCache ? null : this.cache.get(systemPrompt, userPrompt);
       if (cached) {
         return { code: cached, success: true, fromCache: true };
       }
 
-      eventBus.emit(EventTypes.LLM_REQUEST, 'LLMClient', { provider: this.config.provider, model: this.config.model, promptPreview: enhancedUserPrompt.slice(0, 100) });
-
-      const result = await RetryManager.executeWithRetry(async () => {
-        if (this.config.provider === 'ollama') {
-          return await this.callOllama(systemPrompt, enhancedUserPrompt, signal);
-        } else if (this.config.provider === 'openai') {
-          return await this.callOpenAI(systemPrompt, enhancedUserPrompt, signal);
-        } else if (this.config.provider === 'minimax') {
-          return await this.callMinimax(systemPrompt, enhancedUserPrompt, signal);
-        } else if (this.config.provider === 'lmstudio') {
-          return await this.callLMStudio(systemPrompt, enhancedUserPrompt, signal);
-        } else if (this.config.provider === 'hybrid') {
-          return await this.callHybrid(systemPrompt, enhancedUserPrompt, signal);
-        } else {
-          return { code: '', success: false, error: 'Unknown provider: ' + this.config.provider };
-        }
+      eventBus.emit(EventTypes.LLM_REQUEST, 'LLMClient', { 
+        model: this.config.model, 
+        promptPreview: userPrompt.slice(0, 100) 
       });
 
-      // Write to cache on success (only if not bypassed)
+      const result = await RetryManager.executeWithRetry(async () => {
+        if (this.config.apiStyle === 'ollama') {
+          return await this.callOllama(systemPrompt, userPrompt, signal);
+        }
+        return await this.callOpenAICompatible(systemPrompt, userPrompt, signal);
+      });
+
+      // Write to cache on success
       if (result.success && result.code && !bypassCache) {
-        this.cache.set(systemPrompt, enhancedUserPrompt, result.code);
+        this.cache.set(systemPrompt, userPrompt, result.code);
       }
 
-      eventBus.emit(EventTypes.LLM_RESPONSE, 'LLMClient', { provider: this.config.provider, model: this.config.model, success: true, latencyMs: Date.now() - llmStartTime });
+      eventBus.emit(EventTypes.LLM_RESPONSE, 'LLMClient', { 
+        model: this.config.model, 
+        success: true, 
+        latencyMs: Date.now() - llmStartTime 
+      });
 
       return result;
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       const isRetryable = error instanceof LLMError && error.retryable;
       console.error('LLMClient.generate failed:', errMsg, isRetryable ? '(retryable, retries exhausted)' : '');
-      eventBus.emit(EventTypes.LLM_RESPONSE, 'LLMClient', { provider: this.config.provider, model: this.config.model, success: false, latencyMs: Date.now() - llmStartTime, error: errMsg });
+      eventBus.emit(EventTypes.LLM_RESPONSE, 'LLMClient', { 
+        model: this.config.model, 
+        success: false, 
+        latencyMs: Date.now() - llmStartTime, 
+        error: errMsg 
+      });
       return {
         code: `// LLM generation failed: ${errMsg}`,
         success: false,
@@ -197,190 +225,136 @@ export class LLMClient {
     return this.generate(rendered.system, rendered.user, signal, bypassCache);
   }
 
-  /**
-   * Ask the LLM to improve existing p5.js sketch code.
-   */
   async improveP5Sketch(currentCode: string): Promise<LLMResponse> {
     const rendered = PromptLibrary.render('p5.improve', { code: currentCode });
     return this.generate(rendered.system, rendered.user);
   }
 
-  private parseChatCompletionResponse(data: { choices?: Array<{ message?: { content?: string; reasoning_content?: string } }> }): LLMResponse {
-    const message = data.choices?.[0]?.message;
-    const content = message?.content || '';
-    const reasoning = message?.reasoning_content || undefined;
-
-    // Multi-pass code extraction strategy
-    let cleanCode = '';
-
-    // Pass 1: Try to extract code from markdown fences (javascript, js, or no language tag)
-    const markdownCodeMatch = content.match(/```(?:javascript|js)?\n([\s\S]*?)```/);
-    if (markdownCodeMatch) {
-      cleanCode = markdownCodeMatch[1].trim();
-    } else {
-      // Pass 2: Look for code between any markdown fences
-      const anyFenceMatch = content.match(/```\n?([\s\S]*?)```/);
-      if (anyFenceMatch) {
-        cleanCode = anyFenceMatch[1].trim();
-      } else {
-        // Pass 3: Find first actual code line by looking for code keywords
-        const lines = content.split('\n');
-        let codeStartIndex = -1;
-
-        // Patterns that indicate actual code (not reasoning)
-        const codePatterns = [
-          /^(let|const|var|function|class|if|for|while|setup|draw|import|export|return)\b/,
-          /^(precision|void|vec[234]|float|int|bool|uniform|attribute|varying)\b/,
-          /^<!DOCTYPE html>/i,
-          /^<html/i,
-          /^<head/i,
-          /^<body/i,
-          /^<script/i,
-        ];
-
-        // Patterns that indicate reasoning/commentary to skip
-        const skipPatterns = [
-          /^(\/\/\s*)?(The user wants?|I need to|I'll create|I will create|Let me create|Based on|Here's a|This sketch|Creating a|Generating a|I'm going to|The previous|Looking at|To improve|For this|Key elements|I'll write)/i,
-          /^[\d.\-\s]+/, // Numbered list items like "1. ", "2. ", "- ", etc.
-          /^(Has|Uses|Responds|I'll|I'll create|Maybe|Let me|I should|The code|This will)/i, // Common reasoning phrases
-          /^(Sure!|Here is|Below is|This will|I've created|I have created)/i,
-          /^As an AI/i,
-          /^(Note:|Disclaimer:|Important:)/i,
-          /^(This code|This generates?|This creates?)/i,
-          /^(\*\*|__).*?(\*\*|__)\s*[:-]/, // bold headings like "**Approach:**"
-          /^#{1,3}\s/, // markdown headings
-        ];
-
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-
-          // Check if this line matches code patterns
-          const isCode = codePatterns.some(pattern => pattern.test(line));
-          if (isCode) {
-            codeStartIndex = i;
-            break;
-          }
-
-          // Skip lines that match reasoning patterns
-          const isSkip = skipPatterns.some(pattern => pattern.test(line));
-          if (!isSkip) {
-            // This might be code - include it
-            codeStartIndex = i;
-            break;
-          }
-        }
-
-        if (codeStartIndex >= 0) {
-          cleanCode = lines.slice(codeStartIndex).join('\n').trim();
-        } else {
-          // Fallback: use entire content
-          cleanCode = content.trim();
-        }
-      }
+  /** Universal response parser - handles any model's quirks */
+  private parseResponse(data: unknown): LLMResponse {
+    // Handle different response shapes
+    const response = data as Record<string, unknown>;
+    
+    // OpenAI-compatible format
+    const choices = response.choices as Array<{ message?: { content?: string; reasoning_content?: string } }> | undefined;
+    if (choices && choices[0]?.message) {
+      const message = choices[0].message;
+      return this.sanitizeOutput(message.content || '', message.reasoning_content);
     }
-
-    // Final cleanup: Remove any remaining leading non-code lines
-    const finalLines = cleanCode.split('\n');
-    let finalCodeStart = 0;
-    const finalCodePatterns = [
-      /^(let|const|var|function|class|if|for|while|setup|draw|import|export|return)\b/,
-      /^(precision|void|vec[234]|float|int|bool|uniform|attribute|varying)\b/,
-      /^<!DOCTYPE html>/i,
-      /^<html/i,
-      /^<head/i,
-      /^<body/i,
-      /^<script/i,
-    ];
-
-    for (let i = 0; i < Math.min(20, finalLines.length); i++) {
-      const line = finalLines[i].trim();
-      if (finalCodePatterns.some(pattern => pattern.test(line))) {
-        finalCodeStart = i;
-        break;
-      }
+    
+    // Ollama format
+    const ollamaResponse = response.response as string | undefined;
+    if (ollamaResponse !== undefined) {
+      return this.sanitizeOutput(ollamaResponse);
     }
-    const finalCode = finalCodeStart > 0
-      ? finalLines.slice(finalCodeStart).join('\n')
-      : cleanCode;
-
-    // Validate code completeness
-    const isComplete = finalCode ? this.isCodeComplete(finalCode) : true;
-    if (finalCode && !isComplete) {
-      console.warn('[LLMClient] Generated code appears incomplete (cutoff mid-function)');
+    
+    // Fallback: try to find content anywhere in response
+    const anyContent = JSON.stringify(response).match(/"content"\s*:\s*"([^"]*)"/)?.[1];
+    if (anyContent) {
+      return this.sanitizeOutput(anyContent);
     }
-
+    
     return {
-      code: finalCode,
-      explanation: content,
-      reasoning,
-      success: true,
-      isComplete,
+      code: '',
+      success: false,
+      error: 'Unable to parse LLM response',
     };
   }
 
   /**
-   * Validate that code is complete (not cut off mid-function)
+   * Universal output sanitizer
+   * Handles contamination from ANY model: <think> tags, markdown fences, reasoning text
    */
-  private isCodeComplete(code: string): boolean {
-    // Count opening and closing braces
-    const openBraces = (code.match(/\{/g) || []).length;
-    const closeBraces = (code.match(/\}/g) || []).length;
-
-    // Count opening and closing parentheses
-    const openParens = (code.match(/\(/g) || []).length;
-    const closeParens = (code.match(/\)/g) || []).length;
-
-    // Count opening and closing brackets
-    const openBrackets = (code.match(/\[/g) || []).length;
-    const closeBrackets = (code.match(/\]/g) || []).length;
-
-    // Check for common cutoff patterns
-    const hasCutoffPattern = /\n\s{0,4}$/m.test(code.slice(-100)); // Ends with whitespace only
-    const endsMidFunction = /function\s+\w+\s*\([^)]*\)\s*\{[^}]*$/.test(code.slice(-200));
-    const endsMidClass = /class\s+\w+.*\{[^}]*$/.test(code.slice(-200));
-
-    return openBraces === closeBraces &&
-           openParens === closeParens &&
-           openBrackets === closeBrackets &&
-           !hasCutoffPattern &&
-           !endsMidFunction &&
-           !endsMidClass;
+  private sanitizeOutput(content: string, reasoning?: string): LLMResponse {
+    // Step 1: Strip <think> tags (Qwen, DeepSeek, etc.)
+    let cleanCode = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    
+    // Step 2: Extract code from markdown fences
+    const markdownMatch = cleanCode.match(/```(?:\w+)?\n([\s\S]*?)```/);
+    if (markdownMatch) {
+      cleanCode = markdownMatch[1].trim();
+    }
+    
+    // Step 3: Strip leading narrative text
+    const lines = cleanCode.split('\n');
+    const codeStartPatterns = [
+      /^(let|const|var|function|class|if|for|while|import|export|return|precision|void|vec|uniform)\b/,
+      /^<!DOCTYPE/i,
+      /^<html/i,
+      /^<script/i,
+      /^\$/,
+      /^osc\(|^src\(|^render\(/,
+    ];
+    
+    let codeStartIndex = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (!trimmed) continue;
+      
+      if (codeStartPatterns.some(p => p.test(trimmed))) {
+        codeStartIndex = i;
+        break;
+      }
+      
+      // Skip narrative lines
+      if (/^(Here|I'll|Let me|This|The user)/i.test(trimmed)) {
+        codeStartIndex = i + 1;
+      }
+    }
+    
+    cleanCode = lines.slice(codeStartIndex).join('\n').trim();
+    
+    // Step 4: Validate code completeness
+    const isComplete = this.isCodeComplete(cleanCode);
+    
+    return {
+      code: cleanCode,
+      explanation: content,
+      reasoning,
+      success: cleanCode.length > 0,
+      isComplete,
+    };
   }
 
-  private async callProvider(
-    provider: string,
-    defaultBaseUrl: string,
-    system: string,
-    user: string,
-    signal?: AbortSignal
-  ): Promise<LLMResponse> {
-    const baseUrl = this.config.baseUrl || defaultBaseUrl;
+  /** Check if code is structurally complete */
+  private isCodeComplete(code: string): boolean {
+    const openBraces = (code.match(/\{/g) || []).length;
+    const closeBraces = (code.match(/\}/g) || []).length;
+    const openParens = (code.match(/\(/g) || []).length;
+    const closeParens = (code.match(/\)/g) || []).length;
+    
+    return openBraces === closeBraces && openParens === closeParens;
+  }
 
-    // SSRF Protection - validate baseUrl
+  /** Call OpenAI-compatible endpoint */
+  private async callOpenAICompatible(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
+    const baseUrl = this.config.baseUrl;
+    
+    // SSRF Protection
     const allowLocalhost = process.env.LIMINAL_ALLOW_LOCALHOST_LLM !== 'false';
     const allowPrivateIPs = process.env.LIMINAL_ALLOW_PRIVATE_IP_LLM === 'true';
     const allowedHosts = getAllowedHostsFromEnv();
-
+    
     try {
       validateUrl(baseUrl, { allowedHosts, allowPrivateIPs, allowLocalhost });
     } catch (err) {
       if (err instanceof SSRFError) {
-        throw new LLMError(`SSRF Protection: ${err.message}`, provider, undefined, false);
+        throw new LLMError(`SSRF Protection: ${err.message}`, 'llm', undefined, false);
       }
       throw err;
     }
-
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     if (this.config.apiKey) {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
-
-    let response: Response;
-    try {
-      const requestBody = {
+    
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
         model: this.config.model,
         messages: [
           { role: 'system', content: system },
@@ -388,86 +362,27 @@ export class LLMClient {
         ],
         temperature: this.config.temperature,
         max_tokens: this.config.maxTokens,
-      };
-
-      // Debug: Log request details for LM Studio
-      if (provider === 'lmstudio') {
-        console.error('[LM Studio Debug] Request URL:', `${baseUrl}/chat/completions`);
-        console.error('[LM Studio Debug] Model:', this.config.model);
-        console.error('[LM Studio Debug] System prompt length:', system.length);
-        console.error('[LM Studio Debug] User prompt length:', user.length);
-      }
-
-      response = await fetch(`${baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody),
-        signal,
-      });
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        throw new LLMTimeoutError(provider);
-      }
-      throw new LLMError(
-        `${provider} API request failed: ${err instanceof Error ? err.message : err}`,
-        provider,
-        undefined,
-        false
-      );
-    }
-
+      }),
+      signal,
+    });
+    
     if (!response.ok) {
-      // Try to get error details from response body
-      let errorBody = '';
-      try {
-        const errorData = await response.json();
-        errorBody = JSON.stringify(errorData);
-      } catch {
-        // If response isn't JSON, try text
-        try {
-          errorBody = await response.text();
-        } catch {
-          errorBody = response.statusText;
-        }
-      }
-      console.error(`${provider} API error details:`, errorBody);
-      throw this.classifyHttpError(provider, response.status, response.statusText);
+      throw this.classifyHttpError(response.status, response.statusText);
     }
-
+    
     const data = await response.json();
-    return this.parseChatCompletionResponse(data);
+    return this.parseResponse(data);
   }
 
-  private async callOpenAI(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    return this.callProvider('openai', 'https://api.openai.com/v1', system, user, signal);
-  }
-
-  private async callMinimax(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    return this.callProvider('minimax', SERVICE_DEFAULTS.MINIMAX_URL, system, user, signal);
-  }
-
-  private async callLMStudio(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    return this.callProvider('lmstudio', SERVICE_DEFAULTS.LOCAL_LLM_URL, system, user, signal);
-  }
-
-  private async callHybrid(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    // Try cloud provider (minimax) first, fall back to local (lmstudio)
-    try {
-      return await this.callMinimax(system, user, signal);
-    } catch (cloudError) {
-      console.warn('Hybrid: cloud provider failed, falling back to local:', cloudError instanceof Error ? cloudError.message : cloudError);
-      return await this.callLMStudio(system, user, signal);
-    }
-  }
-
+  /** Call Ollama native API */
   private async callOllama(system: string, user: string, signal?: AbortSignal): Promise<LLMResponse> {
-    const baseUrl = this.config.baseUrl || SERVICE_DEFAULTS.OLLAMA_URL;
-
-    // SSRF Protection - validate baseUrl
+    const baseUrl = this.config.baseUrl;
+    
+    // SSRF Protection
     const allowLocalhost = process.env.LIMINAL_ALLOW_LOCALHOST_LLM !== 'false';
     const allowPrivateIPs = process.env.LIMINAL_ALLOW_PRIVATE_IP_LLM === 'true';
     const allowedHosts = getAllowedHostsFromEnv();
-
+    
     try {
       validateUrl(baseUrl, { allowedHosts, allowPrivateIPs, allowLocalhost });
     } catch (err) {
@@ -476,7 +391,7 @@ export class LLMClient {
       }
       throw err;
     }
-
+    
     const response = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -487,71 +402,28 @@ export class LLMClient {
       }),
       signal,
     });
-
+    
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status}`);
+      throw new LLMError(`Ollama API error: ${response.status}`, 'ollama', response.status, response.status >= 500);
     }
-
+    
     const data = await response.json();
-    const code = data.response || '';
-
-    return {
-      code: code.trim(),
-      success: true,
-    };
+    return this.parseResponse(data);
   }
 
-  /**
-   * Call the reasoning service /reason endpoint to enhance a prompt with reasoning transfer.
-   * Falls back to the original prompt on any failure (reasoning service is optional).
-   */
-  private async enhanceWithReasoning(prompt: string, systemPrompt: string): Promise<string> {
-    try {
-      const response = await fetch(`${this.config.reasoningBaseUrl}/reason`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          domain: 'visual',
-          system_prompt: systemPrompt,
-        }),
-        signal: AbortSignal.timeout(5000),
-      });
-
-      if (!response.ok) {
-        console.warn('Reasoning service unavailable:', response.status);
-        return prompt;
-      }
-
-      const data = await response.json();
-      return data.enhanced_prompt || prompt;
-    } catch (err) {
-      console.warn('[LLMClient] Reasoning transfer failed, using original prompt:', err);
-      return prompt;
-    }
-  }
-
-  /** Classify HTTP errors into specific LLM error types. */
-  private classifyHttpError(provider: string, status: number, statusText: string): LLMError {
+  /** Classify HTTP errors */
+  private classifyHttpError(status: number, statusText: string): LLMError {
     if (status === 429) {
-      const retryAfter = undefined; // Could parse Retry-After header if available
-      return new LLMRateLimitError(provider, retryAfter);
+      return new LLMRateLimitError('llm', undefined);
     }
     if (status === 401 || status === 403) {
-      return new LLMAuthError(provider);
+      return new LLMAuthError('llm');
     }
-    return new LLMError(`${provider} API error: ${status} ${statusText}`, provider, status, status >= 500);
+    return new LLMError(`LLM API error: ${status} ${statusText}`, 'llm', status, status >= 500);
   }
 
+  /** Check if LLM is configured */
   static isConfigured(): boolean {
-    const provider = (env('LLM_PROVIDER') || '').toLowerCase();
-    // Ollama and LM Studio don't require API keys — they're local
-    if (provider === 'ollama' || provider === 'lmstudio') return true;
-    return !!(
-      process.env.OPENAI_API_KEY ||
-      env('LLM_API_KEY') ||
-      process.env.MINIMAX_API_KEY ||
-      env('LLM_BASE_URL')
-    );
+    return !!(env('LLM_BASE_URL') || process.env.OPENAI_API_KEY || env('LLM_API_KEY'));
   }
 }

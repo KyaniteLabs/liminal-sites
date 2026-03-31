@@ -19,7 +19,7 @@ async function initializeConfig() {
   const config = await getEffectiveConfig(undefined, process.cwd());
   
   // Set env vars so LLMClient picks them up
-  process.env.LIMINAL_LLM_PROVIDER = config.provider;
+  // Note: provider is no longer used - we use baseUrl + model directly
   if (config.baseUrl) process.env.LIMINAL_LLM_BASE_URL = config.baseUrl;
   process.env.LIMINAL_LLM_MODEL = config.model;
   if (config.apiKey) process.env.LIMINAL_LLM_API_KEY = config.apiKey;
@@ -194,18 +194,20 @@ if (flags.configure) {
 
 // Override config with CLI flags
 if (flags.provider) {
-  process.env.LIMINAL_LLM_PROVIDER = flags.provider;
-  // Set appropriate baseUrl for the provider (overrides project config)
+  // --provider is now a convenience shorthand for setting baseUrl
+  // The actual provider name is no longer stored - we use baseUrl + model directly
   const providerUrls = {
     'lmstudio': 'http://localhost:1234/v1',
     'inception': 'http://localhost:5000/v1',
-    'ollama': 'http://localhost:11434',
+    'ollama': 'http://localhost:11434/v1',  // Note: Ollama OpenAI-compatible endpoint
     'openai': 'https://api.openai.com/v1',
     'minimax': 'https://api.minimax.io/v1',
-    'hybrid': 'https://api.minimax.io/v1',
   };
   if (providerUrls[flags.provider]) {
     process.env.LIMINAL_LLM_BASE_URL = providerUrls[flags.provider];
+    console.log(`[CLI] Using ${flags.provider} endpoint: ${providerUrls[flags.provider]}`);
+  } else {
+    console.warn(`[CLI] Unknown provider: ${flags.provider}. Use --base-url to set custom endpoint.`);
   }
 }
 if (flags.model) {

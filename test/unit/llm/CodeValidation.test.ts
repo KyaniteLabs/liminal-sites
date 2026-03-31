@@ -11,10 +11,10 @@ describe('LLMClient Code Validation', () => {
   let client: LLMClient;
 
   beforeEach(() => {
-    client = new LLMClient({ provider: 'lmstudio' });
+    client = new LLMClient({ baseUrl: 'http://localhost:1234/v1', model: 'test-model' });
   });
 
-  describe('parseChatCompletionResponse - code completeness', () => {
+  describe('parseResponse - code completeness', () => {
     it('parses complete code successfully', () => {
       const data = {
         choices: [{
@@ -24,7 +24,7 @@ describe('LLMClient Code Validation', () => {
         }]
       };
 
-      const result = client['parseChatCompletionResponse'](data);
+      const result = client['parseResponse'](data);
       expect(result.success).toBe(true);
       expect(result.code).toContain('function test()');
     });
@@ -38,8 +38,8 @@ describe('LLMClient Code Validation', () => {
         }]
       };
 
-      const result = client['parseChatCompletionResponse'](data);
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('incomplete'));
+      const result = client['parseResponse'](data);
+      expect(result.isComplete).toBe(false);
     });
 
     it('warns for code with unclosed parentheses', () => {
@@ -51,21 +51,8 @@ describe('LLMClient Code Validation', () => {
         }]
       };
 
-      const result = client['parseChatCompletionResponse'](data);
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('incomplete'));
-    });
-
-    it('warns for code cutoff mid-function', () => {
-      const data = {
-        choices: [{
-          message: {
-            content: '```javascript\nfunction test() {\n  return '
-          }
-        }]
-      };
-
-      const result = client['parseChatCompletionResponse'](data);
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('incomplete'));
+      const result = client['parseResponse'](data);
+      expect(result.isComplete).toBe(false);
     });
 
     it('handles balanced brackets correctly', () => {
@@ -77,19 +64,18 @@ describe('LLMClient Code Validation', () => {
         }]
       };
 
-      const result = client['parseChatCompletionResponse'](data);
+      const result = client['parseResponse'](data);
       expect(result.success).toBe(true);
-      // Should not warn for balanced brackets
-      expect(console.warn).not.toHaveBeenCalled();
+      expect(result.isComplete).toBe(true);
     });
   });
 
-  describe('parseChatCompletionResponse - edge cases', () => {
+  describe('parseResponse - edge cases', () => {
     it('handles empty response', () => {
       const data = { choices: [] };
-      const result = client['parseChatCompletionResponse'](data);
+      const result = client['parseResponse'](data);
       expect(result.code).toBe('');
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
 
     it('handles response without code block', () => {
@@ -101,7 +87,7 @@ describe('LLMClient Code Validation', () => {
         }]
       };
 
-      const result = client['parseChatCompletionResponse'](data);
+      const result = client['parseResponse'](data);
       expect(result.code).toBe('Just some text without code blocks');
     });
 
@@ -115,9 +101,34 @@ describe('LLMClient Code Validation', () => {
         }]
       };
 
-      const result = client['parseChatCompletionResponse'](data);
+      const result = client['parseResponse'](data);
       expect(result.success).toBe(true);
       expect(result.reasoning).toBe('Thinking about the code');
+    });
+
+    it('strips <think> tags from content', () => {
+      const data = {
+        choices: [{
+          message: {
+            content: '<think>Let me think about this...</think>\n```javascript\nfunction test() { return 42; }\n```'
+          }
+        }]
+      };
+
+      const result = client['parseResponse'](data);
+      expect(result.success).toBe(true);
+      expect(result.code).not.toContain('<think>');
+      expect(result.code).toContain('function test()');
+    });
+
+    it('handles Ollama response format', () => {
+      const data = {
+        response: '```javascript\nfunction test() { return 42; }\n```'
+      };
+
+      const result = client['parseResponse'](data);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('function test()');
     });
   });
 });

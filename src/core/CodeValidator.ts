@@ -34,6 +34,16 @@ const REASONING_PATTERNS: RegExp[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// LLM contamination patterns (tags that wrap reasoning and must be stripped)
+// Found in audit: Strudel and Hydra files contained <think>...</think> tags
+// from models like Qwen/DeepSeek that output reasoning content
+// ---------------------------------------------------------------------------
+const CONTAMINATION_PATTERNS: RegExp[] = [
+  /<think>[\s\S]*?<\/think>/gi,  // <think>...</think> tags with content
+  /<thinking>[\s\S]*?<\/thinking>/gi,  // <thinking>...</thinking> variant
+];
+
+// ---------------------------------------------------------------------------
 // Domain detection
 // ---------------------------------------------------------------------------
 function detectDomain(code: string): Domain {
@@ -95,6 +105,18 @@ const CODE_START_PATTERNS: RegExp[] = [
   /^\/\//,   // single-line comments in code
   /^\/\*/,   // multi-line comments in code
 ];
+
+// ---------------------------------------------------------------------------
+// Pre-check: Strip LLM contamination tags (<think>, <thinking>)
+// These tags wrap model reasoning and must be removed entirely
+// ---------------------------------------------------------------------------
+function stripContamination(code: string): string {
+  let cleaned = code;
+  for (const pattern of CONTAMINATION_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  return cleaned.trim();
+}
 
 // ---------------------------------------------------------------------------
 // Check 1: Strip reasoning text
@@ -163,6 +185,18 @@ function stripReasoningText(code: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Check 1.5: Detect contamination (warn if found)
+// ---------------------------------------------------------------------------
+function detectContamination(code: string): string[] {
+  const errors: string[] = [];
+  // Check for unclosed or partial contamination tags
+  if (/<think>/i.test(code) || /<thinking>/i.test(code)) {
+    errors.push('LLM contamination detected: <think> or <thinking> tags found in output');
+  }
+  return errors;
+}
+
+// ---------------------------------------------------------------------------
 // Check 2: Structural validation per domain
 // ---------------------------------------------------------------------------
 function validateStructure(code: string, domain: Domain): string[] {
@@ -173,6 +207,9 @@ function validateStructure(code: string, domain: Domain): string[] {
     errors.push('Code is empty after stripping reasoning text');
     return errors;
   }
+
+  // Detect any remaining contamination
+  errors.push(...detectContamination(trimmed));
 
   switch (domain) {
     case 'p5': {
@@ -217,6 +254,33 @@ function validateStructure(code: string, domain: Domain): string[] {
       const hasHydra = /osc\(|src\(|render\(/.test(trimmed);
       if (!hasStrudel && !hasHydra) {
         errors.push('Music code must contain Strudel patterns ($: s(...)) or Hydra functions (osc(), src(), render())');
+      }
+      
+      // Strudel-specific validations (from audit: found Chinese characters in output)
+      if (hasStrudel) {
+        // Check for non-ASCII characters that might be LLM artifacts
+        if (/[\u4e00-\u9fff]/.test(trimmed)) {
+          errors.push('Strudel code contains non-ASCII characters (likely LLM contamination)');
+        }
+        // Check for valid Strudel pattern syntax
+        const strudelPatternCount = (trimmed.match(/\$:\s*s\(/g) || []).length;
+        if (strudelPatternCount === 0 && !trimmed.includes('.stack(')) {
+          errors.push('Strudel code should use $: pattern syntax or .stack() for layering');
+        }
+      }
+      
+      // Hydra-specific validations (from audit: found duplicate .out() calls)
+      if (hasHydra) {
+        const outCount = (trimmed.match(/\.out\(/g) || []).length;
+        // Hydra chains should end with .out() - multiple outs can be valid for multi-buffer
+        // but we should at least have some outputs
+        if (outCount === 0) {
+          errors.push('Hydra code should end with .out() to render to an output buffer');
+        }
+        // Check for render() call which is needed for multi-buffer setups
+        if (outCount > 1 && !trimmed.includes('render(')) {
+          errors.push('Hydra code with multiple outputs should call render() to composite');
+        }
       }
       break;
     }
@@ -276,8 +340,11 @@ export class CodeValidator {
       return { valid: false, cleanedCode: '', errors: ['No code provided'] };
     }
 
+    // Pre-check: Strip LLM contamination tags (e.g., <think> blocks)
+    const decontaminated = stripContamination(code);
+    
     // Check 1: Strip reasoning text
-    const cleaned = stripReasoningText(code);
+    const cleaned = stripReasoningText(decontaminated);
     if (!cleaned.trim()) {
       return { valid: false, cleanedCode: '', errors: ['Code is empty after stripping LLM reasoning text'] };
     }

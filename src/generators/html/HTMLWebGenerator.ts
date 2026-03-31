@@ -22,7 +22,7 @@ export class HTMLWebGenerator {
 
   constructor(llmClient?: LLMClient) {
     this.llmClient = llmClient || new LLMClient({
-      provider: 'ollama',
+      baseUrl: 'http://localhost:11434/v1',
       model: 'qwen2.5-coder:7b',
     });
   }

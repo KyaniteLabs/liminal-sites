@@ -13,15 +13,37 @@ export type LLMProviderMode = 'local' | 'cloud' | 'auto';
 /** Fragment extraction layer. */
 export type FragmentLayer = 'semantic' | 'structured' | 'raw';
 
-/** LLM provider configuration. */
+/** LLM provider configuration - model agnostic */
 export interface LLMProviderConfig {
-  provider: LLMProviderMode;
-  localBaseUrl: string;
-  localModel: string;
-  cloudProvider: string;
-  cloudApiKeyEnvVar: string;
-  cloudModel: string;
-  localTimeoutMs: number;
+  /** @deprecated Provider mode is no longer used - use baseUrl directly */
+  provider?: LLMProviderMode;
+  /** Base URL for the LLM API endpoint */
+  baseUrl?: string;
+  /** Model name to use */
+  model?: string;
+  /** API key (if required) */
+  apiKey?: string;
+  /** Timeout in milliseconds */
+  timeoutMs?: number;
+  /** 
+   * API style - affects request/response format
+   * - 'openai': Standard OpenAI chat completions
+   * - 'ollama': Ollama native API
+   * - 'anthropic': Anthropic Claude API
+   */
+  apiStyle?: 'openai' | 'ollama' | 'anthropic';
+  /** @deprecated Use baseUrl instead */
+  localBaseUrl?: string;
+  /** @deprecated Use model instead */
+  localModel?: string;
+  /** @deprecated Use baseUrl instead */
+  cloudBaseUrl?: string;
+  /** @deprecated Use apiKey env var directly */
+  cloudApiKeyEnvVar?: string;
+  /** @deprecated Use model instead */
+  cloudModel?: string;
+  /** @deprecated Use timeoutMs instead */
+  localTimeoutMs?: number;
 }
 
 /** Full Compost Mill configuration. */

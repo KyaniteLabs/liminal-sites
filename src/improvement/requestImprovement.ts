@@ -36,7 +36,6 @@ export async function requestImprovement(
   } else {
     const effectiveConfig = await getEffectiveConfig(undefined, projectPath);
     llm = new LLMClient({
-      provider: effectiveConfig.provider,
       baseUrl: effectiveConfig.baseUrl,
       model: effectiveConfig.model,
       apiKey: effectiveConfig.apiKey,

@@ -39,10 +39,14 @@ describe('DEFAULT_CONFIG', () => {
   });
 
   it('has correct LLM defaults', () => {
+    // New model-agnostic defaults
+    expect(DEFAULT_CONFIG.llm.baseUrl).toBe('http://localhost:1234/v1');
+    expect(DEFAULT_CONFIG.llm.model).toBe('auto');
+    expect(DEFAULT_CONFIG.llm.timeoutMs).toBe(30000);
+    // Deprecated fields retained for backward compatibility
     expect(DEFAULT_CONFIG.llm.provider).toBe('auto');
     expect(DEFAULT_CONFIG.llm.localBaseUrl).toBe('http://localhost:1234/v1');
     expect(DEFAULT_CONFIG.llm.localModel).toBe('auto');
-    expect(DEFAULT_CONFIG.llm.cloudProvider).toBe('anthropic');
     expect(DEFAULT_CONFIG.llm.cloudApiKeyEnvVar).toBe('ANTHROPIC_API_KEY');
     expect(DEFAULT_CONFIG.llm.cloudModel).toBe('claude-sonnet-4-20250514');
     expect(DEFAULT_CONFIG.llm.localTimeoutMs).toBe(30000);
