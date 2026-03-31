@@ -43,10 +43,13 @@ export function buildDefaults(projectCompost?: {
   soupSeedPromotionThreshold: 0.7,
   soupCycleIntervalMs: 60000, // 1 minute
   llm: {
+    baseUrl: 'http://localhost:1234/v1',
+    model: 'auto',
+    timeoutMs: 30000,
+    /** @deprecated Fields retained for backward compatibility */
     provider: 'auto',
     localBaseUrl: 'http://localhost:1234/v1',
     localModel: 'auto',
-    cloudProvider: 'anthropic',
     cloudApiKeyEnvVar: 'ANTHROPIC_API_KEY',
     cloudModel: 'claude-sonnet-4-20250514',
     localTimeoutMs: 30000,

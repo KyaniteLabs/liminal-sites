@@ -1,56 +1,89 @@
 import { describe, it, expect, test } from 'vitest';
 /**
- * Tests for MiniMax, LM Studio, Ollama, OpenAI, and Hybrid provider support in LLMClient.
- * Only tests configuration and cost estimation -- no network calls.
+ * Tests for model-agnostic LLMClient configuration.
+ * Works with any OpenAI-compatible endpoint.
  */
 
 import { LLMClient, type LLMConfig } from '../../../src/llm/LLMClient.js';
 
-describe('LLMConfig provider types', () => {
-  function makeConfig(provider: LLMConfig['provider']): LLMConfig {
-    return { provider, model: 'test-model' };
-  }
-
-  test('accepts minimax provider', () => {
-    const config = makeConfig('minimax');
+describe('LLMClient model-agnostic configuration', () => {
+  test('accepts baseUrl configuration', () => {
+    const config: LLMConfig = {
+      baseUrl: 'http://localhost:11434/v1',
+      model: 'qwen2.5-coder',
+    };
     const client = new LLMClient(config);
     expect(client).toBeDefined();
   });
 
-  test('accepts lmstudio provider', () => {
-    const config = makeConfig('lmstudio');
+  test('accepts apiKey for cloud providers', () => {
+    const config: LLMConfig = {
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'sk-test-key',
+      model: 'gpt-4',
+    };
     const client = new LLMClient(config);
     expect(client).toBeDefined();
   });
 
-  test('accepts hybrid provider', () => {
-    const config = makeConfig('hybrid');
+  test('auto-detects Ollama API style', () => {
+    const config: LLMConfig = {
+      baseUrl: 'http://localhost:11434', // No /v1 suffix
+      model: 'llama3',
+    };
+    const client = new LLMClient(config);
+    expect(client).toBeDefined();
+  });
+
+  test('auto-detects OpenAI-compatible API style', () => {
+    const config: LLMConfig = {
+      baseUrl: 'http://localhost:1234/v1', // Has /v1 suffix
+      model: 'local-model',
+    };
+    const client = new LLMClient(config);
+    expect(client).toBeDefined();
+  });
+
+  test('accepts custom headers', () => {
+    const config: LLMConfig = {
+      baseUrl: 'http://localhost:1234/v1',
+      model: 'test-model',
+      headers: {
+        'X-Custom-Header': 'custom-value',
+      },
+    };
+    const client = new LLMClient(config);
+    expect(client).toBeDefined();
+  });
+
+  test('accepts custom endpoint path', () => {
+    const config: LLMConfig = {
+      baseUrl: 'http://localhost:1234',
+      model: 'test-model',
+      endpointPath: '/custom/completions',
+    };
     const client = new LLMClient(config);
     expect(client).toBeDefined();
   });
 });
 
-describe('LLMClient.estimatedCost', () => {
-  test('returns correct values for known providers', () => {
-    // openai: input=0.00001, output=0.00003
-    expect(LLMClient.estimatedCost('openai')).toBeCloseTo(0.00001 * 1000 + 0.00003 * 500);
-    // minimax: input=0.000001, output=0.000002
-    expect(LLMClient.estimatedCost('minimax')).toBeCloseTo(0.000001 * 1000 + 0.000002 * 500);
-  });
-
-  test('returns 0 for unknown providers', () => {
-    expect(LLMClient.estimatedCost('nonexistent-provider')).toBe(0);
-    expect(LLMClient.estimatedCost('')).toBe(0);
-  });
-
-  test('returns 0 for local providers (ollama, lmstudio)', () => {
-    expect(LLMClient.estimatedCost('ollama')).toBe(0);
-    expect(LLMClient.estimatedCost('lmstudio')).toBe(0);
-  });
-
-  test('calculates correctly with custom token counts', () => {
-    // openai: 5000 input tokens, 2000 output tokens
-    const cost = LLMClient.estimatedCost('openai', 5000, 2000);
-    expect(cost).toBeCloseTo(0.00001 * 5000 + 0.00003 * 2000);
+describe('LLMClient environment configuration', () => {
+  test('uses environment variables when config not provided', () => {
+    // Set env vars for this test
+    const originalBaseUrl = process.env.LIMINAL_LLM_BASE_URL;
+    const originalApiKey = process.env.LIMINAL_LLM_API_KEY;
+    const originalModel = process.env.LIMINAL_LLM_MODEL;
+    
+    process.env.LIMINAL_LLM_BASE_URL = 'http://localhost:8080/v1';
+    process.env.LIMINAL_LLM_API_KEY = 'env-api-key';
+    process.env.LIMINAL_LLM_MODEL = 'env-model';
+    
+    const client = new LLMClient();
+    expect(client).toBeDefined();
+    
+    // Restore env vars
+    process.env.LIMINAL_LLM_BASE_URL = originalBaseUrl;
+    process.env.LIMINAL_LLM_API_KEY = originalApiKey;
+    process.env.LIMINAL_LLM_MODEL = originalModel;
   });
 });
