@@ -8,13 +8,12 @@ import { spawn } from 'child_process';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 
 const ALL_TASKS = [
-  { provider: 'minimax', model: 'MiniMax-M2.7', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
-  { provider: 'minimax', model: 'MiniMax-M2.5', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
-  { provider: 'minimax', model: 'MiniMax-M2.1', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
-  { provider: 'lmstudio', model: 'Qwen3.5-9B', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
-  { provider: 'lmstudio', model: 'Qwen3-Coder-40B', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
-  { provider: 'ollama', model: 'Gemma3-4B', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
-  { provider: 'ollama', model: 'Kimi-K2.5', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra'] },
+  { provider: 'minimax', model: 'MiniMax-M2.7', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra', 'remotion', 'html', 'ascii'] },
+  { provider: 'minimax', model: 'MiniMax-M2.5', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra', 'remotion', 'html', 'ascii'] },
+  { provider: 'lmstudio', model: 'Qwen3.5-9B', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra', 'remotion', 'html', 'ascii'] },
+  { provider: 'lmstudio', model: 'Qwen3-Coder-40B', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra', 'remotion', 'html', 'ascii'] },
+  { provider: 'ollama', model: 'Gemma3-4B', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra', 'remotion', 'html', 'ascii'] },
+  { provider: 'ollama', model: 'Kimi-K2.5', domains: ['p5', 'glsl', 'three', 'strudel', 'hydra', 'remotion', 'html', 'ascii'] },
 ];
 
 async function runTask(provider: string, model: string, domain: string): Promise<any> {
