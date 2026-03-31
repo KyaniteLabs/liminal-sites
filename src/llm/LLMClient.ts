@@ -351,6 +351,10 @@ export class LLMClient {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
     
+    // Create timeout signal if none provided (120 second default)
+    const timeoutMs = 120000;
+    const timeoutSignal = signal || AbortSignal.timeout(timeoutMs);
+    
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers,
@@ -363,7 +367,7 @@ export class LLMClient {
         temperature: this.config.temperature,
         max_tokens: this.config.maxTokens,
       }),
-      signal,
+      signal: timeoutSignal,
     });
     
     if (!response.ok) {
@@ -392,6 +396,10 @@ export class LLMClient {
       throw err;
     }
     
+    // Create timeout signal if none provided (120 second default)
+    const timeoutMs = 120000;
+    const timeoutSignal = signal || AbortSignal.timeout(timeoutMs);
+    
     const response = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -400,7 +408,7 @@ export class LLMClient {
         prompt: `${system}\n\nUser: ${user}\n\nAssistant:`,
         stream: false,
       }),
-      signal,
+      signal: timeoutSignal,
     });
     
     if (!response.ok) {
