@@ -8,6 +8,7 @@ import { P5GeneratorLLM } from '../src/generators/p5/P5GeneratorLLM.js';
 import { ShaderGenerator } from '../src/generators/glsl/ShaderGenerator.js';
 import { ThreeGenerator } from '../src/generators/three/ThreeGenerator.js';
 import { StrudelGenerator } from '../src/generators/strudel/StrudelGenerator.js';
+import { HydraGenerator } from '../src/generators/hydra/HydraGenerator.js';
 import { mkdirSync, writeFileSync } from 'fs';
 import { LLMClient } from '../src/llm/LLMClient.js';
 
@@ -22,13 +23,17 @@ const PROMPTS: Record<string, string> = {
   
   hydra: `Create a Hydra video synth patch with feedback effects, color shifting, and geometric patterns. Make it visually striking.`,
   
-  remotion: `Create a Remotion video component that animates text typing with a cursor blink, then fades in a subtitle.`
+  remotion: `Create a Remotion video component that animates text typing with a cursor blink, then fades in a subtitle.`,
+  
+  html: `Create a responsive landing page for a creative coding portfolio. Include a hero section with animated gradient background, project cards, and contact form.`,
+  
+  ascii: `Create an ASCII art animation of a spaceship flying through space with trailing particles and twinkling stars.`
 };
 
+// Removed MiniMax-M2.1 (consistently times out)
 const MODEL_CONFIGS: Record<string, { baseUrl: string; apiKeyEnv: string; modelId?: string }> = {
   'MiniMax-M2.7': { baseUrl: 'https://api.minimax.io/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
   'MiniMax-M2.5': { baseUrl: 'https://api.minimax.io/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
-  'MiniMax-M2.1': { baseUrl: 'https://api.minimax.io/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
   'Qwen3.5-9B': { baseUrl: 'http://localhost:1234/v1', apiKeyEnv: 'LMSTUDIO_API_KEY', modelId: 'qwen3.5-9b' },
   'Qwen3-Coder-40B': { baseUrl: 'http://localhost:1234/v1', apiKeyEnv: 'LMSTUDIO_API_KEY', modelId: 'qwen3-coder-next-reap-40b-a3b-i1' },
   'Gemma3-4B': { baseUrl: 'http://localhost:11434/v1', apiKeyEnv: 'OLLAMA_API_KEY', modelId: 'gemma3:4b' },
@@ -40,7 +45,6 @@ function sanitizeFilename(name: string): string {
 }
 
 async function generateWithLLM(prompt: string, domain: string, llmConfig: { baseUrl: string; apiKey: string; model: string; modelId?: string }): Promise<string> {
-  // Create LLM client with explicit config (use modelId if available)
   const llm = new LLMClient({
     baseUrl: llmConfig.baseUrl,
     apiKey: llmConfig.apiKey,
@@ -49,18 +53,15 @@ async function generateWithLLM(prompt: string, domain: string, llmConfig: { base
     maxTokens: 4000
   });
   
-  // Disable cache to ensure fresh generation per model
   llm.disableCache();
   
   switch (domain) {
     case 'p5': {
       const gen = new P5GeneratorLLM(llm);
-      const result = await gen.generate(prompt);
-      return result;
+      return gen.generate(prompt);
     }
     case 'glsl': {
       const gen = new ShaderGenerator();
-      // Override the LLM client to use our config
       (gen as any).llm = llm;
       return gen.generate(prompt);
     }
@@ -73,11 +74,30 @@ async function generateWithLLM(prompt: string, domain: string, llmConfig: { base
       const gen = new StrudelGenerator(llm);
       return gen.generate(prompt);
     }
+    case 'hydra': {
+      const gen = new HydraGenerator(llm);
+      return gen.generate(prompt);
+    }
+    case 'remotion': {
+      const { RemotionGenerator } = await import('../src/generators/remotion/RemotionGenerator.js');
+      const gen = new RemotionGenerator();
+      (gen as any).llm = llm;
+      return gen.generate(prompt);
+    }
+    case 'html': {
+      const { HTMLWebGenerator } = await import('../src/generators/html/HTMLWebGenerator.js');
+      const gen = new HTMLWebGenerator();
+      (gen as any).llm = llm;
+      return gen.generate(prompt, { responsive: true, includeAnimations: true });
+    }
+    case 'ascii': {
+      const { ASCIIArtGenerator } = await import('../src/generators/ascii/ASCIIArtGenerator.js');
+      const gen = new ASCIIArtGenerator();
+      (gen as any).llm = llm;
+      return gen.generate(prompt, { style: 'abstract', width: 60, height: 30 });
+    }
     default:
-      // Fallback to P5 for other domains
-      const gen = new P5GeneratorLLM(llm);
-      const result = await gen.generate(prompt);
-      return result;
+      throw new Error(`Unknown domain: ${domain}`);
   }
 }
 
@@ -101,20 +121,16 @@ async function main() {
     process.exit(1);
   }
   
-  // Add model-specific cache buster
   const prompt = `${basePrompt}\n\n[Model: ${modelName}]`;
-  
   const apiKey = process.env[config.apiKeyEnv] || 'dummy-key';
   const outputDir = `examples/generated/${provider}/${sanitizeFilename(modelName)}/${domain}`;
   
-  // Set environment variables for LLMClient.isConfigured() check
   process.env.LIMINAL_LLM_BASE_URL = config.baseUrl;
   process.env.LIMINAL_LLM_API_KEY = apiKey;
   process.env.LIMINAL_LLM_MODEL = modelName;
   
   try {
     const startTime = Date.now();
-    
     console.error(`Generating ${domain} with ${modelName}...`);
     
     const code = await generateWithLLM(prompt, domain, {
@@ -126,7 +142,6 @@ async function main() {
     
     const duration = Date.now() - startTime;
     
-    // Save the generated code
     mkdirSync(`${outputDir}/2026-03-31--default`, { recursive: true });
     writeFileSync(`${outputDir}/2026-03-31--default/v1.js`, code);
     
