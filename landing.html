@@ -145,15 +145,15 @@
             
             <div class="stats">
                 <div class="stat-card">
-                    <div class="stat-number" style="color: var(--accent-green);">5</div>
+                    <div class="stat-number" style="color: var(--accent-green);">8</div>
                     <div class="stat-label">Working</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" style="color: var(--accent-red);">10</div>
+                    <div class="stat-number" style="color: var(--accent-red);">7</div>
                     <div class="stat-label">Failed</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" style="color: var(--accent-yellow);">33%</div>
+                    <div class="stat-number" style="color: var(--accent-yellow);">53%</div>
                     <div class="stat-label">Success Rate</div>
                 </div>
                 <div class="stat-card">
@@ -255,6 +255,56 @@
                         <iframe src="landing-assets/dogfood-shader-plasma-final.html" loading="lazy"></iframe>
                     </div>
                 </div>
+                
+                <!-- Remotion Video -->
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-tag" style="background: #f97316; color: #fff;">Remotion</span>
+                        <h3 class="example-title">Title Sequence</h3>
+                        <p class="example-prompt">"Remotion video title sequence with particle dissolve"</p>
+                        <div class="example-meta">
+                            <span class="example-meta-item">1 iter • MiniMax-M2.7</span>
+                            <span class="score-badge score-low">★ 0.34</span>
+                        </div>
+                    </div>
+                    <div class="example-preview" style="display: flex; align-items: center; justify-content: center; background: #0a0a12;">
+                        <video controls style="max-width: 100%; max-height: 100%;">
+                            <source src="landing-assets/dogfood-remotion-title.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+                
+                <!-- Strudel Techno -->
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-tag" style="background: #ec4899; color: #fff;">Strudel</span>
+                        <h3 class="example-title">Techno Beat</h3>
+                        <p class="example-prompt">"driving techno beat with industrial percussion"</p>
+                        <div class="example-meta">
+                            <span class="example-meta-item">1 iter • MiniMax-M2.7</span>
+                            <span class="score-badge score-medium">★ 0.78</span>
+                        </div>
+                    </div>
+                    <div class="example-preview" style="display: flex; align-items: center; justify-content: center; background: #0a0a12;">
+                        <iframe src="landing-assets/dogfood-music-techno-driving.html" loading="lazy"></iframe>
+                    </div>
+                </div>
+                
+                <!-- Strudel Ambient -->
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-tag" style="background: #ec4899; color: #fff;">Strudel</span>
+                        <h3 class="example-title">Ambient Drone</h3>
+                        <p class="example-prompt">"ambient drone soundscape with slowly evolving textures"</p>
+                        <div class="example-meta">
+                            <span class="example-meta-item">1 iter • MiniMax-M2.7</span>
+                            <span class="score-badge score-medium">★ 0.63</span>
+                        </div>
+                    </div>
+                    <div class="example-preview" style="display: flex; align-items: center; justify-content: center; background: #0a0a12;">
+                        <iframe src="landing-assets/dogfood-music-ambient-drone.html" loading="lazy"></iframe>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -302,21 +352,7 @@
                     <div class="failure-name">Hydra Geometric Grid</div>
                     <div class="failure-reason">HTML wrapper file not generated<br>Score: 0.90 (estimated)</div>
                 </div>
-                <div class="failure-card">
-                    <div class="failure-type">No Render</div>
-                    <div class="failure-name">Strudel Techno Beat</div>
-                    <div class="failure-reason">Only .js file exists, no HTML preview<br>Score: 0.78 (estimated)</div>
-                </div>
-                <div class="failure-card">
-                    <div class="failure-type">No Render</div>
-                    <div class="failure-name">Strudel Ambient Drone</div>
-                    <div class="failure-reason">Only .js file exists, no HTML preview<br>Score: 0.63 (estimated)</div>
-                </div>
-                <div class="failure-card">
-                    <div class="failure-type">Needs Bundler</div>
-                    <div class="failure-name">Remotion Title Sequence</div>
-                    <div class="failure-reason">React/TSX requires webpack to render<br>Score: 0.34 (estimated)</div>
-                </div>
+
             </div>
         </div>
         
