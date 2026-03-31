@@ -128,6 +128,16 @@ export class CreativeEvaluator {
       return this.assessThree(output);
     }
 
+    // Hydra visual synth evaluation
+    if (this.detectsHydraUsage(output)) {
+      return this.assessHydra(output);
+    }
+
+    // Strudel music evaluation
+    if (this.detectsStrudelUsage(output)) {
+      return this.assessStrudel(output);
+    }
+
     // Calculate metrics
     const metrics = this.analyzeMetrics(output);
 
@@ -651,6 +661,20 @@ export class CreativeEvaluator {
   }
 
   /**
+   * Detect Hydra visual synth code
+   */
+  static detectsHydraUsage(code: string): boolean {
+    return /\b(osc|src|shape|solid|gradient|noise|voronoi)\s*\([^)]*\)\s*\.\s*(out|modulate|rotate|scale|color|blend|mult|add|diff)\b/.test(code);
+  }
+
+  /**
+   * Detect Strudel music code
+   */
+  static detectsStrudelUsage(code: string): boolean {
+    return /\b(n|s|note|sound)\s*\(\s*["']/.test(code) && /\bstack|\$:|\#|\.s\(|\.n\(/.test(code);
+  }
+
+  /**
    * Assess GLSL shader code quality
    */
   private static assessShader(output: string): AssessmentResult {
@@ -718,6 +742,93 @@ export class CreativeEvaluator {
     if (/import/.test(output)) creativeScore += 0.1;
 
     if (output.length < 200) issues.push('Three.js code too short');
+
+    const overallScore = technicalScore * 0.5 + creativeScore * 0.5;
+    return {
+      passed: overallScore >= MIN_QUALITY_THRESHOLD,
+      score: Math.max(0, Math.min(1, overallScore)),
+      issues,
+      technicalScore: Math.max(0, Math.min(1, technicalScore)),
+      creativeScore: Math.max(0, Math.min(1, creativeScore)),
+      metrics: this.getEmptyMetrics(),
+      emergenceScore: 0,
+      interestingnessScore: 0,
+    };
+  }
+
+  /**
+   * Assess Hydra visual synth code quality
+   */
+  private static assessHydra(output: string): AssessmentResult {
+    const issues: string[] = [];
+    let technicalScore = 0;
+    let creativeScore = 0;
+
+    // Remove <think> tags for evaluation
+    const codeOnly = output.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+    // Technical checks
+    if (/\bosc\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\bsrc\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\bshape\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\.out\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\.modulate|\.blend|\.mult|\.add|\.diff/.test(codeOnly)) technicalScore += 0.1;
+    if (/render\s*\(/.test(codeOnly)) technicalScore += 0.1;
+    if (this.checkBasicSyntax(codeOnly)) technicalScore += 0.1;
+
+    // Creative checks
+    if (/\.modulate\s*\(/.test(codeOnly)) creativeScore += 0.2;
+    if (/\.rotate\s*\(/.test(codeOnly)) creativeScore += 0.15;
+    if (/\.scale\s*\(/.test(codeOnly)) creativeScore += 0.15;
+    if (/\.color\s*\(/.test(codeOnly)) creativeScore += 0.15;
+    if (/noise|voronoi/.test(codeOnly)) creativeScore += 0.2;
+    if (/feedback|src\(o0\)/.test(codeOnly)) creativeScore += 0.15;
+
+    if (codeOnly.length < 50) issues.push('Hydra code too short');
+    if (!/\.out\s*\(/.test(codeOnly)) issues.push('Missing .out() call');
+
+    const overallScore = technicalScore * 0.5 + creativeScore * 0.5;
+    return {
+      passed: overallScore >= MIN_QUALITY_THRESHOLD,
+      score: Math.max(0, Math.min(1, overallScore)),
+      issues,
+      technicalScore: Math.max(0, Math.min(1, technicalScore)),
+      creativeScore: Math.max(0, Math.min(1, creativeScore)),
+      metrics: this.getEmptyMetrics(),
+      emergenceScore: 0,
+      interestingnessScore: 0,
+    };
+  }
+
+  /**
+   * Assess Strudel music code quality
+   */
+  private static assessStrudel(output: string): AssessmentResult {
+    const issues: string[] = [];
+    let technicalScore = 0;
+    let creativeScore = 0;
+
+    // Remove <think> tags for evaluation
+    const codeOnly = output.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+    // Technical checks
+    if (/\bsetc\s*\(/.test(codeOnly) || /\bbpm\s*:/.test(codeOnly)) technicalScore += 0.15;
+    if (/\bn\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\bs\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\bstack\s*\(/.test(codeOnly)) technicalScore += 0.15;
+    if (/\.s\(|\.n\(|\.cut\(|\.resonance\(/.test(codeOnly)) technicalScore += 0.15;
+    if (this.checkBasicSyntax(codeOnly)) technicalScore += 0.1;
+
+    // Creative checks
+    if (/["'][^"']+["'].*\.s\(/.test(codeOnly)) creativeScore += 0.2; // Pattern mini-notation
+    if (/~|\*|\?|\!|\#/.test(codeOnly)) creativeScore += 0.2; // Rhythm modifiers
+    if (/\.delay|\.room|\.distort|\.cutoff/.test(codeOnly)) creativeScore += 0.2;
+    if (/\.add|\.sub|\.mul/.test(codeOnly)) creativeScore += 0.15;
+    if (codeOnly.split('\n').length > 5) creativeScore += 0.15;
+    if (/\$:/.test(codeOnly)) creativeScore += 0.1; // Pattern sequencing
+
+    if (codeOnly.length < 50) issues.push('Strudel code too short');
+    if (!/\bs\s*\(/.test(codeOnly) && !/\.s\(/.test(codeOnly)) issues.push('Missing sound() call');
 
     const overallScore = technicalScore * 0.5 + creativeScore * 0.5;
     return {
