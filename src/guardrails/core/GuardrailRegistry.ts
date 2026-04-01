@@ -94,7 +94,7 @@ export class GuardrailRegistry {
   /**
    * Get guardrails by category
    */
-  getByCategory(category: 'catastrophic' | 'correctness' | 'hygiene'): GuardrailRule[] {
+  getByCategory(category: 'catastrophic' | 'correctness' | 'hygiene' | 'evolution'): GuardrailRule[] {
     return this.getAll().filter(g => g.category === category);
   }
   
@@ -109,9 +109,9 @@ export class GuardrailRegistry {
     
     let modifiedContext = { ...context };
     
-    // Sort guardrails by category priority: catastrophic > correctness > hygiene
+    // Sort guardrails by category priority: catastrophic > correctness > hygiene > evolution
     const sortedGuardrails = this.getAll().sort((a, b) => {
-      const priority = { catastrophic: 0, correctness: 1, hygiene: 2 };
+      const priority = { catastrophic: 0, correctness: 1, hygiene: 2, evolution: 3 };
       return priority[a.category] - priority[b.category];
     });
     
@@ -249,7 +249,7 @@ export class GuardrailRegistry {
    * Evaluate only a specific category of guardrails
    */
   async evaluateCategory(
-    category: 'catastrophic' | 'correctness' | 'hygiene',
+    category: 'catastrophic' | 'correctness' | 'hygiene' | 'evolution',
     context: ExecutionContext
   ): Promise<RegistryEvaluationResult> {
     const categoryGuardrails = this.getByCategory(category);

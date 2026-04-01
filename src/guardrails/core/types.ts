@@ -23,7 +23,7 @@ export const GuardrailTier = {
 /**
  * Guardrail category by priority
  */
-export type GuardrailCategory = 'catastrophic' | 'correctness' | 'hygiene';
+export type GuardrailCategory = 'catastrophic' | 'correctness' | 'hygiene' | 'evolution';
 
 /**
  * Action to take on guardrail violation
