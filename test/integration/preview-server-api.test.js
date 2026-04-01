@@ -96,7 +96,21 @@ describe('PreviewServer API', () => {
   });
 
   describe('POST /api/export', () => {
-    const sampleCode = 'function setup() { createCanvas(400,400); } function draw() { background(0); }';
+    const sampleCode = `function setup() {
+  createCanvas(400, 400);
+  background(220);
+  particles = [];
+  for (let i = 0; i < 50; i++) {
+    particles.push({ x: random(width), y: random(height), size: random(5, 20) });
+  }
+}
+function draw() {
+  background(0, 25);
+  for (let p of particles) {
+    ellipse(p.x, p.y, p.size);
+    p.x += random(-1, 1);
+  }
+}`;
 
     it('export html returns path', async () => {
       const outPath = path.join(testOutputDir, 'api-export.html');

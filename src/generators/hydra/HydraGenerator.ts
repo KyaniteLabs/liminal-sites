@@ -65,7 +65,7 @@ OUTPUT FORMAT:
       if (trimmed === '' && codeLines.length === 0) continue;
       
       // Skip explanation lines (that don't look like code)
-      if (trimmed && !trimmed.startsWith('//') && !/[\(\)=.,;]/.test(trimmed)) {
+      if (trimmed && !trimmed.startsWith('//') && !/[()=.,;]/.test(trimmed)) {
         // Might be an explanation - check if it has Hydra syntax
         if (!/\b(osc|shape|noise|voronoi|src|render|out)\b/.test(trimmed)) {
           continue;

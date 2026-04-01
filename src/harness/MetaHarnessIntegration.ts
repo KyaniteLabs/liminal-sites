@@ -26,7 +26,7 @@ import {
   type ProviderType 
 } from './MultiProviderConfig.js';
 import { LLMClient } from '../llm/LLMClient.js';
-import { harnessMemory, type HarnessTask, type AdaptationRecord } from './HarnessMemory.js';
+import { harnessMemory, type HarnessTask } from './HarnessMemory.js';
 
 export interface MetaHarnessStatus {
   initialized: boolean;
