@@ -13,7 +13,6 @@
  */
 
 import { harnessMemory } from './HarnessMemory.js';
-import { failureLogger } from './FailureLogger.js';
 
 export interface TaskOutcome {
   taskId: string;
@@ -66,15 +65,15 @@ export class SelfEvaluation {
 
     // Record to persistent memory
     harnessMemory.recordEpisode({
-      type: 'task',
+      type: 'generation',
       domain: 'harness',
       prompt: outcome.taskId,
       code: JSON.stringify(outcome),
-      metadata: {
-        success: outcome.success,
-        duration: outcome.duration,
-        strategy: outcome.strategy,
-      },
+      tags: [
+        outcome.success ? 'success' : 'failure',
+        `strategy:${outcome.strategy}`,
+        `duration:${outcome.duration}`,
+      ],
     });
   }
 
