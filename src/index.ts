@@ -643,12 +643,8 @@ export type {
 // Constants
 export { SERVICE_DEFAULTS } from './constants.js';
 
-// HTML Web Generator
-export { HTMLWebGenerator };
+// HTML Web Generator & ASCII Art Generator types (classes exported above with tier-based generators)
 export type { HTMLGeneratorOptions } from './generators/html/HTMLWebGenerator.js';
-
-// ASCII Art Generator
-export { ASCIIArtGenerator };
 export type { ASCIIOptions, ASCIIStyle } from './generators/ascii/ASCIIArtGenerator.js';
 
 // Meta-Harness - Self-improving infrastructure
