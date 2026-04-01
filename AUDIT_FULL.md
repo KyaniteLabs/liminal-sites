@@ -822,4 +822,200 @@ The critical `loader-utils` issue comes through `@remotion/bundler > loader-util
 
 ---
 
-*End of audit.*
+## DELTA AUDIT — Commits After Original Audit
+
+**Commits audited:** `aa469b9`, `f03b05e`, `6d4dbc4` (3 commits, +4229/-540 lines)
+**Date:** 2026-03-31 → 2026-04-01
+
+### What changed
+
+| Area | Change | Impact |
+|------|--------|--------|
+| **Meta-Harness** | 4 new files in `src/harness/` | Failure logging, pattern detection, adaptation system |
+| **P5Generator** | Gutted: -335 lines, removed all template generation | All p5 now goes through LLM, sync→async breaking change |
+| **CodeValidator** | +156 lines: size validation, GLSL semantics, Tone.js API whitelist | Substantial quality improvement |
+| **RegisterGenerators** | Removed ParticleSystem/CellularAutomata/FlowField routing | Template generators no longer dispatched |
+| **LLMClient** | Qwen thinking trap mitigation, Ollama options, timeout increase | Model-specific fixes |
+| **Generators** | ASCIIArtGenerator, StrudelGenerator, ToneGenerator prompt hardening | Validation improvements |
+| **Tests** | New `scripts/test-qwen-models.ts`, Qwen3.5-0.8b model added | Broader model coverage |
+| **Docs** | New architecture docs, README update, CHANGELOG 0.3.0.0 | Documentation expansion |
+
+---
+
+### 39. Meta-Harness — New Module (DEAD CODE)
+
+**Files:** `src/harness/FailureLogger.ts`, `PatternDetector.ts`, `HarnessUpdater.ts`, `index.ts`
+
+The Meta-Harness is a self-improving infrastructure that logs failures, detects patterns, and applies adaptations. It is architecturally coherent but **completely inert**:
+
+| # | Issue | Severity |
+|---|-------|----------|
+| 1 | **Nothing imports the harness** — zero references outside `src/harness/`. Not in `src/index.ts`, not in `bin/liminal`, not in any generator. | CRITICAL |
+| 2 | **HarnessUpdater is performative no-op** — all `apply*` methods log `applied: true` but don't modify any prompts or configs. The "adaptations" are theater. | HIGH |
+| 3 | **PatternDetector.analyzeRecentFailures() is misleading async** — declared `async` but does no async work | LOW |
+| 4 | **FailureLogger.getRecentFailures() crashes on corrupted JSON** — `JSON.parse` without try/catch. One bad `.json` file prevents reading all failures. | HIGH |
+| 5 | **FailureLogger.log() has no try/catch** around `writeFileSync` — disk-full or permission error crashes caller | MEDIUM |
+| 6 | **Unvalidated type assertion** `as FailureRecord` on parsed JSON | MEDIUM |
+| 7 | **Singleton side effects** — module-level instantiation creates `~/.liminal/failures/` directory at import time | LOW |
+| 8 | **10 new `console.log` leaks** in production code (should use Logger) | MEDIUM |
+| 9 | **Deprecated `substr` usage** in FailureLogger (should use `substring`) | LOW |
+
+---
+
+### 40. CodeValidator Improvements
+
+**+156 lines** of new validation logic. Addresses several original audit findings:
+
+| Check | What it does | Issue Status |
+|-------|--------------|--------------|
+| Size validation (Check 4) | Per-domain minimum sizes (p5=500b, shader=800b, etc.) | **Fixed** — catches 66b/74b empty "successes" |
+| Quality validation (Check 5) | GLSL noise/animation, Three.js import mixing | **Partially fixed** |
+| GLSL semantics (Check 5.5) | Regex-based function call validation, undefined function detection | **Partially fixed** — has false positives |
+| Tone.js API (Check 5.6) | Whitelist of ~70 valid `Tone.*` classes, hallucination patterns | **Partially fixed** — wrong gating condition |
+
+**Remaining issues:**
+
+| # | Issue | Severity |
+|---|-------|----------|
+| 1 | **Tone.js validation only fires on `domain === 'unknown'`** — should fire on `domain === 'tone'`. Defeats the purpose. | HIGH |
+| 2 | **GLSL semantic regex matches ANY identifier + `(`** — catches preprocessor macros, struct constructors. False positives. | MEDIUM |
+| 3 | **GLSL builtin set includes `noise`/`hash`/`fbm`/`snoise`** — these are NOT GLSL builtins. They're library functions that may or may not be defined. Inconsistent: sometimes passes missing functions. | MEDIUM |
+| 4 | **`%` operator check is GLSL ES 1.0 only** — GLSL ES 3.0 supports `%` on integers. False positives on modern shaders. | LOW |
+
+---
+
+### 41. P5Generator Breaking Change
+
+| # | Issue | Severity |
+|---|-------|----------|
+| 1 | **Sync→async breaking change** — `generate()` now returns `Promise<string>`. Callers using `P5Generator.generate(prompt)` without `await` silently get `[object Promise]`. | HIGH |
+| 2 | **Template generators removed** — ParticleSystem, CellularAutomata, FlowField no longer dispatched. System requires LLM for ALL p5 generation. Offline capability lost. | MEDIUM |
+| 3 | **Old classes still exported** from `src/index.ts` but not registered — confusing API surface | LOW |
+| 4 | **`_context` parameter silently dropped** — iteration history from RalphLoop never reaches the LLM generator | MEDIUM |
+
+---
+
+### 42. LLMClient Changes
+
+**Partially fixed, partially worsened:**
+
+| # | Issue | Status |
+|---|-------|--------|
+| 1 | **Timeout bypass bug** — `signal || AbortSignal.timeout(timeoutMs)` still present. **NOT FIXED.** | Still HIGH |
+| 2 | **Qwen thinking trap** — `isQwenModel()` + `extractCodeFromThinking()` added for p5. Only in `generateP5Sketch()`, not general `generate()`. | Partially fixed |
+| 3 | **`extractCodeFromThinking` regex too greedy** — `[\s\S]*` matches from first `{` to LAST `}`, producing malformed code from multi-function thinking. Should be `[\s\S]*?` | MEDIUM |
+| 4 | **Redundant model check** — `model.includes('qwen') || model.includes('qwen3.5')` — second condition always redundant since `'qwen3.5'` contains `'qwen'` | LOW |
+| 5 | **Hardcoded Qwen prompt** in `generateP5Sketch()` — bypasses PromptLibrary, can't be versioned | MEDIUM |
+| 6 | **Ollama options added** — `num_predict`, `num_ctx`, temperature pass-through. `numCtx` capped at 32768. | GOOD |
+| 7 | **Timeout increased to 300s** — reasonable for local models. | GOOD |
+| 8 | **Default maxTokens reduced to 4096** — prevents OOM on 8GB GPUs. | GOOD |
+
+---
+
+### 43. Generator Validation Changes
+
+**ASCIIArtGenerator:**
+- Dead `typeof response === 'string'` check — `LLMClient.generate()` always returns `LLMResponse`, never a string
+- Any LLM response is silently padded/truncated to fit dimensions — garbage in, "valid" ASCII art out
+
+**StrudelGenerator:**
+- Overly aggressive filtering — requires every line to contain specific Strudel keywords. Valid supporting code (`const bpm = 120`, `if`, `for`) gets stripped
+- New throw on no sound source — good, but runs AFTER aggressive filtering that may have removed the sound source
+
+**ToneGenerator:**
+- Prompt hardening only (system prompt text changes). No code logic changes. Clean improvement.
+
+---
+
+### 44. New Generated Examples Quality
+
+**10 of 11 new examples are broken or degenerate:**
+
+| Example | Status | Issue |
+|---------|--------|-------|
+| Granite4-1b/glsl | BROKEN | Calls `fbm()` without defining it |
+| Granite4-1b/html | POOR | Placeholder content, `via.placeholder.com` (404s) |
+| Granite4-1b/tone | BROKEN | Invalid Tone.js API (`Oscillator('sine', 'noteA').frequency(440)`) |
+| Granite4-1b/strudel | BROKEN | Garbled mini-notation, neither valid Strudel nor TidalCycles |
+| Granite4-1b/ascii | DEGENERATE | Only `@#` (2 bytes) |
+| Granite4-1b/p5 | BROKEN | Uses non-existent `smooth()` function, wrong `fill()` args |
+| Granite4-1b/three | BROKEN | `THREE.ParametricGeometry` with wrong signature, undefined variables |
+| Granite4-1b/remotion | BROKEN | Non-existent Remotion API (`frame.value`, invalid AbsoluteFill props) |
+| Granite4-1b/hydra | QUESTIONABLE | `beat()` is not standard Hydra |
+| Gemma3-4B/ascii | FAILED | Timeout error comment |
+| Qwen3.5-0.8b/p5 | DEGENERATE | 337 lines of repeated `var x/y/z` declarations — model fell into degenerate loop |
+
+**Note:** The Granite4-1b model produces unusable output across ALL domains. This contradicts the Meta-Harness narrative — the harness should be detecting this pattern but is dead code.
+
+---
+
+### 45. Documentation Accuracy Issues
+
+| # | Doc | Issue |
+|---|-----|-------|
+| 1 | `docs/AGENT_GENERATOR_ARCHITECTURE.md` | Labeled "Proposal" but claims Phase 1-2 complete. Phase 3-4 reference files/classes that don't exist (`HarnessRegistry.ts`, `MetaHarness`). Config format is aspirational. |
+| 2 | `docs/PROMPTS.md` | Claims 27 prompts, but there are 38 `PromptLibrary.register` calls. Missing: compost.ts (7), remotion.ts (2), audio.ts (1), specialized/chat.ts (1). |
+| 3 | README usage example | Import `from 'liminal'` is incorrect — actual import is `from './src/harness/index.js'`. |
+| 4 | CHANGELOG 0.3.0.0 | Version not reflected in `package.json` (still `1.0.0`) or `VERSION` file (still `0.2.0.0`). Three inconsistent versions. |
+| 5 | `GAPS_AND_IMPROVEMENTS.md` | Internal contradictions — section 3.1 still describes old state while section 6 says "REMOVED". |
+
+---
+
+### Original Audit Finding Status Update
+
+| # | Finding | Original Severity | New Status |
+|---|---------|-------------------|------------|
+| 1 | No LICENSE file | CRITICAL | **UNFIXED** |
+| 2 | CI is red | CRITICAL | **UNFIXED** — same 6 TypeScript build errors persist |
+| 3 | ~40 internal docs tracked | CRITICAL | **WORSENED** — new docs added (AGENT_GENERATOR_ARCHITECTURE.md, ARCHITECTURE_AND_PHILOSOPHY.md, PROMPTS.md) |
+| 4 | No GitHub description/topics | CRITICAL | **UNFIXED** |
+| 5 | CompostSoup never reloads population | CRITICAL | **UNFIXED** |
+| 6 | Compost heap data loss | CRITICAL | **UNFIXED** |
+| 7 | `--aesthetic`/`--voice` dead flags | HIGH | **UNFIXED** |
+| 8 | LLM auth failure returns comment-code | HIGH | **UNFIXED** |
+| 9 | LLM timeout bypass bug | HIGH | **UNFIXED** |
+| 10 | `pr-review.yml` missing pnpm install | HIGH | **UNFIXED** |
+| 11 | 30+ untested modules | HIGH | **WORSENED** — 4 new harness modules added with zero tests |
+| 12 | GlitchEffects orphaned | HIGH | **UNFIXED** |
+| 13 | RegisterGenerators fragile guard | HIGH | **UNFIXED** — same `entries.length > 0` guard |
+| 14 | 1 critical CVE (loader-utils) | HIGH | **UNFIXED** |
+| 15 | No console.log→Logger migration | MEDIUM | **WORSENED** — 10 new console.log in harness |
+| 16 | 80+ console.log leaks | MEDIUM | **NOW 90+** |
+| 17 | P5 prompt contradiction | MEDIUM | **FIXED** — template code removed |
+| 18 | Empty/undersized outputs pass validation | MEDIUM | **FIXED** — CodeValidator size checks |
+| 19 | GLSL undefined functions not caught | MEDIUM | **PARTIALLY FIXED** — semantic validation added but has false positives |
+| 20 | Tone.js API hallucinations | MEDIUM | **PARTIALLY FIXED** — whitelist added but wrong gating condition |
+
+### New issues introduced by post-audit commits
+
+| # | Finding | Severity |
+|---|---------|----------|
+| N1 | **Meta-Harness is dead code** — nothing imports it | CRITICAL |
+| N2 | **HarnessUpdater is performative no-op** — logs adaptations that don't actually happen | HIGH |
+| N3 | **FailureLogger.getRecentFailures() crashes on corrupted JSON** | HIGH |
+| N4 | **Tone.js validation gates on wrong domain** (`unknown` instead of `tone`) | HIGH |
+| N5 | **P5Generator sync→async breaking change** | HIGH |
+| N6 | **`extractCodeFromThinking` regex too greedy** — produces malformed code | MEDIUM |
+| N7 | **StrudelGenerator over-filtering strips valid code** | MEDIUM |
+| N8 | **Hardcoded Qwen prompt bypasses PromptLibrary** | MEDIUM |
+| N9 | **Granite4-1b model produces 100% broken output** — contradicts Meta-Harness narrative | MEDIUM |
+| N10 | **Qwen3.5-0.8b degenerate repetition loop** — 337 lines of repeated declarations | MEDIUM |
+| N11 | **3 version numbers now inconsistent** (VERSION=0.2.0.0, package.json=1.0.0, CHANGELOG=0.3.0.0) | LOW |
+| N12 | **10 new console.log leaks** in harness | MEDIUM |
+| N13 | **PROMPTS.md claims 27 prompts, actually 38** | LOW |
+| N14 | **README import example incorrect** (`from 'liminal'`) | LOW |
+| N15 | **test-qwen-models.ts creates untracked output dir** | LOW |
+
+---
+
+### Updated Severity Summary
+
+**CRITICAL: 7** (was 6, +1 new)
+**HIGH: 17** (was 12, +5 new)
+**MEDIUM: 44** (was 34, +10 new)
+**LOW: 18** (was 14, +4 new)
+**GOOD: 9** (was 8, +1 new — Ollama options + timeout)
+
+---
+
+*End of audit. Updated 2026-04-01 with delta findings from 3 post-audit commits.*
