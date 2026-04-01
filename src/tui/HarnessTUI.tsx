@@ -121,11 +121,36 @@ const History = ({ lines }: { lines: HistoryLine[] }) => (
   </Box>
 );
 
-const Input = ({ value, onChange, onSubmit, onCopy }: { 
+const DebugPanel = ({ logs, activity }: { logs: string[]; activity: ActivityState }) => (
+  <Box 
+    flexDirection="column" 
+    borderStyle="single" 
+    borderColor={C.muted}
+    paddingX={1}
+    width={60}
+  >
+    <Text bold color={C.primary}>🔍 DEBUG</Text>
+    <Text color={C.muted}>Phase: {activity.phase}</Text>
+    <Text color={C.muted}>Last Activity: {Math.floor((Date.now() - activity.lastActivity) / 1000)}s ago</Text>
+    {activity.currentTool && <Text color={C.warning}>Tool: {activity.currentTool}</Text>}
+    {activity.step && <Text color={C.muted}>Step: {activity.step}/{activity.totalSteps}</Text>}
+    <Box marginY={1}>
+      <Text color={C.muted}>--- Recent Logs ---</Text>
+    </Box>
+    <Box flexDirection="column" flexGrow={1} overflow="hidden">
+      {logs.slice(-15).map((log, i) => (
+        <Text key={i} color={C.muted} wrap="truncate-end">{log}</Text>
+      ))}
+    </Box>
+  </Box>
+);
+
+const Input = ({ value, onChange, onSubmit, onCopy, onToggleDebug }: { 
   value: string; 
   onChange: (v: string) => void;
   onSubmit: () => void;
   onCopy?: () => void;
+  onToggleDebug?: () => void;
 }) => {
   useInput(async (char, key) => {
     if (key.return) {
@@ -144,6 +169,9 @@ const Input = ({ value, onChange, onSubmit, onCopy }: {
     } else if (key.ctrl && char === 'c') {
       // Copy current input or last response
       if (onCopy) onCopy();
+    } else if (key.ctrl && char === 'd') {
+      // Toggle debug panel
+      if (onToggleDebug) onToggleDebug();
     } else if (char === '\n' || char === '\r') {
       // Ignore raw newlines from paste - require Enter key
       return;
@@ -164,21 +192,31 @@ const Input = ({ value, onChange, onSubmit, onCopy }: {
 function App() {
   const [history, setHistory] = useState<HistoryLine[]>([
     { type: 'system', content: 'Liminal initialized.' },
-    { type: 'assistant', content: 'Hi! I\'m Liminal, your creative coding partner.\n\nJust talk to me naturally:\n  • "Fix the Tone.js validation"\n  • "What\'s the status?"\n  • "Tell me about p5.js noise()"\n\nShortcuts: Ctrl+V=paste, Ctrl+C=copy last response\nType "/help" for explicit commands.' },
+    { type: 'assistant', content: 'Hi! I\'m Liminal, your creative coding partner.\n\nJust talk to me naturally:\n  • "Fix the Tone.js validation"\n  • "What\'s the status?"\n  • "Tell me about p5.js noise()"\n\nShortcuts: Ctrl+V=paste, Ctrl+C=copy last response, Ctrl+D=toggle debug\nType "/help" for explicit commands.' },
   ]);
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<any>(null);
   const [statusMsg, setStatusMsg] = useState('Ready');
   const [activity, setActivity] = useState<ActivityState>({ phase: 'idle', lastActivity: Date.now() });
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
   const [, setNaturalInterface] = useState<NaturalInterface | null>(null);
   const [shouldExit, setShouldExit] = useState(false);
   
   // Use ref for latest state in callbacks
   const interfaceRef = useRef<NaturalInterface | null>(null);
+  const debugLogRef = useRef<string[]>([]);
   
   // Helper to update activity with timestamp
   const updateActivity = useCallback((update: Partial<ActivityState>) => {
     setActivity(prev => ({ ...prev, ...update, lastActivity: Date.now() }));
+  }, []);
+  
+  // Add to debug log (ref + state for performance)
+  const addDebug = useCallback((msg: string) => {
+    const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    debugLogRef.current = [...debugLogRef.current.slice(-50), line];
+    setDebugLog(debugLogRef.current);
   }, []);
 
   // Init
@@ -267,6 +305,7 @@ function App() {
     // Add user message to history
     setHistory(h => [...h, { type: 'user', content: userInput }]);
     setInput('');
+    addDebug(`USER INPUT: ${userInput.slice(0, 50)}${userInput.length > 50 ? '...' : ''}`);
 
     const ni = interfaceRef.current;
     if (!ni) {
@@ -282,17 +321,27 @@ function App() {
       let streamingContent = '';
       updateActivity({ phase: 'thinking', thinkingChars: 0 });
       setStatusMsg('Processing...');
+      addDebug('LLM: Starting stream request');
       
+      const startTime = Date.now();
       const result = await ni.processInput(userInput, (chunk, meta) => {
         // Stream handler - updates UI incrementally
         if (meta?.type === 'thinking') {
           updateActivity({ phase: 'thinking', thinkingChars: meta.length });
+          if (meta.length && meta.length % 100 === 0) {
+            addDebug(`LLM: Thinking... ${meta.length} chars`);
+          }
           return;
         }
         
         if (meta?.type === 'content') {
           updateActivity({ phase: 'generating' });
           streamingContent += chunk;
+          
+          // Log every 100 chars of content
+          if (streamingContent.length % 100 === 0) {
+            addDebug(`LLM: Generated ${streamingContent.length} chars (${Date.now() - startTime}ms)`);
+          }
           
           // Update the last assistant message or add a new streaming one
           setHistory(h => {
@@ -314,6 +363,9 @@ function App() {
         }
       });
       
+      addDebug(`LLM: Stream complete in ${Date.now() - startTime}ms, ${streamingContent.length} chars`);
+      addDebug(`RESULT: type=${result.type}`);
+      
       // Finalize the message - mark as not streaming
       const displayType = result.type === 'chat' ? 'assistant' : 'output';
       setHistory(h => {
@@ -332,15 +384,18 @@ function App() {
       }
       updateActivity({ phase: 'idle', thinkingChars: 0, currentTool: undefined });
       setStatusMsg('Ready');
+      addDebug(`RESULT: type=${result.type}, shouldContinue=${result.shouldContinue}`);
     } catch (err) {
       updateActivity({ phase: 'idle' });
       setStatusMsg('Error');
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      addDebug(`ERROR: ${errorMsg}`);
       setHistory(h => [...h, { 
         type: 'error', 
-        content: err instanceof Error ? err.message : String(err) 
+        content: errorMsg 
       }]);
     }
-  }, [input, updateActivity]);
+  }, [input, updateActivity, addDebug]);
 
   // Handle exit
   useEffect(() => {
@@ -366,17 +421,28 @@ function App() {
     }
   }, [history]);
 
+  // Toggle debug panel
+  const handleToggleDebug = useCallback(() => {
+    setShowDebug(prev => !prev);
+  }, []);
+
   return (
     <Box flexDirection="column" height="100%">
       <Header />
-      <Box flexDirection="column" flexGrow={1} paddingY={1}>
-        <History lines={history.slice(-50)} />
+      <Box flexDirection="row" flexGrow={1}>
+        <Box flexDirection="column" flexGrow={1} paddingY={1}>
+          <History lines={history.slice(-50)} />
+        </Box>
+        {showDebug && (
+          <DebugPanel logs={debugLog} activity={activity} />
+        )}
       </Box>
       <Input 
         value={input} 
         onChange={setInput} 
         onSubmit={handleSubmit} 
         onCopy={handleCopy}
+        onToggleDebug={handleToggleDebug}
       />
       <StatusBar status={status} message={statusMsg} activity={activity} />
     </Box>
