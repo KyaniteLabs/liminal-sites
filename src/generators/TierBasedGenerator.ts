@@ -9,7 +9,7 @@
  */
 
 import { LLMClient, LLMConfig } from '../llm/LLMClient.js';
-import { PromptBuilder, type PromptContext } from '../llm/PromptBuilder.js';
+import { PromptBuilder } from '../llm/PromptBuilder.js';
 import { detectModelTier, trimContext, type ModelTier } from '../llm/ModelTier.js';
 import { harnessMemory } from '../harness/HarnessMemory.js';
 
@@ -102,7 +102,7 @@ export abstract class TierBasedGenerator {
   /**
    * Domain-specific validation - override in subclasses
    */
-  protected validateOutput(code: string): { valid: boolean; error?: string } {
+  protected validateOutput(_code: string): { valid: boolean; error?: string } {
     return { valid: true };
   }
 

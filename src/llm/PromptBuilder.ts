@@ -12,9 +12,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { 
   detectModelTier, 
-  getModelProfile, 
-  _trimContext,
-  selectPromptStyle,
+  getModelProfile,
   type ModelTier 
 } from './ModelTier.js';
 import type { LLMConfig } from './LLMClient.js';
@@ -48,12 +46,10 @@ export interface BuiltPrompt {
 export class PromptBuilder {
   private tier: ModelTier;
   private profile: ReturnType<typeof getModelProfile>;
-  private style: ReturnType<typeof selectPromptStyle>;
 
   constructor(config: LLMConfig) {
     this.tier = detectModelTier(config);
     this.profile = getModelProfile(this.tier);
-    this.style = selectPromptStyle(this.tier);
   }
 
   /**

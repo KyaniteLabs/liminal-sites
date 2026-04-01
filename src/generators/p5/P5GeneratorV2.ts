@@ -31,7 +31,7 @@ export class P5GeneratorV2 extends TierBasedGenerator {
   protected validateOutput(code: string): { valid: boolean; error?: string } {
     // Check for required p5 functions
     const hasSetup = code.includes('function setup()') || code.includes('setup()');
-    const hasDraw = code.includes('function draw()') || code.includes('draw()');
+    // Note: draw() is optional for static sketches
     
     // p5 code should have at least setup
     if (!hasSetup) {

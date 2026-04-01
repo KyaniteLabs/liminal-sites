@@ -13,6 +13,14 @@ export interface HarnessAdaptation {
   description: string;
   applied: boolean;
   appliedAt?: string;
+  // Extended properties for detailed tracking
+  patternName?: string;
+  patternSeverity?: 'low' | 'medium' | 'high' | 'critical';
+  fixType?: 'prompt' | 'template' | 'guardrail' | 'config' | 'code';
+  targetFile?: string;
+  success?: boolean;
+  error?: string;
+  diff?: string;
 }
 
 export class HarnessUpdater {
