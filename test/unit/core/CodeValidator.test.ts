@@ -1,22 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { CodeValidator } from '../../../src/core/CodeValidator.js';
 
-describe('CodeValidator', () => {
-  describe('stripReasoningText', () => {
-    it('should strip LLM reasoning preamble and return clean code', () => {
-      const input = `The user wants a p5.js sketch with particles.
-I'll create a simple particle system.
-Here's a p5.js sketch that does this:
-
-function setup() {
-  createCanvas(400, 400);
-  background(220);
-  particles = [];
-  for (let i = 0; i < 50; i++) {
-    particles.push({ x: random(width), y: random(height), speed: random(1, 3), col: color(random(255), random(100,200), random(255), 200) });
-  }
+// Shared p5 code body that exceeds the 500-byte MIN_SIZE_REQUIREMENTS for p5 domain
+const P5_BODY = `particles = [];
+for (let i = 0; i < 50; i++) {
+  particles.push({ x: random(width), y: random(height), speed: random(1, 3), col: color(random(255), 100, random(255), 200) });
 }
-
 function draw() {
   background(0, 0, 0, 25);
   for (let p of particles) {
@@ -27,7 +16,22 @@ function draw() {
     p.y += random(-p.speed, p.speed);
     if (p.x < 0) p.x = width;
     if (p.x > width) p.x = 0;
+    if (p.y < 0) p.y = height;
+    if (p.y > height) p.y = 0;
   }
+}`;
+
+describe('CodeValidator', () => {
+  describe('stripReasoningText', () => {
+    it('should strip LLM reasoning preamble and return clean code', () => {
+      const input = `The user wants a p5.js sketch with particles.
+I'll create a simple particle system.
+Here's a p5.js sketch that does this:
+
+function setup() {
+  createCanvas(400, 400);
+  background(220);
+  ${P5_BODY}
 }`;
 
       const result = CodeValidator.validate(input);
@@ -53,8 +57,11 @@ Key elements: setup, draw, particles, color.`;
 2. A nice particle effect
 3. It should look good
 
-function setup() { createCanvas(400,400); background(220); }
-function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(width), random(height), 10); } }`;
+function setup() {
+  createCanvas(400, 400);
+  background(220);
+  ${P5_BODY}
+}`;
 
       const result = CodeValidator.validate(input);
       expect(result.valid).toBe(true);
@@ -67,11 +74,7 @@ function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(w
 function setup() {
   createCanvas(400, 400);
   background(220);
-  for (let i = 0; i < 50; i++) { particles.push(random(width)); }
-}
-function draw() {
-  background(0, 25);
-  for (let p of particles) { ellipse(p, p, 10); }
+  ${P5_BODY}
 }
 \`\`\``;
 
@@ -86,18 +89,7 @@ function draw() {
       const code = `function setup() {
   createCanvas(400, 400);
   background(220);
-  particles = [];
-  for (let i = 0; i < 50; i++) {
-    particles.push({ x: random(width), y: random(height), size: random(5, 20) });
-  }
-}
-function draw() {
-  background(0);
-  ellipse(200, 200, 50, 50);
-  for (let p of particles) {
-    ellipse(p.x, p.y, p.size);
-    p.x += random(-1, 1);
-  }
+  ${P5_BODY}
 }`;
       const result = CodeValidator.validate(code, 'p5');
       expect(result.valid).toBe(true);
@@ -115,10 +107,22 @@ var x = 5;`;
     it('should accept code with only createCanvas', () => {
       const code = `createCanvas(800, 600);
 background(100);
-for (let i = 0; i < 20; i++) {
-  ellipse(random(width), random(height), random(5, 30));
-  rect(random(width), random(height), 20, 20);
-  line(random(width), random(height), random(width), random(height));
+particles = [];
+for (let i = 0; i < 50; i++) {
+  particles.push({ x: random(width), y: random(height), size: random(5, 30) });
+  rect(particles[i].x, particles[i].y, 20, 20);
+  line(particles[i].x, particles[i].y, random(width), random(height));
+}
+for (let p of particles) {
+  fill(color(random(255), random(255), random(255)));
+  noStroke();
+  ellipse(p.x, p.y, p.size);
+  p.x += random(-1, 1);
+  p.y += random(-1, 1);
+  if (p.x < 0) p.x = width;
+  if (p.x > width) p.x = 0;
+  if (p.y < 0) p.y = height;
+  if (p.y > height) p.y = 0;
 }`;
       const result = CodeValidator.validate(code, 'p5');
       expect(result.valid).toBe(true);
@@ -131,6 +135,7 @@ for (let i = 0; i < 20; i++) {
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform vec3 u_color;
+uniform vec2 u_mouse;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -147,10 +152,24 @@ float noise(vec2 p) {
   return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 }
 
+float fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  for (int i = 0; i < 5; i++) {
+    value += amplitude * noise(p);
+    p *= 2.0;
+    amplitude *= 0.5;
+  }
+  return value;
+}
+
 void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution;
-  float n = noise(uv * 4.0 + u_time * 0.5);
-  vec3 col = vec3(n * u_color.r, uv.y * u_color.g, sin(u_time + uv.x * 6.28) * 0.5 + 0.5);
+  vec2 mouse = u_mouse / u_resolution;
+  float n = fbm(uv * 4.0 + u_time * 0.3);
+  float dist = length(uv - mouse);
+  float glow = smoothstep(0.3, 0.0, dist);
+  vec3 col = vec3(n * u_color.r + glow, uv.y * u_color.g, sin(u_time + uv.x * 6.28) * 0.5 + 0.5);
   gl_FragColor = vec4(col, 1.0);
 }`;
       const result = CodeValidator.validate(code, 'shader');
@@ -168,18 +187,30 @@ void main() {
   describe('Three.js structural validation', () => {
     it('should validate valid Three.js code', () => {
       const code = `const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
 const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
+
+const light = new THREE.PointLight(0xffffff, 1, 100);
+light.position.set(5, 5, 5);
+scene.add(light);
+
+const ambient = new THREE.AmbientLight(0x404040);
+scene.add(ambient);
+
 camera.position.z = 5;
+
 function animate() {
   requestAnimationFrame(animate);
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
+  cube.position.x = Math.sin(Date.now() * 0.001) * 2;
   renderer.render(scene, camera);
 }
 animate();`;
@@ -277,8 +308,11 @@ solid(1, 0, 0).diff(osc(3)).out()`;
 </head>
 <body>
 <script>
-function setup() { createCanvas(400,400); background(220); }
-function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(width), random(height), 10); } }
+function setup() {
+  createCanvas(400, 400);
+  background(220);
+  ${P5_BODY}
+}
 </script>
 </body>
 </html>`;
@@ -292,8 +326,11 @@ function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(w
 <head></head>
 <body>
 <script>
-function setup() { createCanvas(400,400); background(220); }
-function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(width), random(height), 10); } }
+function setup() {
+  createCanvas(400, 400);
+  background(220);
+  ${P5_BODY}
+}
 </script>
 </body>
 </html>`;
@@ -303,8 +340,11 @@ function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(w
     });
 
     it('should pass raw JS without self-contained check', () => {
-      const code = `function setup() { createCanvas(400,400); background(220); }
-function draw() { background(0); for (let i = 0; i < 20; i++) { ellipse(random(width), random(height), 10); } }`;
+      const code = `function setup() {
+  createCanvas(400, 400);
+  background(220);
+  ${P5_BODY}
+}`;
       const result = CodeValidator.validate(code);
       expect(result.valid).toBe(true);
     });

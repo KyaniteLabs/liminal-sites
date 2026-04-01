@@ -558,6 +558,16 @@ export { ShaderGenerator };
 // Three.js Generator
 export { ThreeGenerator };
 
+// M9-M11 Guardrails
+export { 
+  SemanticValidator,
+  RuntimeHealthMonitor, 
+  AccessibilityGuardrails,
+  type SemanticValidationResult,
+  type RuntimeHealthResult,
+  type AccessibilityResult,
+} from './guardrails/index.js';
+
 // Swarm
 export { SwarmOrchestrator } from './swarm/SwarmOrchestrator.js';
 export { VotingEngine } from './swarm/VotingEngine.js';
