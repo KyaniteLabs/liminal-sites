@@ -5,6 +5,21 @@
 
 ---
 
+## Remediation status (2026-04-01)
+
+After the **Meta-Harness Implementation** and **Template Removal**, the following additional items were **addressed**:
+
+| § | Gap | Remediation |
+|---|-----|-------------|
+| **3.1** | Template generators removed | **ParticleSystem, CellularAutomata, FlowField templates removed** — All p5 generation now uses LLM exclusively via P5GeneratorLLM. Meta-Harness learns from failures instead of falling back to templates. |
+| **MH.1** | No failure pattern detection | **Meta-Harness implemented** — FailureLogger captures rich context; PatternDetector identifies 6 known patterns (Qwen thinking trap, GLSL undefined functions, Tone.js hallucinations, Strudel/Tidal confusion, ASCII timeout, HTML 404); HarnessUpdater applies adaptations. |
+| **MH.2** | Qwen models timeout consistently | **Qwen detection and simplified prompts** — Auto-detects Qwen models, uses simplified system/user prompts to avoid "thinking trap", extracts code from thinking field if response empty. |
+| **MH.3** | GLSL uses undefined functions | **GLSL semantic validation** — Detects undefined functions (noise, fbm, hash), invalid operators (`%` instead of mod()), validates function definitions. |
+| **MH.4** | Tone.js hallucinates APIs | **Tone.js API whitelist** — Validates Tone.* classes against known API, catches hallucinations (Reverberator, DrivingPattern, ReverbNode), suggests closest valid class. |
+| **MH.5** | Strudel confused with TidalCycles | **Strudel anti-patterns** — Prompt includes explicit "NEVER DO" section: never use Haskell `$`, never write `d1 $`, never bare `s("bd")`. Working examples show correct syntax. |
+
+---
+
 ## Remediation status (2026-03-07)
 
 After the **Full Remediation to Launch** (Waves 0–7), the following items from this document were **addressed**:
@@ -239,7 +254,7 @@ A comprehensive adversarial audit identified unification gaps, synergy failures,
 |------|----------------------------------|----------------|
 | **Loop context** | Context is built but not sent to LLM unless user adds `{{context}}`. | Ralph: “world” must be visible each iteration. Computational Life: substrate = prompt + context + evaluation. |
 | **Quality gate** | minQualityScore is never used; no exit or retry on low quality. | Ralph: backpressure. PRD: “Garbage output → Creative evaluator quality gates.” |
-| **Generators** | ParticleSystem and CellularAutomata are never used in the loop. | PRD Phase 1: particle systems, Lenia-style CA. Research: parameters as genotype, Lenia/GNCA. |
+| **Generators** | ~~ParticleSystem and CellularAutomata~~ **REMOVED** — Templates removed in favor of LLM-only generation with Meta-Harness learning. See §3.1 update above. | PRD Phase 1: particle systems, Lenia-style CA. **Replaced by:** Meta-Harness pattern detection and adaptation. |
 | **GA / evolution** | No “5 variations,” no parameter evolution, no IGA. | PRD: Genetic Algorithms phase. Research: genetic-js, IGA, CreativeEvaluator as fitness. |
 | **Substrate** | No explicit substrate design or documentation. | Computational Life: substrate design enables emergence. |
 | **Config** | config/atelier.json documented but not loaded. | Doc/code consistency. |
@@ -251,7 +266,7 @@ A comprehensive adversarial audit identified unification gaps, synergy failures,
 
 1. **Context always in prompt (1.1)** — Ensure the “world that changes” is always sent to the LLM (append context if no placeholder). Highest impact for a “bare MVP that was never successful.”
 2. **Quality gate (1.2)** — Use minQualityScore to break (or retry) when score is below threshold. Makes the loop respect creative backpressure.
-3. **Use ParticleSystem and CellularAutomata in the loop (3.1)** — Route prompts to the rich generators or seed the LLM with their output. Aligns code with PRD and research.
+3. **~~Use ParticleSystem and CellularAutomata in the loop (3.1)~~** — **SUPERSEDED by Meta-Harness** — Templates removed. All generation uses LLM with Meta-Harness observing failures and updating prompts/validators.
 4. **Default prompt template (4.2)** — Include `{{context}}` and short iteration instructions so default runs get context and a clear “improve on previous” instruction.
 5. **Substrate doc (2.1)** — Document prompt + context + evaluation + termination as the “Atelier substrate” and tune so improvement can emerge.
 6. **tolerateErrors in run() (5.3)** — Small API fix; improves doc/code alignment.
