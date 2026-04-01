@@ -41,7 +41,7 @@ function mousePressed() {
 
 vi.mock('../../src/generators/p5/P5Generator.js', () => ({
   P5Generator: {
-    generate: vi.fn(async () => MOCK_P5_CODE),
+    generate: vi.fn(() => MOCK_P5_CODE),
   },
 }));
 

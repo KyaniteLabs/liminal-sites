@@ -535,6 +535,21 @@ export { P5GeneratorLLM };
 export { LLMError, LLMTimeoutError, LLMRateLimitError, LLMAuthError } from './llm/LLMClient.js';
 export type { LLMConfig, LLMResponse } from './llm/LLMClient.js';
 
+// Model Tier Detection & Prompt Building
+export { 
+  detectModelTier, 
+  getModelProfile, 
+  getModelInfo, 
+  trimContext, 
+  selectPromptStyle,
+  type ModelTier,
+  type ModelProfile 
+} from './llm/ModelTier.js';
+export { PromptBuilder, type PromptContext, type BuiltPrompt } from './llm/PromptBuilder.js';
+
+// V2 Generators (tier-based)
+export { P5GeneratorV2, type P5GeneratorV2Options } from './generators/p5/P5GeneratorV2.js';
+
 export type { PersistedLoopState } from './core/ContextAccumulation.js';
 
 // GLSL Generator
