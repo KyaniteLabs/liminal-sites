@@ -364,19 +364,21 @@ function App() {
       });
       
       addDebug(`LLM: Stream complete in ${Date.now() - startTime}ms, ${streamingContent.length} chars`);
-      addDebug(`RESULT: type=${result.type}`);
+      addDebug(`RESULT: type=${result.type}, responseLen=${result.response?.length || 0}`);
       
       // Finalize the message - mark as not streaming
+      // Use streamingContent if result.response is empty (streaming mode)
+      const finalContent = streamingContent || result.response || '(no response)';
       const displayType = result.type === 'chat' ? 'assistant' : 'output';
       setHistory(h => {
         const lastMsg = h[h.length - 1];
         if (lastMsg && lastMsg.streaming) {
           return [...h.slice(0, -1), { 
             type: displayType, 
-            content: result.response,
+            content: finalContent,
           }];
         }
-        return [...h, { type: displayType, content: result.response }];
+        return [...h, { type: displayType, content: finalContent }];
       });
       
       if (!result.shouldContinue) {
