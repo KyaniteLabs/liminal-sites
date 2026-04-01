@@ -34,8 +34,8 @@ export const PROVIDER_TEMPLATES: Record<ProviderType, Omit<ProviderConfig, 'apiK
   minimax: {
     provider: 'minimax',
     name: 'MiniMax',
-    description: 'MiniMax M2.7 and other models',
-    baseUrl: 'https://api.minimax.chat/v1',
+    description: 'MiniMax M2.7 and other models (Global Token Plan)',
+    baseUrl: 'https://api.minimax.io/v1',
     model: 'MiniMax-Text-01',
     apiStyle: 'openai',
     temperature: 0.7,
@@ -241,8 +241,35 @@ export function getHarnessLLMConfig(): HarnessLLMConfig {
 
 /**
  * Get LLMConfig for harness use (applies harness-specific overrides)
+ * 
+ * Supports separate harness provider via environment variables:
+ * - LIMINAL_HARNESS_BASE_URL - Separate base URL for harness
+ * - LIMINAL_HARNESS_MODEL - Separate model for harness
+ * - LIMINAL_HARNESS_API_KEY - Separate API key for harness
+ * 
+ * Falls back to active provider if harness-specific config not set.
  */
 export function getHarnessProviderConfig(): LLMConfig | null {
+  // Check for separate harness provider configuration
+  const harnessBaseUrl = process.env.LIMINAL_HARNESS_BASE_URL;
+  const harnessModel = process.env.LIMINAL_HARNESS_MODEL;
+  const harnessApiKey = process.env.LIMINAL_HARNESS_API_KEY;
+  const harnessTemp = process.env.LIMINAL_HARNESS_TEMPERATURE;
+  const harnessMaxTokens = process.env.LIMINAL_HARNESS_MAX_TOKENS;
+  
+  // If harness-specific config exists, use it
+  if (harnessBaseUrl && harnessModel) {
+    return {
+      baseUrl: harnessBaseUrl,
+      model: harnessModel,
+      apiKey: harnessApiKey || process.env.LIMINAL_LLM_API_KEY || process.env.OPENAI_API_KEY,
+      temperature: harnessTemp ? parseFloat(harnessTemp) : 0.2,
+      maxTokens: harnessMaxTokens ? parseInt(harnessMaxTokens) : 4096,
+      apiStyle: harnessBaseUrl.includes('minimax') ? 'openai' : 'openai',
+    };
+  }
+  
+  // Otherwise fall back to active provider with harness overrides
   const baseConfig = getActiveProviderConfig();
   if (!baseConfig) return null;
   
