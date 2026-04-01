@@ -96,6 +96,20 @@ export {
   CodeStyleGuardrail,
 } from './hygiene/CodeStyleGuardrail.js';
 
+// Evolution layer - Self-healing & Constitution
+export {
+  Constitution,
+  initializeConstitution,
+  getConstitution,
+  type FailureRecord,
+  type RuleApplication,
+} from './evolution/Constitution.js';
+
+export {
+  SelfHealingGuardrail,
+  type SelfHealingConfig,
+} from './evolution/SelfHealingGuardrail.js';
+
 // M9-M11: Legacy guardrails (backward compatibility)
 export {
   SemanticValidator,
