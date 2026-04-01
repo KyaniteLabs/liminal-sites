@@ -77,7 +77,7 @@ const TIER_PROFILES: Record<ModelTier, ModelProfile> = {
   },
   local: {
     tier: 'local',
-    contextWindow: 32000,
+    contextWindow: 16000,  // Currently 16k for local models
     recommendedContextTokens: 2000,  // Keep it tight
     supportsSystemPrompt: true,
     needsExplicitInstructions: true,  // Needs clear guidance
