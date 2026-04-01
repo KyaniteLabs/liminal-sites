@@ -16,6 +16,7 @@ export interface Pattern {
   lastSeen: string;
   affectedModels: string[];
   affectedDomains: string[];
+  severity?: 'low' | 'medium' | 'high' | 'critical';
 }
 
 // Known patterns from dogfooding

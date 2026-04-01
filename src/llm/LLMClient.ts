@@ -166,6 +166,11 @@ export class LLMClient {
     };
   }
 
+  /** Get current config */
+  getConfig(): LLMConfig {
+    return { ...this.config };
+  }
+
   /**
    * Generate code from prompts
    * Universal interface - works with any OpenAI-compatible endpoint

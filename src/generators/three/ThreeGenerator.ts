@@ -17,14 +17,11 @@ export class ThreeGenerator extends TierBasedGenerator {
    * Three.js-specific validation
    */
   protected validateOutput(code: string): { valid: boolean; error?: string } {
-    // Three.js code should have scene, camera, or renderer
+    // Three.js code should reference THREE
     const hasThree = code.includes('THREE') || 
                      code.includes('import * as THREE') ||
                      code.includes('from "three"') ||
                      code.includes("from 'three'");
-    
-    const hasScene = code.includes('Scene') || code.includes('scene');
-    const hasRenderer = code.includes('Renderer') || code.includes('renderer');
     
     if (!hasThree) {
       return {

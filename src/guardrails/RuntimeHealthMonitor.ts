@@ -118,10 +118,8 @@ export class RuntimeHealthMonitor {
           const metrics = window.__liminalMetrics;
           // Count various object types that might accumulate
           let count = 0;
-          if (typeof window.p5 !== 'undefined') {
-            // @ts-expect-error -- puppeteer types
-            count += Object.keys(window).filter(k => k.startsWith('_')).length;
-          }
+          // Simple heuristic: count window properties starting with _
+          count += Object.keys(window).filter((k: string) => k.startsWith('_')).length;
           metrics.objectCounts.push(count);
         }, 1000);
       });
@@ -145,7 +143,7 @@ export class RuntimeHealthMonitor {
         // @ts-expect-error -- puppeteer types
         return window.__liminalMetrics?.objectCounts?.slice(-1)[0] || 0;
       });
-      memorySamples.push(initialMetrics.JSHeapUsedSize / 1024 / 1024);
+      memorySamples.push((initialMetrics.JSHeapUsedSize || 0) / 1024 / 1024);
 
       // Monitor over time
       const startTime = Date.now();
@@ -155,7 +153,7 @@ export class RuntimeHealthMonitor {
         await new Promise(r => setTimeout(r, this.options.sampleIntervalMs));
         
         const metrics = await page.metrics();
-        memorySamples.push(metrics.JSHeapUsedSize / 1024 / 1024);
+        memorySamples.push((metrics.JSHeapUsedSize || 0) / 1024 / 1024);
 
         // Get FPS samples from page
         const pageFps = await page.evaluate(() => {
@@ -169,7 +167,7 @@ export class RuntimeHealthMonitor {
       }
 
       // Get final metrics
-      const _finalMetrics = await page.metrics();
+      await page.metrics(); // Final metrics for completeness
       finalObjectCount = await page.evaluate(() => {
         // @ts-expect-error -- puppeteer types
         return window.__liminalMetrics?.objectCounts?.slice(-1)[0] || 0;

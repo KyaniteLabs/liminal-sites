@@ -32,17 +32,9 @@ import { noise2D, noise3D, noiseSeed, flowField } from './generators/p5/Noise.js
 
 import { P5GeneratorLLM } from './generators/p5/P5GeneratorLLM.js';
 
-// GLSL Generator
-import { ShaderGenerator } from './generators/glsl/ShaderGenerator.js';
-
-// Three.js Generator
-import { ThreeGenerator } from './generators/three/ThreeGenerator.js';
-
-// HTML Web Generator
-import { HTMLWebGenerator } from './generators/html/HTMLWebGenerator.js';
-
-// ASCII Art Generator
-import { ASCIIArtGenerator } from './generators/ascii/ASCIIArtGenerator.js';
+// HTML Web Generator & ASCII Art Generator (imported for type exports only)
+import type { HTMLGeneratorOptions as _HTMLGeneratorOptions } from './generators/html/HTMLWebGenerator.js';
+import type { ASCIIOptions as _ASCIIOptions, ASCIIStyle as _ASCIIStyle } from './generators/ascii/ASCIIArtGenerator.js';
 
 // Rendering and export
 import { Renderer } from './render/Renderer.js';
@@ -490,8 +482,6 @@ export default {
   CellularAutomata,
   FlowField,
   promptToGeneratorParams,
-  HTMLWebGenerator,
-  ASCIIArtGenerator,
 
   // Noise
   noise2D,
@@ -646,6 +636,7 @@ export { SERVICE_DEFAULTS } from './constants.js';
 // HTML Web Generator & ASCII Art Generator types (classes exported above with tier-based generators)
 export type { HTMLGeneratorOptions } from './generators/html/HTMLWebGenerator.js';
 export type { ASCIIOptions, ASCIIStyle } from './generators/ascii/ASCIIArtGenerator.js';
+// Note: ShaderGenerator, ThreeGenerator, HTMLWebGenerator, ASCIIArtGenerator exported below with TierBasedGenerator
 
 // Meta-Harness - Self-improving infrastructure
 export {

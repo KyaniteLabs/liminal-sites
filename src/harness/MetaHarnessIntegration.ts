@@ -185,11 +185,11 @@ export class MetaHarnessIntegration {
           // Record adaptation to persistent memory
           harnessMemory.recordAdaptation({
             patternName: pattern.name,
-            patternSeverity: pattern.severity,
-            fixType: adaptation.fixType,
+            patternSeverity: pattern.severity ?? 'medium',
+            fixType: adaptation.fixType ?? 'code',
             targetFile: adaptation.targetFile,
             description: adaptation.description,
-            success: adaptation.success,
+            success: adaptation.success ?? true,
             error: adaptation.error,
             diff: adaptation.diff,
           });
