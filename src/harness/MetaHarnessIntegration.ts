@@ -15,6 +15,8 @@
  *   await metaHarness.shutdown();
  */
 
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { failureLogger, type FailureRecord } from './FailureLogger.js';
 import { patternDetector, type Pattern } from './PatternDetector.js';
 import { harnessUpdater, type HarnessAdaptation } from './HarnessUpdater.js';
@@ -248,6 +250,122 @@ export class MetaHarnessIntegration {
    */
   isOnline(): boolean {
     return this.initialized && !!this.llmClient;
+  }
+
+  /**
+   * Convert a generator to plugin format
+   * Creates plugin.json and index.ts in plugins/<name>/
+   */
+  async convertGeneratorToPlugin(generatorName: string): Promise<{
+    success: boolean;
+    pluginPath?: string;
+    error?: string;
+  }> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    const pluginDir = path.join(process.cwd(), 'plugins', generatorName);
+    
+    try {
+      // Check if generator exists
+      const generatorPath = path.join(process.cwd(), 'src', 'generators', generatorName);
+      const exists = await fs.access(generatorPath).then(() => true).catch(() => false);
+      
+      if (!exists) {
+        return { success: false, error: `Generator ${generatorName} not found` };
+      }
+
+      // Create plugin directory
+      await fs.mkdir(pluginDir, { recursive: true });
+
+      // Create plugin.json
+      const manifest = {
+        id: generatorName.toLowerCase(),
+        name: `${generatorName} Generator`,
+        version: '2.0.0',
+        description: `Auto-converted ${generatorName} generator plugin`,
+        entry: 'index.js',
+        domains: [generatorName.toLowerCase()],
+        keywords: [generatorName.toLowerCase()],
+        author: 'Liminal Harness',
+        minLiminalVersion: '2.0.0',
+      };
+
+      await fs.writeFile(
+        path.join(pluginDir, 'plugin.json'),
+        JSON.stringify(manifest, null, 2)
+      );
+
+      // Create index.ts (template)
+      const indexContent = `/**
+ * ${generatorName} Generator Plugin
+ * Auto-converted by Meta-Harness
+ */
+
+import { ${generatorName}Generator } from '../../src/generators/${generatorName}/${generatorName}Generator.js';
+import type { GenerateOptions } from '../../src/plugins/types.js';
+
+let generator: ${generatorName}Generator | null = null;
+
+export async function initialize(): Promise<void> {
+  if (!generator) {
+    generator = new ${generatorName}Generator();
+  }
+}
+
+export async function generate(
+  prompt: string,
+  options: GenerateOptions = {}
+): Promise<string> {
+  if (!generator) {
+    await initialize();
+  }
+  return generator!.generate(prompt);
+}
+
+export function canHandle(prompt: string): number {
+  // TODO: Implement domain-specific detection
+  return 0.5;
+}
+`;
+
+      await fs.writeFile(path.join(pluginDir, 'index.ts'), indexContent);
+
+      console.log(`[MetaHarness] Converted ${generatorName} to plugin at ${pluginDir}`);
+      
+      return { success: true, pluginPath: pluginDir };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Register a plugin from a path
+   */
+  async registerPlugin(pluginPath: string): Promise<{
+    success: boolean;
+    pluginId?: string;
+    error?: string;
+  }> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    try {
+      const { pluginLoader } = await import('../plugins/PluginLoader.js');
+      const result = await pluginLoader.loadPlugin(pluginPath);
+      
+      if (result.success && result.plugin) {
+        return { success: true, pluginId: result.plugin.manifest.id };
+      } else {
+        return { success: false, error: result.error?.error || 'Unknown error' };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, error: message };
+    }
   }
 
   /**
