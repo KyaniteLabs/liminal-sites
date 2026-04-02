@@ -1,15 +1,17 @@
 # THE BIBLE - Liminal System Documentation
 
-**Version:** 2.1 - DGF Complete  
-**Date:** 2026-04-01  
-**Status:** 31 guardrail tests passing, DGF Phases 1-3 complete  
-**Branch:** narrative/liminal-archaeology  
+**Version:** 2.1 - DGF Complete
+**Date:** 2026-04-01
+**Status:** 31 guardrail tests passing, DGF Phases 1-3 complete
+**Branch:** narrative/liminal-archaeology
 
 ---
 
 ## Executive Summary
 
-Liminal is a creative coding agent with self-improving capabilities. It generates p5.js sketches, GLSL shaders, Three.js scenes, music (Tone.js/Strudel), video (Remotion/Hydra), and more. The system features **18 major subsystems**:
+Liminal is a creative coding agent with self-improving capabilities. It generates
+p5.js sketches, GLSL shaders, Three.js scenes, music (Tone.js/Strudel), video
+(Remotion/Hydra), and more. The system features **18 major subsystems**:
 
 ### Core Framework
 - **Deterministic Guardrails Framework (DGF)** - 3-phase multi-layer protection
@@ -20,7 +22,8 @@ Liminal is a creative coding agent with self-improving capabilities. It generate
 - **M1-M11 Complete** - Traditional guardrails + DGF
 
 ### Generation & Creation
-- **9 Generators** - p5.js, GLSL, Three.js, Hydra, Strudel, Tone, Remotion, HTML, ASCII
+- **9 Generators** - p5.js, GLSL, Three.js, Hydra, Strudel, Tone, Remotion, HTML,
+  ASCII
 - **Tier-Based Generation** - Model-aware prompts (flagship/medium/local/tiny)
 - **Swarm System** - Multi-agent generation with voting
 
@@ -50,7 +53,7 @@ Guardrail Tests:
   - test/guardrails/GuardrailSystem.test.ts:     8 tests passing
   - test/guardrails/FullSystemSmoke.test.ts:    10 tests passing
   - test/e2e/guardrails-e2e.test.ts:            13 tests passing (with real LLM)
-  
+
 Total Guardrail Tests: 31 passing
 Full System Tests: 1741+ passing
 Failures: 0
@@ -71,147 +74,147 @@ Failures: 0
 ## System Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           LIMINAL ARCHITECTURE                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ DETERMINISTIC GUARDRAILS FRAMEWORK (DGF)                            │    │
-│  │  Phase 1: Foundation (Tier 3 - AUTONOMOUS)                          │    │
-│  │   ├── MaxIterationGuardrail     - Prevents infinite loops           │    │
-│  │   ├── ResourceExhaustionGuardrail - Token/memory/time/api limits    │    │
-│  │   ├── ToolPermissionGuardrail   - Whitelist-based authorization     │    │
-│  │   └── OutputSchemaGuardrail     - JSON schema validation            │    │
-│  │                                                                     │    │
-│  │  Phase 2: Validation & Remediation (Tier 2 - ENFORCING)             │    │
-│  │   ├── SchemaValidator           - Zod-like type-safe validation     │    │
-│  │   ├── RemediationEngine         - Error taxonomy & auto-fix         │    │
-│  │   ├── TypeCheckGuardrail        - tsc --noEmit integration          │    │
-│  │   ├── TestVerificationGuardrail - Runs related tests                │    │
-│  │   └── CodeStyleGuardrail        - ESLint + Prettier (Advisory)      │    │
-│  │                                                                     │    │
-│  │  Phase 3: Evolution (Tier 3 - AUTONOMOUS)                           │    │
-│  │   ├── Constitution              - Self-learning rule database       │    │
-│  │   └── SelfHealingGuardrail      - Pattern matching & prevention     │    │
-│  │                                                                     │    │
-│  │  4 Tiers: SHADOW→ADVISORY→ENFORCING→AUTONOMOUS                      │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+┌────────────────────────────────┐
+│    LIMINAL ARCHITECTURE            │
+├────────────────────────────────┤
+│                                    │
+│  ┌────────────────────────┐        │
+│  │ DETERMINISTIC GUARDRAILS FRAMEWORK (DGF)                            │  │
+│ Phase 1: Foundation (Tier 3 - AUTONOMOUS)                          │  │
+│  ├── MaxIterationGuardrail     - Prevents infinite loops           │  │
+│  ├── ResourceExhaustionGuardrail - Token/memory/time/api limits    │  │
+│  ├── ToolPermissionGuardrail   - Whitelist-based authorization     │  │
+│  └── OutputSchemaGuardrail     - JSON schema validation            │  │
+│                                                                    │  │
+│ Phase 2: Validation & Remediation (Tier 2 - ENFORCING)             │  │
+│  ├── SchemaValidator           - Zod-like type-safe validation     │  │
+│  ├── RemediationEngine         - Error taxonomy & auto-fix         │  │
+│  ├── TypeCheckGuardrail        - tsc --noEmit integration          │  │
+│  ├── TestVerificationGuardrail - Runs related tests                │  │
+│  └── CodeStyleGuardrail        - ESLint + Prettier (Advisory)      │  │
+│                                                                    │  │
+│ Phase 3: Evolution (Tier 3 - AUTONOMOUS)                           │  │
+│  ├── Constitution              - Self-learning rule database       │  │
+│  └── SelfHealingGuardrail      - Pattern matching & prevention     │  │
+│                                                                    │  │
+│ 4 Tiers: SHADOW→ADVISORY→ENFORCING→AUTONOMOUS                      │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ META-HARNESS (Self-Improvement)    🟢 ACTIVE                        │    │
-│  │  ├── HarnessMemory          - Persistent tasks/adaptations          │    │
-│  │  ├── FailureLogger          - Logs to ~/.liminal/failures/          │    │
-│  │  ├── PatternDetector        - Detects failure patterns              │    │
-│  │  ├── HarnessUpdater         - Applies adaptations                   │    │
-│  │  ├── HarnessAgent           - 7 tools for self-repair               │    │
-│  │  ├── ValidationGuard        - Prevents bad edits                    │    │
-│  │  └── RateLimiter            - Prevents runaway execution            │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ META-HARNESS (Self-Improvement)    🟢 ACTIVE                        │  │
+│  ├─ HarnessMemory          - Persistent tasks/adaptations          │  │
+│  ├─ FailureLogger          - Logs to ~/.liminal/failures/          │  │
+│  ├─ PatternDetector        - Detects failure patterns              │  │
+│  ├─ HarnessUpdater         - Applies adaptations                   │  │
+│  ├─ HarnessAgent           - 7 tools for self-repair               │  │
+│  ├─ ValidationGuard        - Prevents bad edits                    │  │
+│ └── RateLimiter            - Prevents runaway execution            │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ RALPH LOOP (Core Engine)           🟢 ACTIVE                        │    │
-│  │  ├── GenerationOrchestrator - Swarm/Collab/Standard modes           │    │
-│  │  ├── ContextAccumulation    - Builds iteration context              │    │
-│  │  ├── CompostHeap            - Learns from failures                  │    │
-│  │  ├── ScoringEngine          - Multi-strategy scoring                │    │
-│  │  ├── PromiseDetector        - Detects "COMPLETE"                    │    │
-│  │  ├── StagnationDetector     - Detects loops/plateaus                │    │
-│  │  └── SafetyGuardrails       - Budget, circuit breaker               │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ RALPH LOOP (Core Engine)           🟢 ACTIVE                        │  │
+│  ├─ GenerationOrchestrator - Swarm/Collab/Standard modes           │  │
+│  ├─ ContextAccumulation    - Builds iteration context              │  │
+│  ├─ CompostHeap            - Learns from failures                  │  │
+│  ├─ ScoringEngine          - Multi-strategy scoring                │  │
+│  ├─ PromiseDetector        - Detects "COMPLETE"                    │  │
+│  ├─ StagnationDetector     - Detects loops/plateaus                │  │
+│ └── SafetyGuardrails       - Budget, circuit breaker               │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ USER INTERFACE LAYER               🟢 ACTIVE                        │    │
-│  │  TUI (Terminal UI):                                                 │    │
-│  │   ├── HarnessTUI            - Main TUI orchestration                │    │
-│  │   ├── NaturalInterface      - Natural language commands             │    │
-│  │   └── InteractiveMode       - REPL-style interaction                │    │
-│  │  Chat System:                                                       │    │
-│  │   ├── ChatCLI               - Conversational interface              │    │
-│  │   ├── ConversationManager   - State management                      │    │
-│  │   └── GuidanceEngine        - Conversation guidance                 │    │
-│  │  SOUL System:                                                       │    │
-│  │   └── SOUL.md               - User-editable personality             │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ USER INTERFACE LAYER               🟢 ACTIVE                        │  │
+│ TUI (Terminal UI):                                                 │  │
+│  ├── HarnessTUI            - Main TUI orchestration                │  │
+│  ├── NaturalInterface      - Natural language commands             │  │
+│  └── InteractiveMode       - REPL-style interaction                │  │
+│ Chat System:                                                       │  │
+│  ├── ChatCLI               - Conversational interface              │  │
+│  ├── ConversationManager   - State management                      │  │
+│  └── GuidanceEngine        - Conversation guidance                 │  │
+│ SOUL System:                                                       │  │
+│  └── SOUL.md               - User-editable personality             │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ GENERATOR LAYER (Model-Aware)      🟢 TIER-BASED                  │    │
-│  │  ├── TierBasedGenerator     - Base class for all                    │    │
-│  │  ├── P5GeneratorV2          - p5.js with tier detection             │    │
-│  │  ├── ShaderGenerator        - GLSL shaders                          │    │
-│  │  ├── ThreeGenerator         - Three.js 3D                          │    │
-│  │  ├── HydraGenerator         - Video synthesis                       │    │
-│  │  ├── StrudelGenerator       - Live coding music                    │    │
-│  │  ├── ToneGenerator          - Web Audio API                        │    │
-│  │  ├── RemotionGenerator      - Video components                     │    │
-│  │  ├── HTMLWebGenerator       - Web pages                            │    │
-│  │  └── ASCIIArtGenerator      - ASCII art                            │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ GENERATOR LAYER (Model-Aware)      🟢 TIER-BASED                  │  │
+│  ├─ TierBasedGenerator     - Base class for all                    │  │
+│  ├─ P5GeneratorV2          - p5.js with tier detection             │  │
+│  ├─ ShaderGenerator        - GLSL shaders                          │  │
+│  ├─ ThreeGenerator         - Three.js 3D                          │  │
+│  ├─ HydraGenerator         - Video synthesis                       │  │
+│  ├─ StrudelGenerator       - Live coding music                    │  │
+│  ├─ ToneGenerator          - Web Audio API                        │  │
+│  ├─ RemotionGenerator      - Video components                     │  │
+│  ├─ HTMLWebGenerator       - Web pages                            │  │
+│ └── ASCIIArtGenerator      - ASCII art                            │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ AESTHETIC & QUALITY LAYER          🟢 ACTIVE                        │    │
-│  │  ├── AestheticCritic        - Multi-dimension scoring               │    │
-│  │  ├── ColorExtractor         - Palette analysis                      │    │
-│  │  └── ColorTheoryEngine      - Harmony evaluation                    │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ AESTHETIC & QUALITY LAYER          🟢 ACTIVE                        │  │
+│  ├─ AestheticCritic        - Multi-dimension scoring               │  │
+│  ├─ ColorExtractor         - Palette analysis                      │  │
+│ └── ColorTheoryEngine      - Harmony evaluation                    │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ SWARM & COLLABORATION LAYER        🟢 ACTIVE                        │    │
-│  │  ├── SwarmOrchestrator      - Multi-agent coordination              │    │
-│  │  ├── VotingEngine           - Consensus mechanism                   │    │
-│  │  └── MiningEngine           - Fragment extraction                   │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ SWARM & COLLABORATION LAYER        🟢 ACTIVE                        │  │
+│  ├─ SwarmOrchestrator      - Multi-agent coordination              │  │
+│  ├─ VotingEngine           - Consensus mechanism                   │  │
+│ └── MiningEngine           - Fragment extraction                   │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ COMPOST SYSTEM (Failure Learning)  🟢 ACTIVE                        │    │
-│  │  ├── CompostMill            - Processing orchestrator               │    │
-│  │  ├── CompostShredder        - Fragment extraction                   │    │
-│  │  ├── CompostSoup            - Blended synthesis                     │    │
-│  │  ├── CollisionEngine        - Fragment combination                  │    │
-│  │  └── SeedBank               - Reusable code seeds                   │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ COMPOST SYSTEM (Failure Learning)  🟢 ACTIVE                        │  │
+│  ├─ CompostMill            - Processing orchestrator               │  │
+│  ├─ CompostShredder        - Fragment extraction                   │  │
+│  ├─ CompostSoup            - Blended synthesis                     │  │
+│  ├─ CollisionEngine        - Fragment combination                  │  │
+│ └── SeedBank               - Reusable code seeds                   │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ ROUTING & INTELLIGENCE             🟢 ACTIVE                        │    │
-│  │  ├── SmartRouter            - Intelligent routing                   │    │
-│  │  ├── QualityPredictor       - Output quality prediction             │    │
-│  │  └── IntentRouter           - Command intent routing                │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ ROUTING & INTELLIGENCE             🟢 ACTIVE                        │  │
+│  ├─ SmartRouter            - Intelligent routing                   │  │
+│  ├─ QualityPredictor       - Output quality prediction             │  │
+│ └── IntentRouter           - Command intent routing                │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  │ GUARDRAIL LAYER (M1-M18 + DGF)                                     │    │
-│  │  M1:  ✅ Prompt Validation          - CodeValidator                 │    │
-│  │  M2:  ✅ Domain Routing             - GeneratorRegistry             │    │
-│  │  M3:  ✅ Budget/Rate Limit          - SafetyGuardrails              │    │
-│  │  M4:  ✅ Syntax Validation          - CodeValidator                 │    │
-│  │  M5:  ✅ Safety (execution)         - SandboxRunner                 │    │
-│  │  M6:  ✅ Anti-Hallucination         - APIValidator                  │    │
-│  │  M7:  ✅ Aesthetic Quality          - AestheticCritic               │    │
-│  │  M8:  ✅ Output Size                - CodeValidator                 │    │
-│  │  M9:  ✅ Semantic Alignment         - SemanticValidator             │    │
-│  │  M10: ✅ Runtime Health             - RuntimeHealthMonitor          │    │
-│  │  M11: ✅ Accessibility              - AccessibilityGuardrails       │    │
-│  │  M12-M18: ⚪ Planned/Future                                         │    │
-│  │                                                                     │    │
-│  │  DGF: ✅ COMPLETE (see above)                                       │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  │ GUARDRAIL LAYER (M1-M18 + DGF)                                     │  │
+│ M1:  ✅ Prompt Validation          - CodeValidator                 │  │
+│ M2:  ✅ Domain Routing             - GeneratorRegistry             │  │
+│ M3:  ✅ Budget/Rate Limit          - SafetyGuardrails              │  │
+│ M4:  ✅ Syntax Validation          - CodeValidator                 │  │
+│ M5:  ✅ Safety (execution)         - SandboxRunner                 │  │
+│ M6:  ✅ Anti-Hallucination         - APIValidator                  │  │
+│ M7:  ✅ Aesthetic Quality          - AestheticCritic               │  │
+│ M8:  ✅ Output Size                - CodeValidator                 │  │
+│ M9:  ✅ Semantic Alignment         - SemanticValidator             │  │
+│ M10: ✅ Runtime Health             - RuntimeHealthMonitor          │  │
+│ M11: ✅ Accessibility              - AccessibilityGuardrails       │  │
+│ M12-M18: ⚪ Planned/Future                                         │  │
+│                                                                    │  │
+│ DGF: ✅ COMPLETE (see above)                                       │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ MEMORY & LEARNING LAYER            🟢 ACTIVE                        │    │
-│  │  ├── HarnessMemory          - ~/.liminal/memory/                    │    │
-│  │  ├── EpisodicMemory         - Conversations, generations            │    │
-│  │  ├── CompostHeap            - Failed generations                    │    │
-│  │  ├── NoveltyArchive         - Pattern diversity                     │    │
-│  │  ├── QualityArchive         - High-quality examples                 │    │
-│  │  ├── Constitution           - Learned guardrail rules               │    │
-│  │  └── ArtKnowledgeGraph      - Concepts, techniques                  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────┐        │
+│  │ MEMORY & LEARNING LAYER            🟢 ACTIVE                        │  │
+│  ├─ HarnessMemory          - ~/.liminal/memory/                    │  │
+│  ├─ EpisodicMemory         - Conversations, generations            │  │
+│  ├─ CompostHeap            - Failed generations                    │  │
+│  ├─ NoveltyArchive         - Pattern diversity                     │  │
+│  ├─ QualityArchive         - High-quality examples                 │  │
+│  ├─ Constitution           - Learned guardrail rules               │  │
+│ └── ArtKnowledgeGraph      - Concepts, techniques                  │  │
+│  └────────────────────────┘        │
 │                                    ↓                                         │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ EXTENSIBILITY                      🟡 PLANNED                       │    │
-│  │  ├── PluginLoader           - Dynamic plugin loading                │    │
-│  │  └── HookSystem             - Lifecycle hooks                       │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+│  ┌────────────────────────┐        │
+│  │ EXTENSIBILITY                      🟡 PLANNED                       │  │
+│  ├─ PluginLoader           - Dynamic plugin loading                │  │
+│ └── HookSystem             - Lifecycle hooks                       │  │
+│  └────────────────────────┘        │
+│                                    │
+└────────────────────────────────┘
 ```
 
 ---
@@ -224,9 +227,9 @@ Failures: 0
 
 | Guardrail | File | Purpose | Tier |
 |-----------|------|---------|------|
-| MaxIterationGuardrail | `rules/CatastrophicGuardrails.ts` | Blocks infinite loops at 50 iterations | AUTONOMOUS |
-| ResourceExhaustionGuardrail | `rules/CatastrophicGuardrails.ts` | Enforces token/memory/time/api limits | AUTONOMOUS |
-| ToolPermissionGuardrail | `rules/CatastrophicGuardrails.ts` | Whitelist-based tool authorization | AUTONOMOUS |
+| MaxIterationGuardrail | `rules/CatastrophicGuardrails.ts` | Blocks loops | AUTONOMOUS |
+| ResourceExhaustionGuardrail | `rules/CatastrophicGuardrails.ts` | Resource limits | AUTONOMOUS |
+| ToolPermissionGuardrail | `rules/CatastrophicGuardrails.ts` | Auth whitelist | AUTONOMOUS |
 | OutputSchemaGuardrail | `rules/CatastrophicGuardrails.ts` | JSON schema validation | AUTONOMOUS |
 
 ### Phase 2: Validation & Remediation Layer
@@ -234,9 +237,9 @@ Failures: 0
 | Component | File | Purpose | Tier |
 |-----------|------|---------|------|
 | SchemaValidator | `validation/SchemaValidator.ts` | Zod-like type-safe validation | ENFORCING |
-| RemediationEngine | `remediation/ErrorTaxonomy.ts` | 15 error types with auto-fix strategies | ENFORCING |
-| TypeCheckGuardrail | `correctness/TypeCheckGuardrail.ts` | Runs tsc --noEmit on changes | ENFORCING |
-| TestVerificationGuardrail | `correctness/TestVerificationGuardrail.ts` | Runs test suite on affected files | ENFORCING |
+| RemediationEngine | `remediation/ErrorTaxonomy.ts` | 15 error types, auto-fix | ENFORCING |
+| TypeCheckGuardrail | `correctness/TypeCheckGuardrail.ts` | TypeScript check | ENFORCING |
+| TestVerificationGuardrail | `correctness/TestVerificationGuardrail.ts` | Test runner | ENFORCING |
 | CodeStyleGuardrail | `hygiene/CodeStyleGuardrail.ts` | ESLint + Prettier integration | ADVISORY |
 
 **Error Taxonomy (15 types):**
@@ -263,7 +266,7 @@ UNKNOWN_ERROR     - Fallback
 | Component | File | Purpose | Tier |
 |-----------|------|---------|------|
 | Constitution | `evolution/Constitution.ts` | Self-learning rule database | AUTONOMOUS |
-| SelfHealingGuardrail | `evolution/SelfHealingGuardrail.ts` | Pattern matching & prevention | AUTONOMOUS |
+| SelfHealingGuardrail | `evolution/SelfHealingGuardrail.ts` | Pattern prevention | AUTONOMOUS |
 
 **Constitution Features:**
 - Extracts patterns from failure messages
@@ -311,7 +314,7 @@ UNKNOWN_ERROR     - Fallback
 
 | Component | File | Purpose | Status |
 |-----------|------|---------|--------|
-| HarnessMemory | `HarnessMemory.ts` | Persistent storage for tasks, adaptations, episodes | 🟢 Active |
+| HarnessMemory | `HarnessMemory.ts` | Task storage | 🟢 Active |
 | FailureLogger | `FailureLogger.ts` | Logs failures to ~/.liminal/failures/ | 🟢 Active |
 | PatternDetector | `PatternDetector.ts` | Detects patterns in failures | 🟢 Active |
 | HarnessUpdater | `HarnessUpdater.ts` | Applies adaptations to fix issues | 🟡 Built |
@@ -428,16 +431,16 @@ UNKNOWN_ERROR     - Fallback
 
 ### 5. Memory Systems
 
-**Location:** `src/brain/`, `src/harness/`, `src/compost/`, `src/learning/`, `src/guardrails/evolution/`
+**Location:** Multiple - `src/brain/`, `src/harness/`, `src/compost/`, `src/learning/`, etc.
 
 | System | File | Purpose | Persistence |
 |--------|------|---------|-------------|
-| HarnessMemory | `harness/HarnessMemory.ts` | Tasks, adaptations, episodes | ✅ ~/.liminal/memory/ |
+| HarnessMemory | `harness/HarnessMemory.ts` | Tasks, episodes | ✅ ~/.liminal/memory/ |
 | EpisodicMemory | `brain/EpisodicMemory.ts` | Conversations, generations | ✅ Via HarnessMemory |
 | CompostHeap | `compost/CompostHeap.ts` | Failed generations | ✅ File-based |
 | NoveltyArchive | `learning/NoveltyArchive.ts` | Pattern diversity | ✅ File-based |
 | QualityArchive | `learning/QualityArchive.ts` | High-quality examples | ✅ File-based |
-| Constitution | `guardrails/evolution/Constitution.ts` | Learned guardrail rules | ✅ Export/import |
+| Constitution | `guardrails/evolution/Constitution.ts` | Learned rules | ✅ Export/import |
 | ArtKnowledgeGraph | `brain/ArtKnowledgeGraph.ts` | Concepts, techniques | ❌ In-memory |
 
 ---
@@ -1183,39 +1186,39 @@ LIMINAL_LOG_LEVEL=info
 ## Decision Log (ADRs)
 
 ### ADR-001: DGF Over Traditional Guardrails
-**Date:** 2026-03-25  
-**Decision:** Build 3-phase DGF instead of static M1-M18 only  
-**Context:** M1-M18 were incomplete, needed runtime protection  
+**Date:** 2026-03-25
+**Decision:** Build 3-phase DGF instead of static M1-M18 only
+**Context:** M1-M18 were incomplete, needed runtime protection
 **Consequences:** +17 components, 31 tests, but complete protection
 
 ### ADR-002: Constitution for Self-Healing
-**Date:** 2026-03-28  
-**Decision:** Pattern matching + rule learning vs hardcoded fixes  
-**Context:** Hardcoded fixes don't scale, need learning  
+**Date:** 2026-03-28
+**Decision:** Pattern matching + rule learning vs hardcoded fixes
+**Context:** Hardcoded fixes don't scale, need learning
 **Consequences:** Rules evolve, confidence scoring, exportable
 
 ### ADR-003: Tier-Based Generation
-**Date:** 2026-03-20  
-**Decision:** Model-aware prompts (flagship/medium/local/tiny)  
-**Context:** Local models have 16k limit, need different prompts  
+**Date:** 2026-03-20
+**Decision:** Model-aware prompts (flagship/medium/local/tiny)
+**Context:** Local models have 16k limit, need different prompts
 **Consequences:** 9 generators migrated, better local performance
 
 ### ADR-004: Natural Interface
-**Date:** 2026-03-18  
-**Decision:** No command prefixes, intent routing  
-**Context:** `/generate p5` is clunky, want natural language  
+**Date:** 2026-03-18
+**Decision:** No command prefixes, intent routing
+**Context:** `/generate p5` is clunky, want natural language
 **Consequences:** More accessible, requires IntentRouter
 
 ### ADR-005: Compost System
-**Date:** 2026-03-15  
-**Decision:** Learn from failures vs discard  
-**Context:** Failures contain reusable fragments  
+**Date:** 2026-03-15
+**Decision:** Learn from failures vs discard
+**Context:** Failures contain reusable fragments
 **Consequences:** SeedBank, CollisionEngine, semantic extraction
 
 ### ADR-006: No Template Fallbacks
-**Date:** 2026-03-10  
-**Decision:** LLM-only generation, no static templates  
-**Context:** Templates mask problems  
+**Date:** 2026-03-10
+**Decision:** LLM-only generation, no static templates
+**Context:** Templates mask problems
 **Consequences:** Harness must be robust, no safety net
 
 ---
