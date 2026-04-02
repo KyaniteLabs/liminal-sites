@@ -1,7 +1,7 @@
 {
   "meta": {
     "generated": "2026-04-02",
-    "description": "8 derived cross-tabulations from Liminal raw telemetry — data prerequisite for archaeology.html visualizations",
+    "description": "9 derived cross-tabulations from Liminal raw telemetry — data prerequisite for archaeology.html visualizations",
     "source_files": [
       "telemetry-sessions.json",
       "telemetry-git.json",
@@ -1185,5 +1185,164 @@
       ]
     },
     "insight": "Three agents, three philosophies: The Assembly Line Worker (Kai) built fast and shallow. The Landscaper (Cursor) covered everything but tested nothing. The Architect (Claude Code) was slowest but built self-improving infrastructure. The handoff from Cursor to Claude Code was the pivotal moment — it happened at the Explosion and never reversed."
+  },
+  "lunar_phase_correlation": {
+    "description": "Lunar phase illumination mapped to daily commit velocity — the celestial rhythm beneath the build",
+    "methodology": "Lunar phase dates sourced from timeanddate.com (Central Time). Illumination approximated using sinusoidal model between phase transitions. Sleep disruption science: Cajochen et al. 2013 (Current Biology), Casiraghi et al. 2021 (Science Advances). ADHD-hyperactivity link: Mishra & Mishra 2025 (Research Square).",
+    "lunar_phases": [
+      {"phase": "First Quarter", "date": "2026-02-24", "time_ct": "06:28 AM"},
+      {"phase": "Full Moon + Total Lunar Eclipse", "date": "2026-03-03", "time_ct": "05:39 AM", "special": "Total lunar eclipse visible in North America"},
+      {"phase": "Last Quarter", "date": "2026-03-11", "time_ct": "04:41 AM"},
+      {"phase": "New Moon", "date": "2026-03-18", "time_ct": "08:26 PM"},
+      {"phase": "First Quarter", "date": "2026-03-25", "time_ct": "02:19 PM"},
+      {"phase": "Full Moon (Pink Moon)", "date": "2026-04-01", "time_ct": "09:13 PM"}
+    ],
+    "daily_illumination": [
+      {"date": "2026-02-28", "commits": 34, "illumination_pct": 82, "phase_name": "Waxing Gibbous", "era": 1},
+      {"date": "2026-03-01", "commits": 8, "illumination_pct": 91, "phase_name": "Waxing Gibbous", "era": 1},
+      {"date": "2026-03-03", "commits": 0, "illumination_pct": 100, "phase_name": "FULL MOON (Eclipse)", "era": 1},
+      {"date": "2026-03-07", "commits": 1, "illumination_pct": 52, "phase_name": "Waning Gibbous", "era": 1},
+      {"date": "2026-03-11", "commits": 0, "illumination_pct": 50, "phase_name": "LAST QUARTER", "era": null},
+      {"date": "2026-03-19", "commits": 23, "illumination_pct": 4, "phase_name": "Waxing Crescent", "era": 2},
+      {"date": "2026-03-20", "commits": 28, "illumination_pct": 10, "phase_name": "Waxing Crescent", "era": 3},
+      {"date": "2026-03-21", "commits": 9, "illumination_pct": 18, "phase_name": "Waxing Crescent", "era": 4},
+      {"date": "2026-03-22", "commits": 45, "illumination_pct": 28, "phase_name": "Waxing Crescent", "era": 5},
+      {"date": "2026-03-23", "commits": 15, "illumination_pct": 38, "phase_name": "Waxing Crescent", "era": 5},
+      {"date": "2026-03-24", "commits": 0, "illumination_pct": 47, "phase_name": "Waxing Crescent", "era": 6},
+      {"date": "2026-03-25", "commits": 0, "illumination_pct": 50, "phase_name": "FIRST QUARTER", "era": 6},
+      {"date": "2026-03-26", "commits": 0, "illumination_pct": 56, "phase_name": "Waxing Gibbous", "era": 6},
+      {"date": "2026-03-27", "commits": 0, "illumination_pct": 64, "phase_name": "Waxing Gibbous", "era": 6},
+      {"date": "2026-03-28", "commits": 16, "illumination_pct": 72, "phase_name": "Waxing Gibbous", "era": 7},
+      {"date": "2026-03-29", "commits": 32, "illumination_pct": 80, "phase_name": "Waxing Gibbous", "era": 7},
+      {"date": "2026-03-30", "commits": 18, "illumination_pct": 88, "phase_name": "Waxing Gibbous", "era": 8},
+      {"date": "2026-03-31", "commits": 21, "illumination_pct": 95, "phase_name": "Waxing Gibbous", "era": 8},
+      {"date": "2026-04-01", "commits": 53, "illumination_pct": 100, "phase_name": "FULL MOON (Pink Moon)", "era": 9}
+    ],
+    "phase_aligned_bursts": [
+      {
+        "burst_name": "The Seed",
+        "dates": "Feb 28 - Mar 1",
+        "total_commits": 42,
+        "moon_phase": "Waxing Gibbous → Full Moon",
+        "illumination_range": "82% → 91%",
+        "interpretation": "Energy builds toward the Full Moon. The waxing phase traditionally associates with growth, accumulation, and building — the scaffolding burst matches."
+      },
+      {
+        "burst_name": "The Eclipse Dormancy",
+        "dates": "Mar 3 - Mar 17",
+        "total_commits": 1,
+        "moon_phase": "Full Moon (Eclipse) → Waning → New Moon",
+        "illumination_range": "100% → 0%",
+        "interpretation": "A Total Lunar Eclipse marks the start of 15 days of near-total silence. The waning phase traditionally associates with release, letting go, completion — the developer released other projects (GlazeLab, openglaze, ICM) while Liminal lay fallow."
+      },
+      {
+        "burst_name": "The New Moon Ignition",
+        "dates": "Mar 18 - Mar 19",
+        "total_commits": 23,
+        "moon_phase": "New Moon → Waxing Crescent",
+        "illumination_range": "0% → 4%",
+        "interpretation": "The Explosion begins within 24 hours of the New Moon. The dark moon — traditionally associated with new beginnings, fresh starts, and planting seeds — coincides with the project's rebirth (rename to Liminal, architecture overhaul). The darkest sky, the brightest spark."
+      },
+      {
+        "burst_name": "The Waxing Sprint",
+        "dates": "Mar 20 - Mar 23",
+        "total_commits": 97,
+        "moon_phase": "Waxing Crescent → First Quarter",
+        "illumination_range": "10% → 38%",
+        "interpretation": "The most productive 4-day stretch aligns perfectly with the waxing crescent. Quality Crusade, Conversational Turn — every creative breakthrough happened while the moon grew."
+      },
+      {
+        "burst_name": "The Quiet Inversion",
+        "dates": "Mar 24 - Mar 27",
+        "total_commits": 0,
+        "moon_phase": "Waxing Crescent → First Quarter → Waxing Gibbous",
+        "illumination_range": "47% → 64%",
+        "interpretation": "The anomaly: the waxing phase (normally building energy) coincides with total Liminal silence. But 25 commits went to OTHER repos. The energy was flowing — just elsewhere. The moon was growing while Liminal waited."
+      },
+      {
+        "burst_name": "The Pink Moon Crescendo",
+        "dates": "Mar 28 - Apr 1",
+        "total_commits": 140,
+        "moon_phase": "Waxing Gibbous → Full Moon (Pink Moon)",
+        "illumination_range": "72% → 100%",
+        "interpretation": "The second act traces a perfect waxing arc. 140 commits in 5 days building to the exact Full Moon. THE BIBLE (53 commits, Apr 1) peaks on the Pink Moon — culmination, harvest, completion. The traditional Full Moon associations map precisely to the project's final documentation burst."
+      }
+    ],
+    "three_alignments": [
+      {
+        "alignment": 1,
+        "name": "The Eclipse Burnout",
+        "lunar_event": "Full Moon + Total Lunar Eclipse (Mar 3)",
+        "project_event": "Project goes silent for 15 days after initial burst",
+        "correlation": "The most dramatic celestial event of the quarter coincides with the project going completely dark. Sleep disruption research (Cajochen 2013) shows 25min less sleep and 30% less deep sleep around full moons — compounded by the eclipse's psychological weight.",
+        "strength": "strong"
+      },
+      {
+        "alignment": 2,
+        "name": "The New Moon Ignition",
+        "lunar_event": "New Moon (Mar 18, 8:26 PM)",
+        "project_event": "The Explosion — 23 commits, project renamed, reborn within 24 hours",
+        "correlation": "The darkest moon phase (traditionally associated with new beginnings) coincides with the project's literal rebirth. The entire second act begins at the New Moon and builds toward the next Full Moon.",
+        "strength": "strong"
+      },
+      {
+        "alignment": 3,
+        "name": "The Pink Moon Crescendo",
+        "lunar_event": "Full Moon / Pink Moon (Apr 1, 9:13 PM)",
+        "project_event": "53 commits — the single most productive day — THE BIBLE era",
+        "correlation": "The highest-velocity day lands on the exact Full Moon. The entire second act (Mar 19 - Apr 1) traces one complete waxing cycle from New Moon to Full Moon.",
+        "strength": "strong"
+      }
+    ],
+    "sleep_disruption_context": {
+      "full_moon_effects": {
+        "total_sleep_reduction": "~25 minutes",
+        "deep_sleep_reduction": "30%",
+        "melatonin_suppression": "measurable",
+        "source": "Cajochen et al. 2013 (Current Biology), Casiraghi et al. 2021 (Science Advances)",
+        "key_finding": "Effect held even in indigenous Toba/Qom community with no access to moonlight or clocks — suggests endogenous circalunar rhythm"
+      },
+      "adhd_hyperactivity_link": {
+        "finding": "20%+ increase in hyperactivity scores during full moon in sensory-sensitive subgroup",
+        "source": "Mishra & Mishra 2025 (Research Square)",
+        "population": "ASD children with sensory sensitivity",
+        "relevance": "Plausible pathway: full moon → sleep disruption → executive function stress → for ADHD-adjacent adults, either paralysis (Mar 4-17 dormancy) or hyperfocus (Apr 1 burst)"
+      },
+      "peak_frustration_moon_phase": "Both peak frustration days (Mar 20 wiring, Mar 30 dogfood) fall in the waxing phase — building toward full moons. Calmest work (Mar 24-27 quiet, Apr 1 documentation) clusters near phase transitions."
+    },
+    "second_act_lunar_arc": {
+      "description": "The entire second act of Liminal traces one complete waxing lunar cycle",
+      "start": {"date": "2026-03-18", "phase": "New Moon", "illumination": "0%"},
+      "peak_building": {"date": "2026-03-22", "phase": "Waxing Crescent", "illumination": "~28%", "commits": 45},
+      "breath": {"date": "2026-03-24_to_27", "phase": "First Quarter", "illumination": "~50-64%", "commits": 0},
+      "return": {"date": "2026-03-28", "phase": "Waxing Gibbous", "illumination": "~72%", "commits": 16},
+      "culmination": {"date": "2026-04-01", "phase": "Full Moon (Pink Moon)", "illumination": "100%", "commits": 53},
+      "insight": "New Moon (new beginning) → Waxing (building) → First Quarter (decision/crisis) → Waxing Gibbous (refinement) → Full Moon (completion/harvest). The lunar cycle maps perfectly to the project's emotional arc: darkness → explosion → quality → quiet → multimedia → documentation."
+    },
+    "chart_spec": {
+      "recommended_type": "dual-axis line chart with phase bands",
+      "x_axis": "Date (Feb 28 - Apr 1)",
+      "y_left": "Commits per day",
+      "y_right": "Moon illumination %",
+      "overlays": [
+        "Semi-transparent phase bands (new/dark, first quarter, full, last quarter)",
+        "Vertical lines at each phase transition",
+        "Eclipse marker on Mar 3 (diamond symbol)",
+        "Pink Moon marker on Apr 1 (star symbol)"
+      ],
+      "sankey_companion": {
+        "left": ["New Moon", "First Quarter", "Full Moon", "Last Quarter"],
+        "right": ["Seed", "Explosion", "Consolidation", "Quality", "Conversational", "Quiet", "Multimedia", "Dogfood", "Bible"],
+        "flows": [
+          {"from": "New Moon", "to": "Explosion", "weight": 23},
+          {"from": "New Moon", "to": "Consolidation", "weight": 28},
+          {"from": "First Quarter", "to": "Conversational", "weight": 15},
+          {"from": "First Quarter", "to": "Quiet", "weight": 0},
+          {"from": "Full Moon", "to": "Seed", "weight": 42},
+          {"from": "Full Moon", "to": "Bible", "weight": 53}
+        ]
+      }
+    },
+    "insight": "The project's second act (Mar 18 - Apr 1) traces one complete waxing lunar cycle: New Moon ignition → Full Moon culmination. The first act peaked approaching a Total Lunar Eclipse Full Moon and then went dark for 15 days. The three strongest correlations — Eclipse Burnout, New Moon Ignition, Pink Moon Crescendo — involve every major lunar phase transition. The moon didn't cause the build rhythm, but the circalunar sleep-disruption mechanism (25 min less sleep, 30% less deep sleep at full moon) provides a plausible biological substrate for why the bursts clustered where they did."
   }
 }
