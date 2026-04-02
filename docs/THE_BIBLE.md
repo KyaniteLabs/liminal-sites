@@ -1,6 +1,6 @@
 # THE BIBLE - Liminal System Documentation
 
-**Version:** 2.1 - Production Ready  
+**Version:** 2.1.0 - Production Ready  
 **Date:** 2026-04-02  
 **Status:** 295 commits, worktree isolation deployed  
 **Branch:** main
