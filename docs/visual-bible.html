@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Bible - Liminal</title>
+    <link rel="stylesheet" href="styles/docs.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .dashboard-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .dashboard-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            color: var(--text-secondary);
+        }
+        .metric-value {
+            font-weight: 600;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .status-list {
+            list-style: none;
+        }
+        .status-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .status-list li:last-child {
+            border-bottom: none;
+        }
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+        .status-complete { background: var(--accent-green); }
+        .status-progress { background: var(--accent-yellow); }
+        .status-planned { background: var(--accent-purple); }
+        .status-blocked { background: var(--accent-red); }
+        .alert {
+            background: rgba(218, 54, 51, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .alert h4 {
+            color: var(--accent-red);
+            margin-bottom: 0.5rem;
+        }
+        .warning {
+            background: rgba(210, 153, 34, 0.1);
+            border: 1px solid var(--accent-yellow);
+        }
+        .warning h4 {
+            color: var(--accent-yellow);
+        }
+        .success {
+            background: rgba(35, 134, 54, 0.1);
+            border: 1px solid var(--accent-green);
+        }
+        .success h4 {
+            color: var(--accent-green);
+        }
+        .task-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .task-column {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 200px;
+        }
+        .task-column h4 {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .task-item {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            border-left: 3px solid transparent;
+        }
+        .task-item.critical { border-left-color: var(--accent-red); }
+        .task-item.high { border-left-color: var(--accent-yellow); }
+        .task-item.medium { border-left-color: var(--accent-blue); }
+        .task-item.low { border-left-color: var(--accent-purple); }
+        .task-id {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        /* Utility classes */
+        .text-green { color: var(--accent-green); }
+        .text-yellow { color: var(--accent-yellow); }
+        .text-purple { color: var(--accent-purple); }
+        .text-cyan { color: var(--accent-cyan); }
+        .text-muted { color: var(--text-muted); }
+        .text-secondary { color: var(--text-secondary); }
+        .bg-green { background: var(--accent-green); }
+        .bg-purple { background: rgba(137, 87, 229, 0.1); border-color: var(--accent-purple); }
+        .mt-1 { margin-top: 1rem; }
+        .mt-sm { margin-top: 0.5rem; }
+        .ml-lg { margin-left: 1.5rem; }
+        .pl-lg { padding-left: 1rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .lh-2 { line-height: 2; }
+        .w-full { width: 100%; }
+        .meta-info { color: var(--text-muted); font-size: 0.875rem; }
+        .footer-note { color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; }
+        @media (max-width: 768px) {
+            .task-board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="navbar-brand">
+            <span>🎨</span>
+            <h1>Liminal</h1>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="architecture.html">Architecture</a></li>
+            <li><a href="cli-reference.html">CLI</a></li>
+            <li><a href="soul-system.html">SOUL</a></li>
+            <li><a href="visual-bible.html" class="active">Visual Bible</a></li>
+        </ul>
+    </nav>
+
+    <div class="breadcrumbs">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <span>Visual Bible</span>
+    </div>
+
+    <main class="container">
+        <section class="section">
+            <h1 class="section-title">📖 Visual Bible</h1>
+            <p class="section-subtitle">Visual representation of THE_BIBLE.md - Real-time system status</p>
+            <p class="meta-info">Last updated: April 1, 2026 | Branch: narrative/liminal-archaeology | <a href="THE_BIBLE.md">📖 THE BIBLE</a></p>
+        </section>
+
+        <!-- Critical Alerts -->
+        <section class="section">
+            <h2 class="section-title">🚨 Critical Items</h2>
+            <div class="alert success">
+                <h4>✅ DGF Phase 3 Complete</h4>
+                <p><strong>31 guardrail tests passing.</strong> Deterministic Guardrails Framework: 3 phases, 17 components, 15 error taxonomy types. Constitution learning active.</p>
+            </div>
+            <div class="alert success">
+                <h4>✅ 18 Subsystems Complete</h4>
+                <p>All 18 major subsystems documented in THE_BIBLE.md and operational. M1-M11 + DGF + TUI + Chat + Swarm + Compost + Aesthetic + Plugins + SOUL + LLM Mode + Routing + Scavenger.</p>
+            </div>
+        </section>
+
+        <!-- Overview Metrics -->
+        <section class="section">
+            <h2 class="section-title">📈 Overview</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>🛡️ DGF Framework</h3>
+                    <div class="metric">
+                        <span class="metric-label">Tests Passing</span>
+                        <span class="metric-value" class="text-green">31 / 31</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" class="w-full bg-green"></div>
+                    </div>
+                    <div class="metric" class="mt-1">
+                        <span class="metric-label">Phase 1</span>
+                        <span class="metric-value" class="text-green">✅ 6/6</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Phase 2</span>
+                        <span class="metric-value" class="text-green">✅ 6/6</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Phase 3</span>
+                        <span class="metric-value" class="text-green">✅ 5/5</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>🛡️ Guardrails M1-M18</h3>
+                    <div class="metric">
+                        <span class="metric-label">M1-M8 (Core)</span>
+                        <span class="metric-value" class="text-green">✅ 8/8</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">M9-M11 (New)</span>
+                        <span class="metric-value" class="text-green">✅ 3/3</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" class="w-full bg-green"></div>
+                    </div>
+                    <div class="metric" class="mt-1">
+                        <span class="metric-label">M12-M18</span>
+                        <span class="metric-value" class="text-purple">⚪ Planned</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>🔧 Subsystems</h3>
+                    <div class="metric">
+                        <span class="metric-label">Total</span>
+                        <span class="metric-value">18</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Active</span>
+                        <span class="metric-value" class="text-green">18/18</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" class="w-full bg-green"></div>
+                    </div>
+                    <div class="metric" class="mt-1">
+                        <span class="metric-label">Core + UI</span>
+                        <span class="metric-value" class="text-green">10</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>📚 Documentation</h3>
+                    <div class="metric">
+                        <span class="metric-label">THE_BIBLE.md</span>
+                        <span class="metric-value" class="text-green">✅ 937 lines</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">18 Subsystems</span>
+                        <span class="metric-value" class="text-green">✅ Complete</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value" class="text-green">✅ Source of Truth</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Status -->
+        <section class="section">
+            <h2 class="section-title">✨ Feature Status</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Status</th>
+                        <th>Files</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Natural Language Interface</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>NaturalInterface.ts</code>, <code>IntentRouter.ts</code></td>
+                        <td>Routes without prefixes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LLMModeAgent</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>LLMModeAgent.ts</code></td>
+                        <td>Planning + reflection</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Meta-Harness</strong></td>
+                        <td><span class="badge badge-success">✅ Online</span></td>
+                        <td><code>MetaHarnessIntegration.ts</code></td>
+                        <td>18-type guardrail arch</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SOUL System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>SOUL.md</code></td>
+                        <td>User-editable personality</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hybrid TUI</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>HarnessTUI.tsx</code></td>
+                        <td>Terminal + browser</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ralph-Wiggum Loop</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>RalphLoop.ts</code></td>
+                        <td>Self-recursive iteration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-Domain Support</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>generators/*</code></td>
+                        <td>p5, Three.js, GLSL, Hydra, Strudel</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tool System</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>src/harness/tools/*</code></td>
+                        <td>7 tools with rate limiting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Harness Tasks M1-M11</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>harness-tasks/*.json</code></td>
+                        <td>All 11 tasks defined</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SemanticValidator (M9)</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>guardrails/SemanticValidator.ts</code></td>
+                        <td>Intent matching via LLM</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AccessibilityGuardrails (M10)</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>guardrails/AccessibilityGuardrails.ts</code></td>
+                        <td>Photosensitivity, WCAG</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RuntimeHealthMonitor (M11)</strong></td>
+                        <td><span class="badge badge-success">✅ Complete</span></td>
+                        <td><code>guardrails/RuntimeHealthMonitor.ts</code></td>
+                        <td>Memory/FPS monitoring</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Swarm System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>swarm/SwarmOrchestrator.ts</code></td>
+                        <td>Multi-agent voting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compost System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>compost/CompostMill.ts</code></td>
+                        <td>Failure learning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Aesthetic System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>aesthetic/AestheticCritic.ts</code></td>
+                        <td>Quality evaluation (M7)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Plugin System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>plugins/PluginLoader.ts</code></td>
+                        <td>Extension architecture</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Routing System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>routing/SmartRouter.ts</code></td>
+                        <td>Intelligent routing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scavenger System</strong></td>
+                        <td><span class="badge badge-success">✅ Active</span></td>
+                        <td><code>scavenger/DNAExtractor.ts</code></td>
+                        <td>Code pattern extraction</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Task Board -->
+        <section class="section">
+            <h2 class="section-title">📋 Task Board (18 Subsystems)</h2>
+            <div class="task-board">
+                <div class="task-column">
+                    <h4>✅ Complete (18/18)</h4>
+                    <div class="task-item critical"><div class="task-id">1</div>Meta-Harness (7 tools)</div>
+                    <div class="task-item critical"><div class="task-id">2</div>Ralph Loop</div>
+                    <div class="task-item critical"><div class="task-id">3</div>Generators (9)</div>
+                    <div class="task-item critical"><div class="task-id">4</div>DGF (3 Phases)</div>
+                    <div class="task-item critical"><div class="task-id">5</div>Memory Systems</div>
+                    <div class="task-item high"><div class="task-id">6</div>LLM Infrastructure</div>
+                    <div class="task-item high"><div class="task-id">7</div>Security & Sandbox</div>
+                    <div class="task-item high"><div class="task-id">8</div>Testing (1741+)</div>
+                    <div class="task-item high"><div class="task-id">9</div>TUI (Terminal)</div>
+                    <div class="task-item high"><div class="task-id">10</div>Chat System</div>
+                    <div class="task-item medium"><div class="task-id">11</div>Swarm System</div>
+                    <div class="task-item medium"><div class="task-id">12</div>Compost System</div>
+                    <div class="task-item medium"><div class="task-id">13</div>Aesthetic System</div>
+                    <div class="task-item medium"><div class="task-id">14</div>Plugin System</div>
+                    <div class="task-item medium"><div class="task-id">15</div>SOUL System</div>
+                    <div class="task-item medium"><div class="task-id">16</div>LLM Mode Agent</div>
+                    <div class="task-item medium"><div class="task-id">17</div>Routing System</div>
+                    <div class="task-item medium"><div class="task-id">18</div>Scavenger System</div>
+                </div>
+                <div class="task-column">
+                    <h4>🟡 In Progress</h4>
+                    <div class="task-item high"><div class="task-id">M12-18</div>Future guardrails</div>
+                </div>
+                <div class="task-column">
+                    <h4>📅 Planned</h4>
+                    <div class="task-item low"><div class="task-id">FUTURE</div>Community plugins</div>
+                </div>
+                <div class="task-column">
+                    <h4>⏸️ Blocked</h4>
+                    <div class="meta-info">None</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What's Missing -->
+        <section class="section">
+            <h2 class="section-title">📊 System Status</h2>
+            
+            <div class="alert success">
+                <h4>✅ All 18 Subsystems Complete</h4>
+                <p>All major subsystems documented in THE_BIBLE.md and operational:</p>
+                <ul class="ml-lg text-secondary">
+                    <li><strong>Core (5):</strong> Meta-Harness, Ralph Loop, Generators, DGF, Memory</li>
+                    <li><strong>UI (3):</strong> TUI, Chat, SOUL</li>
+                    <li><strong>Intelligence (5):</strong> Swarm, Compost, Aesthetic, Routing, Scavenger</li>
+                    <li><strong>Infrastructure (5):</strong> LLM, Security, Testing, Plugins, LLM Mode</li>
+                </ul>
+            </div>
+
+            <div class="alert warning">
+                <h4>⚠️ M12-M18 Future Guardrails</h4>
+                <p>7 guardrails planned for future implementation:</p>
+                <ul class="ml-lg text-secondary">
+                    <li>M12: Version Compatibility</li>
+                    <li>M13: Dependency Health</li>
+                    <li>M14: Resource Prediction</li>
+                    <li>M15-M18: Additional future guardrails</li>
+                </ul>
+            </div>
+
+            <div class="alert" class="bg-purple">
+                <h4 class="text-purple">📖 Source of Truth</h4>
+                <p>Complete documentation at <a href="THE_BIBLE.md" class="text-cyan"><strong>docs/THE_BIBLE.md</strong></a></p>
+                <p class="mt-sm">This dashboard reflects THE_BIBLE. Always refer to THE_BIBLE for complete details.</p>
+            </div>
+        </section>
+
+        <!-- Recent Commits -->
+        <section class="section">
+            <h2 class="section-title">📝 Recent Commits (narrative/liminal-archaeology)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Commit</th>
+                        <th>Message</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>bb67f67</code></td>
+                        <td>docs: Update THE_BIBLE.md and create DEV dashboard for DGF</td>
+                        <td>18 subsystems documented</td>
+                    </tr>
+                    <tr>
+                        <td><code>a066b26</code></td>
+                        <td>docs: Final THE_BIBLE and architecture updates</td>
+                        <td>DGF Phase 3 complete</td>
+                    </tr>
+                    <tr>
+                        <td><code>ee57b32</code></td>
+                        <td>feat: Migrate all generators to TierBasedGenerator</td>
+                        <td>9 generators migrated</td>
+                    </tr>
+                    <tr>
+                        <td><code>f750b7a</code></td>
+                        <td>feat: Implement M9-M11 Guardrails</td>
+                        <td>Semantic, Runtime, Accessibility</td>
+                    </tr>
+                    <tr>
+                        <td><code>acc6dd1</code></td>
+                        <td>feat: Add Model Tier detection</td>
+                        <td>Flagship/Medium/Local/Tiny</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="section">
+            <h2 class="section-title">🎯 Next Steps</h2>
+            <ol class="ml-lg text-secondary lh-2">
+                <li><strong>✅ DGF Phases 1-3 COMPLETE</strong> - 31 tests passing</li>
+                <li><strong>🔄 M12-M18 implementation</strong> - Future guardrails</li>
+                <li><strong>🔄 Constitution persistence</strong> - Optional disk export</li>
+                <li><strong>🔄 Community plugins</strong> - Extract generator plugin API</li>
+            </ol>
+        </section>
+    </main>
+
+    <!-- Quick Reference -->
+        <section class="section">
+            <h2 class="section-title">📖 Quick Reference</h2>
+            <div class="grid-4">
+                <div class="card">
+                    <h3>Documentation</h3>
+                    <ul class="text-secondary text-sm pl-lg">
+                        <li><a href="THE_BIBLE.md">THE_BIBLE.md</a> (1513 lines)</li>
+                        <li>Glossary</li>
+                        <li>Decision Log (ADRs)</li>
+                        <li>Changelog</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Operations</h3>
+                    <ul class="text-secondary text-sm pl-lg">
+                        <li>Troubleshooting Guide</li>
+                        <li>Runbooks</li>
+                        <li>Security Runbook</li>
+                        <li>Observability</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Development</h3>
+                    <ul class="text-secondary text-sm pl-lg">
+                        <li>API Quick Reference</li>
+                        <li>Contributing Guide</li>
+                        <li>Getting Started</li>
+                        <li>Migrations Guide</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Links</h3>
+                    <ul class="text-secondary text-sm pl-lg">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="architecture.html">Architecture</a></li>
+                        <li><a href="cli-reference.html">CLI</a></li>
+                        <li><a href="soul-system.html">SOUL</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>Liminal AI Documentation • <a href="index.html">← Back to Home</a> • <a href="THE_BIBLE.md">📖 THE_BIBLE.md</a></p>
+            <p class="footer-note">
+                1513 lines • 18 subsystems • 31 guardrail tests • Glossary • Troubleshooting • Runbooks • Changelog
+            </p>
+        </footer>
+</body>
+</html>
