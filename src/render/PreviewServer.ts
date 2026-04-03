@@ -24,11 +24,11 @@ import {
   sandboxLimiter,
 } from '../security/RateLimiter.js';
 
-export interface PreviewServerOptions {
+interface PreviewServerOptions {
   galleryDir?: string;
 }
 
-export interface VersionedIteration {
+interface VersionedIteration {
   version: number;
   code: string;
   timestamp?: string;
