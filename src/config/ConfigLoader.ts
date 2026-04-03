@@ -3,6 +3,9 @@ import path from 'path';
 import os from 'os';
 import { env } from '../utils/env.js';
 import { Logger } from '../utils/Logger.js';
+import { SERVICE_DEFAULTS } from '../constants.js';
+import { loadRoleConfig } from './RoleConfig.js';
+import type { ModelRole, ResolvedRoleConfig } from './RoleConfig.js';
 
 /** Routing mode for multi-model generation */
 export type RoutingMode = 'cascade' | 'speculative' | 'ensemble' | 'specialized' | 'thompson';
@@ -293,9 +296,24 @@ export async function getEffectiveConfig(configPath?: string, projectConfigPath?
   return {
     provider,
     baseUrl: env('LLM_BASE_URL') || projectLlm.baseUrl || fileProviderConfig.baseUrl,
-    model: env('LLM_MODEL') || projectLlm.model || fileProviderConfig.model || 'qwen2.5-coder-7b-instruct',
+    model: env('LLM_MODEL') || projectLlm.model || fileProviderConfig.model || SERVICE_DEFAULTS.DEFAULT_MODEL,
     apiKey: env('LLM_API_KEY') || projectLlm.apiKey || fileProviderConfig.apiKey || process.env.OPENAI_API_KEY || process.env.MINIMAX_API_KEY,
   };
 }
 
-
+/**
+ * Load role-based configuration and apply capability overrides to the registry.
+ *
+ * This is the unified entry point for callers that want the new three-role
+ * config system (generator / evaluator / harness). Internally delegates to
+ * `loadRoleConfig()` from RoleConfig which handles file merging, env-var
+ * fallbacks, and CapabilityRegistry.override() calls.
+ *
+ * @param projectDir - Optional project directory (defaults to cwd)
+ * @returns Resolved config keyed by role, with capability overrides already applied
+ */
+export async function getEffectiveRoleConfig(
+  projectDir?: string,
+): Promise<Record<ModelRole, ResolvedRoleConfig>> {
+  return loadRoleConfig(projectDir);
+}
