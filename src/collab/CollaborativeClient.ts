@@ -210,7 +210,7 @@ export class CollaborativeClient {
 
       // Score all outputs from this round
       const outputs = [currentLocal, currentCloud, localRefined, cloudRefined];
-      const scores = await this.scoreOutputs(outputs, domain);
+      const scores = this.scoreOutputs(outputs, domain);
       roundResult.scores = scores;
 
       // Select best output
