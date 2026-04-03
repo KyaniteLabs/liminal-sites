@@ -90,7 +90,12 @@ export class CanvasRecorder {
       }
     } finally {
       // Clean up frames
-      await fs.rm(framesDir, { recursive: true, force: true }).catch(() => {});
+      try {
+        await fs.rm(framesDir, { recursive: true, force: true });
+      } catch (error) {
+        console.error('[CanvasRecorder] Cleanup failed:', error);
+        throw new Error(`CanvasRecorder cleanup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   }
 
