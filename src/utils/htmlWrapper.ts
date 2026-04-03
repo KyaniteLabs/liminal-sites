@@ -17,8 +17,6 @@ import { P5Wrapper } from '../core/wrappers/P5Wrapper.js';
 
 export type Domain = 'p5' | 'shader' | 'three' | 'strudel' | 'hydra' | 'tone' | 'remotion' | 'html' | 'ascii';
 
-const P5_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
-const P5_SOUND_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js';
 const STRUDEL_CDN = 'https://unpkg.com/@strudel/repl@latest';
 const HYDRA_CDN = 'https://unpkg.com/hydra-synth';
 const THREE_CDN = 'https://unpkg.com/three@0.160.0/build/three.module.js';
