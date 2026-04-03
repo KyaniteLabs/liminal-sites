@@ -1,6 +1,6 @@
 // ── Config & Response ──
 
-import { LLMError, LLMTimeoutError, LLMAuthError } from './errors.js';
+import { LLMError, LLMTimeoutError, LLMAuthError, LLMRateLimitError } from './errors.js';
 export { LLMError, LLMTimeoutError, LLMRateLimitError, LLMAuthError } from './errors.js';
 
 import { SERVICE_DEFAULTS } from '../constants.js';
@@ -19,8 +19,8 @@ import { createProvider } from './ProviderFactory.js';
 import { CapabilityRegistry } from './CapabilityRegistry.js';
 import { BaseProvider } from './providers/BaseProvider.js';
 import type { ProviderRequest, ProviderResponse } from './ProviderTypes.js';
-import type { ModelRole, ResolvedRoleConfig } from '../config/RoleConfig.js';
-import { loadRoleConfig } from '../config/RoleConfig.js';
+import type { ModelRole, ResolvedRoleConfig, RoleConfigFile } from '../config/RoleConfig.js';
+import { loadRoleConfig, getFallbacks } from '../config/RoleConfig.js';
 
 export interface LLMConfig {
   /** Base URL for the LLM API (OpenAI-compatible) */
@@ -101,6 +101,10 @@ export class LLMClient {
   private role: ModelRole | undefined;
   /** Cached role config — populated lazily when role is used */
   private static roleConfigs: Record<ModelRole, ResolvedRoleConfig> | null = null;
+  /** Cached raw config file — needed for fallback resolution */
+  private static roleConfigFile: RoleConfigFile | null = null;
+  /** Resolved fallback providers — lazily populated */
+  private fallbackProviders: BaseProvider[] | null = null;
 
   constructor(config?: Partial<LLMConfig>) {
     this.role = config?.role;
@@ -194,16 +198,116 @@ export class LLMClient {
    */
   static async loadRoles(projectDir?: string): Promise<void> {
     try {
-      LLMClient.roleConfigs = await loadRoleConfig(projectDir);
+      const { configs, rawFile } = await LLMClient.loadRoleConfigWithFile(projectDir);
+      LLMClient.roleConfigs = configs;
+      LLMClient.roleConfigFile = rawFile;
     } catch {
       // Role config loading failure is non-fatal — env vars still work
       LLMClient.roleConfigs = null;
+      LLMClient.roleConfigFile = null;
     }
   }
 
   /** Get the role this client was configured for */
   getRole(): ModelRole | undefined {
     return this.role;
+  }
+
+  // ── Fallback provider chain ──
+
+  /**
+   * Load role config and also return the raw file for fallback resolution.
+   */
+  private static async loadRoleConfigWithFile(
+    projectDir?: string,
+  ): Promise<{ configs: Record<ModelRole, ResolvedRoleConfig>; rawFile: RoleConfigFile | null }> {
+    // Re-use the existing loadRoleConfig for resolved configs.
+    // For the raw file, we load it separately here to avoid changing the
+    // public API of loadRoleConfig.
+    const configs = await loadRoleConfig(projectDir);
+
+    // Load raw file for fallbacks
+    let rawFile: RoleConfigFile | null = null;
+    try {
+      const { readFile } = await import('fs/promises');
+      const { join } = await import('path');
+      const { homedir } = await import('os');
+      const userPath = join(homedir(), '.liminal', 'config.json');
+      const content = await readFile(userPath, 'utf-8');
+      rawFile = JSON.parse(content) as RoleConfigFile;
+    } catch {
+      // No config file — fallbacks come from env or are empty
+    }
+
+    return { configs, rawFile };
+  }
+
+  /**
+   * Resolve fallback providers for this client's role.
+   * Returns cached instances if already resolved.
+   */
+  private getFallbackProviders(): BaseProvider[] {
+    if (this.fallbackProviders) {
+      return this.fallbackProviders;
+    }
+
+    if (!this.role) {
+      this.fallbackProviders = [];
+      return this.fallbackProviders;
+    }
+
+    const rawFile = LLMClient.roleConfigFile;
+    const fallbackConfigs = getFallbacks(this.role, rawFile);
+
+    if (fallbackConfigs.length === 0) {
+      this.fallbackProviders = [];
+      return this.fallbackProviders;
+    }
+
+    this.fallbackProviders = fallbackConfigs.map((cfg) => {
+      const providerCfg: import('../llm/ProviderTypes.js').ProviderConfig = {
+        baseUrl: cfg.baseUrl,
+        apiKey: cfg.apiKey,
+        model: cfg.model,
+        temperature: cfg.temperature,
+        maxTokens: cfg.maxTokens,
+        timeout: cfg.timeout,
+      };
+      Logger.info('LLMClient.fallback', `Registered fallback provider: ${cfg.model} @ ${cfg.baseUrl}`);
+      return createProvider(providerCfg);
+    });
+
+    return this.fallbackProviders;
+  }
+
+  /**
+   * Determine if an error is a network/auth issue that warrants fallback.
+   * Do NOT fallback on malformed responses — those are prompt/model issues.
+   */
+  private isFallbackableError(error: unknown): boolean {
+    if (error instanceof LLMTimeoutError) return true;
+    if (error instanceof LLMAuthError) return true;
+    if (error instanceof LLMRateLimitError) return true;
+    if (error instanceof LLMError) {
+      // Network-level errors (connection refused, DNS failure, etc.)
+      const msg = error.message.toLowerCase();
+      if (msg.includes('econnrefused') || msg.includes('enotfound') ||
+          msg.includes('econnreset') || msg.includes('fetch failed') ||
+          msg.includes('network') || msg.includes('socket hang up')) {
+        return true;
+      }
+      // Server errors (5xx)
+      if (error.statusCode && error.statusCode >= 500) return true;
+    }
+    if (error instanceof Error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('econnrefused') || msg.includes('enotfound') ||
+          msg.includes('econnreset') || msg.includes('fetch failed') ||
+          msg.includes('network') || msg.includes('socket hang up')) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // ── Provider delegation ──
@@ -384,6 +488,44 @@ export class LLMClient {
 
         const response = await provider.generate(req);
         return this.mapProviderResponse(response);
+      }).catch(async (primaryError: unknown) => {
+        // Only attempt fallbacks on network/auth errors
+        if (!this.isFallbackableError(primaryError)) {
+          throw primaryError;
+        }
+
+        const fallbacks = this.getFallbackProviders();
+        if (fallbacks.length === 0) {
+          throw primaryError;
+        }
+
+        Logger.info('LLMClient.fallback',
+          `Primary provider failed (${primaryError instanceof Error ? primaryError.message : 'unknown'}), trying ${fallbacks.length} fallback(s)`);
+
+        const req: ProviderRequest = {
+          systemPrompt,
+          userPrompt,
+          temperature: this.config.temperature,
+          maxTokens: this.config.maxTokens,
+          signal,
+        };
+
+        for (const fallback of fallbacks) {
+          try {
+            Logger.info('LLMClient.fallback', `Trying fallback: ${fallback.getModel()}`);
+            const response = await fallback.generate(req);
+            const mapped = this.mapProviderResponse(response);
+            Logger.info('LLMClient.fallback', `Fallback succeeded: ${fallback.getModel()}`);
+            return mapped;
+          } catch (fallbackErr) {
+            Logger.info('LLMClient.fallback',
+              `Fallback ${fallback.getModel()} failed: ${fallbackErr instanceof Error ? fallbackErr.message : 'unknown'}`);
+            continue;
+          }
+        }
+
+        // All fallbacks exhausted — throw original error
+        throw primaryError;
       });
 
       // Write to cache on success
@@ -512,6 +654,41 @@ Rules:
         }
 
         return { text: response.content, success: true as const };
+      }).catch(async (primaryError: unknown) => {
+        if (!this.isFallbackableError(primaryError)) {
+          throw primaryError;
+        }
+
+        const fallbacks = this.getFallbackProviders();
+        if (fallbacks.length === 0) {
+          throw primaryError;
+        }
+
+        Logger.info('LLMClient.fallback',
+          `complete(): primary failed, trying ${fallbacks.length} fallback(s)`);
+
+        const req: ProviderRequest = {
+          systemPrompt,
+          userPrompt: prompt,
+          temperature,
+          maxTokens,
+          signal,
+        };
+
+        for (const fallback of fallbacks) {
+          try {
+            Logger.info('LLMClient.fallback', `complete() trying fallback: ${fallback.getModel()}`);
+            const response = await fallback.generate(req);
+            if (response.success) {
+              Logger.info('LLMClient.fallback', `complete() fallback succeeded: ${fallback.getModel()}`);
+              return { text: response.content, success: true as const };
+            }
+          } catch {
+            continue;
+          }
+        }
+
+        throw primaryError;
       });
 
       return result;
@@ -547,7 +724,7 @@ Rules:
       signal,
     };
 
-    const streamGen = provider.stream(req);
+    let streamGen = provider.stream(req);
 
     try {
       for await (const event of streamGen) {
@@ -558,8 +735,112 @@ Rules:
         }
         // 'thinking' and 'done' events are silently consumed
       }
-    } finally {
-      // AsyncGenerator cleanup is automatic when the loop ends or breaks
+    } catch (primaryError: unknown) {
+      if (!this.isFallbackableError(primaryError)) {
+        throw primaryError;
+      }
+
+      const fallbacks = this.getFallbackProviders();
+      if (fallbacks.length === 0) {
+        throw primaryError;
+      }
+
+      Logger.info('LLMClient.fallback',
+        `stream(): primary failed, trying ${fallbacks.length} fallback(s)`);
+
+      for (const fallback of fallbacks) {
+        try {
+          Logger.info('LLMClient.fallback', `stream() trying fallback: ${fallback.getModel()}`);
+          const fallbackGen = fallback.stream(req);
+          for await (const event of fallbackGen) {
+            if (event.type === 'content') {
+              yield event.content;
+            } else if (event.type === 'error') {
+              break; // Try next fallback
+            }
+          }
+          Logger.info('LLMClient.fallback', `stream() fallback succeeded: ${fallback.getModel()}`);
+          return;
+        } catch {
+          continue;
+        }
+      }
+
+      // All fallbacks exhausted
+      throw primaryError;
+    }
+  }
+
+  /**
+   * Stream tokens with thinking events included
+   * Yields tagged events so callers can distinguish thinking from content
+   */
+  async *streamWithThinking(
+    systemPrompt: string,
+    userPrompt: string,
+    signal?: AbortSignal,
+  ): AsyncGenerator<{ type: 'thinking' | 'content'; content: string }> {
+    // Auto-detect model on first use
+    const resolvedModel = await this.resolveModel();
+    this.syncResolvedModel(resolvedModel);
+
+    const provider = this.getProvider();
+    const req: ProviderRequest = {
+      systemPrompt,
+      userPrompt,
+      temperature: this.config.temperature,
+      maxTokens: this.config.maxTokens,
+      signal,
+    };
+
+    const streamGen = provider.stream(req);
+
+    try {
+      for await (const event of streamGen) {
+        if (event.type === 'thinking') {
+          yield { type: 'thinking' as const, content: event.content };
+        } else if (event.type === 'content') {
+          yield { type: 'content' as const, content: event.content };
+        } else if (event.type === 'error') {
+          throw new LLMError(event.error, provider.name, undefined, false);
+        }
+        // 'done' events are silently consumed
+      }
+    } catch (primaryError: unknown) {
+      if (!this.isFallbackableError(primaryError)) {
+        throw primaryError;
+      }
+
+      const fallbacks = this.getFallbackProviders();
+      if (fallbacks.length === 0) {
+        throw primaryError;
+      }
+
+      Logger.info('LLMClient.fallback',
+        `streamWithThinking(): primary failed, trying ${fallbacks.length} fallback(s)`);
+
+      for (const fallback of fallbacks) {
+        try {
+          Logger.info('LLMClient.fallback', `streamWithThinking() trying fallback: ${fallback.getModel()}`);
+          const fallbackGen = fallback.stream(req);
+          for await (const event of fallbackGen) {
+            if (event.type === 'thinking') {
+              yield { type: 'thinking' as const, content: event.content };
+            } else if (event.type === 'content') {
+              yield { type: 'content' as const, content: event.content };
+            } else if (event.type === 'error') {
+              break; // Try next fallback
+            }
+          }
+          Logger.info('LLMClient.fallback', `streamWithThinking() fallback succeeded: ${fallback.getModel()}`);
+          return;
+        } catch {
+          continue;
+        }
+      }
+
+      // All fallbacks exhausted
+      throw primaryError;
     }
   }
 
