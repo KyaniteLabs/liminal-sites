@@ -1,6 +1,6 @@
 /**
  * Natural Language Interface - Claude Code style
- * 
+ *
  * How Claude Code does it:
  * 1. User types naturally (no prefixes)
  * 2. System token-matches against available commands/tools
@@ -69,7 +69,7 @@ const AGENT_PATTERNS = [
 
 /**
  * Natural Interface - Main entry point
- * 
+ *
  * Pattern from claw-code/Claude Code:
  * - Take raw user input
  * - Route to appropriate handler
@@ -99,7 +99,7 @@ export class NaturalInterface {
     this.tasks = options.tasks;
     this.onStatus = options.onStatus;
     this.onLog = options.onLog;
-    
+
     this.session = {
       id: `session-${Date.now()}`,
       messages: [],
@@ -107,7 +107,7 @@ export class NaturalInterface {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     // Load SOUL.md
     void this.loadSoul();
   }
@@ -125,30 +125,30 @@ export class NaturalInterface {
    * This is the main entry point - like Claude Code's input handling
    */
   async processInput(
-    input: string, 
+    input: string,
     onStream?: (chunk: string, meta?: { type: 'thinking' | 'content'; length?: number }) => void
   ): Promise<NaturalInputResult> {
     const trimmed = input.trim();
-    
+
     // Add user message to history
     this.addMessage('user', trimmed);
-    
+
     // 1. Check for exact slash commands first (habit from other systems)
     if (trimmed.startsWith('/')) {
       return this.handleSlashCommand(trimmed.slice(1));
     }
-    
+
     // 2. Check for explicit command patterns
     const commandMatch = this.matchCommand(trimmed);
     if (commandMatch) {
       return this.executeCommand(commandMatch.command, commandMatch.args);
     }
-    
+
     // 3. Check for agent patterns (code changes)
     if (this.isAgentRequest(trimmed)) {
       return this.handleAgentRequest(trimmed);
     }
-    
+
     // 4. Default: chat mode with personality (streaming if callback provided)
     return this.handleChat(trimmed, onStream);
   }
@@ -190,35 +190,35 @@ export class NaturalInterface {
    */
   private async executeCommand(command: string, args: string[]): Promise<NaturalInputResult> {
     this.onStatus(`Executing ${command}...`);
-    
+
     switch (command) {
       case 'status':
         return this.handleStatus();
-      
+
       case 'tasks':
         return this.handleTasks();
-      
+
       case 'run':
         return this.handleRun(args[0] || '');
-      
+
       case 'preview':
         return this.handlePreview(args[0] || '');
-      
+
       case 'help':
         return this.handleHelp();
-      
+
       case 'clear':
         return { type: 'command', response: '\x1Bc', shouldContinue: true };
-      
+
       case 'exit':
       case 'quit':
       case 'q':
-        return { type: 'command', response: 'Goodbye! 👋', shouldContinue: false };
-      
+        return { type: 'command', response: 'Goodbye! \uD83D\uDC4B', shouldContinue: false };
+
       case 'test':
       case 'diagnostic':
         return this.handleDiagnostic();
-      
+
       default:
         return {
           type: 'ambiguous',
@@ -245,20 +245,20 @@ export class NaturalInterface {
       };
 
       const session = await this.llmAgent.executeTask(task);
-      
+
       // Add to conversation history
       for (const msg of session.messages) {
         if (msg.role === 'assistant' && msg.toolCall) {
-          this.onLog(`→ ${msg.toolCall.tool}`);
+          this.onLog(`\u2192 ${msg.toolCall.tool}`);
         }
       }
 
-      const statusEmoji = session.status === 'success' ? '✅' : 
-                         session.status === 'rolled_back' ? '⏮️' : '❌';
-      
+      const statusEmoji = session.status === 'success' ? '\u2705' :
+                         session.status === 'rolled_back' ? '\u23EE\uFE0F' : '\u274C';
+
       const response = [
         `${statusEmoji} Task ${session.status}`,
-        session.status === 'success' 
+        session.status === 'success'
           ? 'The changes have been applied and verified.'
           : session.status === 'rolled_back'
           ? 'Changes were rolled back due to errors.'
@@ -271,18 +271,18 @@ export class NaturalInterface {
           .map(m => m.toolCall!.tool),
       });
 
-      return { 
-        type: 'agent', 
-        response, 
+      return {
+        type: 'agent',
+        response,
         actionTaken: `Executed ${session.stepCount} steps`,
         shouldContinue: true,
       };
-      
+
     } catch (error) {
       const msg = formatError('Agent', error);
-      return { 
-        type: 'agent', 
-        response: `❌ ${msg}`, 
+      return {
+        type: 'agent',
+        response: `\u274C ${msg}`,
         shouldContinue: true,
       };
     }
@@ -292,7 +292,7 @@ export class NaturalInterface {
    * Handle chat with streaming for real-time response
    */
   private async handleChat(
-    input: string, 
+    input: string,
     onStream?: (chunk: string, meta?: { type: 'thinking' | 'content'; length?: number }) => void
   ): Promise<NaturalInputResult> {
     this.onStatus('Thinking...');
@@ -310,46 +310,37 @@ ${recentHistory}
 
 USER: ${input}
 
-Respond naturally as your personality. If the user asks you to modify code (fix, add, change, etc.) OR says words like "do", "make", "create", "implement" — immediately invoke the agent without asking for confirmation. Only ask "Should I...?" if the request is ambiguous or destructive (delete, overwrite).`;
+Respond naturally as your personality. If the user asks you to modify code (fix, add, change, etc.) OR says words like "do", "make", "create", "implement" \u2014 immediately invoke the agent without asking for confirmation. Only ask "Should I...?" if the request is ambiguous or destructive (delete, overwrite).`;
 
       // Use streaming if callback provided
       if (onStream) {
         let fullResponse = '';
-        let isThinking = false;
         let thinkingContent = '';
+        // ANSI escape codes for dim rendering of thinking events
+        const THINKING_PREFIX = '\x1B[2m\u22B2 '; // dim + unicode triangle prefix
+        const THINKING_SUFFIX = '\x1B[0m';         // reset
 
-        for await (const chunk of this.llmClient.stream(systemPrompt, userPrompt)) {
-          // Handle thinking tags from MiniMax
-          if (chunk.includes('<think>')) {
-            isThinking = true;
-            this.onStatus('🤔 Thinking...');
-            if (onStream) onStream('', { type: 'thinking', length: thinkingContent.length });
-            continue;
-          }
-          
-          if (chunk.includes('</think>')) {
-            isThinking = false;
-            this.onStatus('Generating...');
-            continue;
-          }
-
-          if (isThinking) {
-            thinkingContent += chunk;
+        for await (const event of this.llmClient.streamWithThinking(systemPrompt, userPrompt)) {
+          if (event.type === 'thinking') {
+            thinkingContent += event.content;
             // Show brief thinking indicator
             if (thinkingContent.length % 50 === 0) {
-              this.onStatus(`🤔 Thinking... (${thinkingContent.length} chars)`);
-              if (onStream) onStream('', { type: 'thinking', length: thinkingContent.length });
+              this.onStatus(`\uD83E\uDD14 Thinking... (${thinkingContent.length} chars)`);
             }
-            continue;
+            // Render thinking in dimmed style via callback
+            onStream(`${THINKING_PREFIX}${event.content}${THINKING_SUFFIX}`, {
+              type: 'thinking',
+              length: thinkingContent.length,
+            });
+          } else {
+            fullResponse += event.content;
+            onStream(event.content, { type: 'content' });
           }
-
-          fullResponse += chunk;
-          if (onStream) onStream(chunk, { type: 'content' });
         }
 
-        // Clean up any remaining think tags
+        // Clean up any remaining think tags in the response
         fullResponse = this.cleanThinkTags(fullResponse);
-        
+
         this.addMessage('assistant', fullResponse, { thinking: thinkingContent });
         return { type: 'chat', response: fullResponse, shouldContinue: true };
       }
@@ -370,12 +361,12 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
       this.addMessage('assistant', response);
 
       return { type: 'chat', response, shouldContinue: true };
-      
+
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      return { 
-        type: 'chat', 
-        response: `I'm having trouble thinking right now: ${msg}`, 
+      return {
+        type: 'chat',
+        response: `I'm having trouble thinking right now: ${msg}`,
         shouldContinue: true,
       };
     }
@@ -383,8 +374,8 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
 
   private cleanThinkTags(text: string): string {
     return text
-      .replace(/<think>[\s\S]*?<\/think>/gi, '')
-      .replace(/<think>/gi, '')
+      .replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, '')
+      .replace(/<think\b[^>]*>/gi, '')
       .replace(/<\/think>/gi, '')
       .trim();
   }
@@ -395,7 +386,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     const status = metaHarness.getStatus();
 
     const response = [
-      `Harness: ${status.initialized ? '🟢 Online' : '🔴 Offline'}`,
+      `Harness: ${status.initialized ? '\uD83D\uDFE2 Online' : '\uD83D\uDD34 Offline'}`,
       `Provider: ${status.activeProvider}`,
       `Recent failures: ${status.recentFailures}`,
       `Detected patterns: ${status.detectedPatterns.length}`,
@@ -408,11 +399,11 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     if (this.tasks.length === 0) {
       return { type: 'command', response: 'No pending tasks.', shouldContinue: true };
     }
-    
+
     const response = this.tasks
       .map(t => `  ${t.id.padEnd(8)} ${t.title.slice(0, 40)}`)
       .join('\n');
-    
+
     return { type: 'command', response: `Pending tasks:\n${response}`, shouldContinue: true };
   }
 
@@ -428,9 +419,9 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
 
     this.onStatus(`Running ${taskId}...`);
     const session = await this.harnessAgent.executeTask(task);
-    
-    return { 
-      type: 'command', 
+
+    return {
+      type: 'command',
       response: `Task ${taskId}: ${session.status.toUpperCase()}`,
       shouldContinue: true,
     };
@@ -444,10 +435,10 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     // Route to preview system
     const { browserLauncher } = await import('./preview/BrowserLauncher.js');
     const url = await browserLauncher.previewFile(filePath);
-    
-    return { 
-      type: 'command', 
-      response: `🌐 Opened in browser: ${url}`,
+
+    return {
+      type: 'command',
+      response: `\uD83C\uDF10 Opened in browser: ${url}`,
       shouldContinue: true,
     };
   }
@@ -457,18 +448,18 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
       'I\'m Liminal, your creative coding partner.',
       '',
       'You can talk to me naturally:',
-      '  • "Fix the Tone.js validation" - I\'ll make code changes',
-      '  • "What\'s the status?" - I\'ll show system status',
-      '  • "Generate a particle system" - I\'ll help you create',
+      '  \u2022 "Fix the Tone.js validation" - I\'ll make code changes',
+      '  \u2022 "What\'s the status?" - I\'ll show system status',
+      '  \u2022 "Generate a particle system" - I\'ll help you create',
       '',
       'Or use explicit commands:',
-      '  • status - Show harness status',
-      '  • tasks  - List pending tasks',
-      '  • run <id> - Execute a task',
-      '  • preview <file> - Preview a file',
-      '  • test   - Run diagnostic tests',
-      '  • clear  - Clear screen',
-      '  • exit   - Quit',
+      '  \u2022 status - Show harness status',
+      '  \u2022 tasks  - List pending tasks',
+      '  \u2022 run <id> - Execute a task',
+      '  \u2022 preview <file> - Preview a file',
+      '  \u2022 test   - Run diagnostic tests',
+      '  \u2022 clear  - Clear screen',
+      '  \u2022 exit   - Quit',
     ].join('\n');
 
     return { type: 'command', response, shouldContinue: true };
@@ -476,9 +467,9 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
 
   private async handleDiagnostic(): Promise<NaturalInputResult> {
     this.onStatus('Running diagnostics...');
-    
+
     const tests: string[] = [];
-    
+
     // Test 1: LLM Connection
     try {
       const result = await this.llmClient.complete({
@@ -489,7 +480,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     } catch (e) {
       tests.push(`1. LLM Connection: FAIL (${e instanceof Error ? e.message : String(e)})`);
     }
-    
+
     // Test 2: JSON Parsing
     try {
       const json = '{"test": true, "number": 42}';
@@ -498,21 +489,21 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     } catch {
       tests.push('2. JSON Parsing: FAIL');
     }
-    
+
     // Test 3: Harness Status
     const { metaHarness } = await import('../harness/index.js');
     const status = metaHarness.getStatus();
     tests.push(`3. Harness Online: ${status.initialized ? 'PASS' : 'FAIL'}`);
-    
+
     // Test 4: Context Retention
     const contextTest = await this.llmClient.complete({
       prompt: 'Remember this word: "banana". Confirm you remember it.',
       maxTokens: 20,
     });
     tests.push(`4. Context Retention: ${contextTest.success && contextTest.text.toLowerCase().includes('banana') ? 'PASS' : 'FAIL'}`);
-    
+
     const response = [
-      '📊 HARNESS DIAGNOSTIC RESULTS',
+      '\uD83D\uDCCA HARNESS DIAGNOSTIC RESULTS',
       '',
       ...tests,
       '',
@@ -520,7 +511,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
       `Harness: ${status.activeProvider}`,
       `Failures loaded: ${status.recentFailures}`,
     ].join('\n');
-    
+
     return { type: 'command', response, shouldContinue: true };
   }
 
