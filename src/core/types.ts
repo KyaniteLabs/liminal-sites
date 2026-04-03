@@ -133,3 +133,28 @@ export function scavengerToFragment(extraction: {
 export function isFromOrigin(fragment: CreativeFragment, origin: FragmentOrigin): boolean {
   return fragment.origin === origin;
 }
+
+// ---------------------------------------------------------------------------
+// Re-export composition types for convenience
+// ---------------------------------------------------------------------------
+
+export {
+  DomainType,
+  BlendMode,
+  Layer,
+  LayerConfig,
+  LayerMetadata,
+  DEFAULT_LAYER_CONFIG,
+  Composition,
+  GlobalSettings,
+  AudioSettings,
+  DEFAULT_GLOBAL_SETTINGS,
+  CompositionMetadata,
+  LiminalProject,
+  Export,
+  Import,
+  createLayer,
+  createLayerFromResponse,
+  createComposition,
+  exportProject,
+} from '../composition/types.js';

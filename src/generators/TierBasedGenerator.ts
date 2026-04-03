@@ -8,11 +8,12 @@
  * - TINY: Minimal, direct
  */
 
-import { LLMClient, LLMConfig } from '../llm/LLMClient.js';
+import { LLMClient, LLMConfig, LLMResponse } from '../llm/LLMClient.js';
 import { PromptBuilder } from '../llm/PromptBuilder.js';
 import { detectModelTier, trimContext, type ModelTier } from '../llm/ModelTier.js';
 import { harnessMemory } from '../harness/HarnessMemory.js';
 import { GenerationError } from '../errors/GenerationError.js';
+import { Layer, createLayer, DomainType } from '../composition/types.js';
 
 export interface TierBasedGeneratorOptions {
   signal?: AbortSignal;
@@ -40,6 +41,39 @@ export abstract class TierBasedGenerator {
   }
 
   async generate(prompt: string, options?: TierBasedGeneratorOptions): Promise<string> {
+    const response = await this.generateInternal(prompt, options);
+    return response.code;
+  }
+
+  /**
+   * Generate a Layer with full metadata.
+   * This is the preferred method for layer-based composition.
+   */
+  async generateLayer(prompt: string, options?: TierBasedGeneratorOptions): Promise<Layer> {
+    const response = await this.generateInternal(prompt, options);
+    
+    return createLayer(
+      this.domain as DomainType,
+      response.code,
+      prompt,
+      {
+        generator: this.constructor.name,
+        model: this.llm.getConfig().model || 'unknown',
+        generatedAt: new Date().toISOString(),
+        thinking: response.thinking,
+        recoveredFromThinking: response.recoveredFromThinking,
+        validation: { passed: true },
+      }
+    );
+  }
+
+  /**
+   * Internal generation method that returns full LLMResponse.
+   */
+  private async generateInternal(
+    prompt: string, 
+    options?: TierBasedGeneratorOptions
+  ): Promise<LLMResponse> {
     if (!LLMClient.isConfigured()) {
       throw new GenerationError(`${this.constructor.name}: No LLM configured`, this.domain);
     }
@@ -62,7 +96,7 @@ export abstract class TierBasedGenerator {
     console.log(`[${this.constructor.name}] Using ${this.tier} tier (${budget} token budget)`);
 
     // 4. Generate based on tier capabilities
-    let response;
+    let response: LLMResponse;
     if (this.tier === 'tiny') {
       response = await this.llm.generate(
         '',
@@ -99,7 +133,7 @@ export abstract class TierBasedGenerator {
       code: response.code,
     });
 
-    return response.code;
+    return response;
   }
 
   /**

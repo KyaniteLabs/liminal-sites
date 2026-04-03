@@ -1,5 +1,6 @@
-import { LLMClient, LLMConfig } from '../../llm/LLMClient.js';
+import { LLMClient, LLMConfig, LLMResponse } from '../../llm/LLMClient.js';
 import { GenerationError } from '../../errors/GenerationError.js';
+import { Layer, createLayer } from '../../composition/types.js';
 
 export interface P5GeneratorOptions {
   maxIterations?: number;
@@ -18,6 +19,30 @@ export class P5GeneratorLLM {
   }
 
   async generate(prompt: string, options?: P5GeneratorOptions): Promise<string> {
+    const response = await this.generateInternal(prompt, options);
+    return response.code;
+  }
+
+  /**
+   * Generate a Layer with full metadata.
+   */
+  async generateLayer(prompt: string, options?: P5GeneratorOptions): Promise<Layer> {
+    const response = await this.generateInternal(prompt, options);
+    
+    return createLayer('p5', response.code, prompt, {
+      generator: 'P5GeneratorLLM',
+      model: this.llm.getConfig().model || 'unknown',
+      generatedAt: new Date().toISOString(),
+      thinking: response.thinking,
+      recoveredFromThinking: response.recoveredFromThinking,
+      validation: { passed: true },
+    });
+  }
+
+  /**
+   * Internal generation method.
+   */
+  private async generateInternal(prompt: string, options?: P5GeneratorOptions): Promise<LLMResponse> {
     if (!LLMClient.isConfigured()) {
       throw new GenerationError(
         '[P5Generator] Using LLM-based generation. Ensure LIMINAL_LLM_API_KEY or OPENAI_API_KEY is set.',
@@ -41,7 +66,7 @@ export class P5GeneratorLLM {
       );
     }
 
-    return llmResponse.code;
+    return llmResponse;
   }
 
   /**
