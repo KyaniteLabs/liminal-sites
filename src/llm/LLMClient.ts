@@ -44,6 +44,7 @@ import { CacheManager } from './CacheManager.js';
 import { eventBus, EventTypes } from '../core/EventBus.js';
 import { validateUrl, getAllowedHostsFromEnv, SSRFError } from '../security/UrlValidator.js';
 import { failureLogger } from '../harness/FailureLogger.js';
+import { env } from '../utils/env.js';
 
 export interface LLMConfig {
   /** Base URL for the LLM API (OpenAI-compatible) */
@@ -91,10 +92,6 @@ export interface LLMResponse {
   error?: string;
   fromCache?: boolean;
   isComplete?: boolean;
-}
-
-function env(key: string): string | undefined {
-  return process.env[`LIMINAL_${key}`];
 }
 
 /**
