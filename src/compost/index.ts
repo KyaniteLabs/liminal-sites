@@ -19,14 +19,12 @@ export type {
   DigestStats,
   DigestResult,
   MillStatus,
-  SemanticInput,
   CollisionPair,
-  DigestInputs,
 } from './types.js';
 
 // Defaults
 export { DEFAULT_CONFIG, mergeConfig } from './defaults.js';
-export type { UserCompostConfig } from './defaults.js';
+
 
 // Core
 export { CompostHeap } from './CompostHeap.js';
