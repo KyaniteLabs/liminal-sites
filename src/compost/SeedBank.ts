@@ -106,8 +106,11 @@ export class SeedBank {
     if (this.embeddingEnabled && this.embeddingService) {
       try {
         const embedding = await this.embed(seed.content);
+        // eslint-disable-next-line require-atomic-updates
         seed.embedding = embedding.vector;
+        // eslint-disable-next-line require-atomic-updates
         seed.embeddingModel = embedding.model;
+        // eslint-disable-next-line require-atomic-updates
         seed.embeddedAt = new Date().toISOString();
       } catch (error) {
         Logger.warn(

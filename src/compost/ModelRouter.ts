@@ -123,8 +123,8 @@ function sampleGamma(shape: number, scale: number): number {
   const d = shape - 1 / 3;
   const c = 1 / Math.sqrt(9 * d);
   
-  while (true) {
-    let x = sampleNormal();
+  for (;;) {
+    const x = sampleNormal();
     let v = 1 + c * x;
     
     if (v <= 0) continue;

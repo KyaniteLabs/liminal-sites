@@ -182,7 +182,7 @@ export class ASCIIValidator {
     let artChars = 0;
     let codeChars = 0;
 
-    const artPatterns = /[\|\/\\\-+=*_#@$%&~^:;,.<>{}[\]()`"']+/;
+    const artPatterns = /[|/\\\-+=*_#@$%&~^:;,.<>{}[\]()`"']+/;
     const codePatterns = /(function|const|let|var|if|for|while|class|import|export|return|=|;|\{|\})/;
 
     for (const line of lines) {
