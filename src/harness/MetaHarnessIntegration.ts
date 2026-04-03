@@ -72,7 +72,7 @@ export class MetaHarnessIntegration {
     // Initialize LLM client with harness-specific config (lower temp for code fixes)
     const config = getHarnessProviderConfig() || getActiveProviderConfig();
     if (config) {
-      this.llmClient = new LLMClient(config);
+      this.llmClient = new LLMClient({ ...config, role: 'harness' });
       console.log(`[MetaHarness] LLM client configured: ${config.model} @ ${config.baseUrl} (temp: ${config.temperature})`);
     } else {
       console.warn('[MetaHarness] No LLM provider configured. Set LIMINAL_LLM_BASE_URL or provider API key.');
