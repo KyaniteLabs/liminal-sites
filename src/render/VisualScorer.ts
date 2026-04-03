@@ -313,8 +313,8 @@ export class VisualScorer {
     const halfW = Math.floor(width / 2);
     const halfH = Math.floor(height / 2);
     
-    let quadrantSums = [0, 0, 0, 0];
-    let quadrantCounts = [0, 0, 0, 0];
+    const quadrantSums = [0, 0, 0, 0];
+    const quadrantCounts = [0, 0, 0, 0];
     
     // Sample pixels
     const step = Math.max(1, Math.floor(width / 50));
