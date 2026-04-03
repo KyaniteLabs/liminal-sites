@@ -4,7 +4,7 @@
  * Creates wrapper HTMLs with CDNs + builds gallery
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 
 const MODELS = [
   { key: 'minimax/MiniMax-M2.7', name: 'MiniMax-M2.7', short: 'minimax-m27' },
@@ -229,6 +229,9 @@ function createWrapper(domain: string, code: string): string {
     default: return `<pre>${code}</pre>`;
   }
 }
+
+// Ensure output directory exists
+mkdirSync('landing-live', { recursive: true });
 
 // Build all wrapper files
 console.log('Building wrapper files...\n');

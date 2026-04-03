@@ -4,7 +4,7 @@
  * Addresses: Three.js modules, Hydra API, Strudel imports, iframe permissions
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 
 const MODELS = [
   { key: 'minimax/MiniMax-M2.7', short: 'minimax-m27' },
@@ -304,6 +304,7 @@ for (const model of MODELS) {
       default: wrapper = `<pre>${code}</pre>`;
     }
     
+    mkdirSync('landing-live', { recursive: true });
     writeFileSync(`landing-live/${domain}-${model.short}.html`, wrapper);
     console.log(`✅ Fixed: ${domain}-${model.short}.html`);
   }
