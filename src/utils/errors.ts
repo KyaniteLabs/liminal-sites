@@ -28,33 +28,7 @@ export function formatError(context: string, error: unknown): string {
   return `${context}: ${message}`;
 }
 
-/**
- * Format an error with stack trace when available.
- * 
- * This is useful for detailed error logging where you want the full
- * stack trace for Error objects, but still handle non-Error values
- * gracefully.
- * 
- * @param context - The context where the error occurred
- * @param error - The error value (Error, string, number, or unknown)
- * @returns Formatted error string with stack trace if available
- * 
- * @example
- * ```ts
- * try {
- *   await riskyOperation();
- * } catch (error) {
- *   logger.error(formatErrorWithStack('CriticalFailure', error));
- *   // Output includes full stack trace for Error objects
- * }
- * ```
- */
-export function formatErrorWithStack(context: string, error: unknown): string {
-  if (error instanceof Error && error.stack) {
-    return `${context}: ${error.message}\n${error.stack}`;
-  }
-  return formatError(context, error);
-}
+
 
 /**
  * Format an error with a fallback message for null/undefined values.
