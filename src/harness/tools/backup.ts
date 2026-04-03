@@ -8,6 +8,14 @@ import os from 'node:os';
 
 const BACKUP_DIR = path.join(os.tmpdir(), 'liminal-harness-backups');
 
+/**
+ * Format error message consistently
+ */
+function formatError(context: string, error: unknown): string {
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  return `${context}: ${message}`;
+}
+
 export interface BackupResult {
   success: boolean;
   backupPath?: string;
@@ -70,7 +78,7 @@ export async function restoreBackup(backupPath: string, originalPath?: string): 
     };
   } catch (error) {
     console.error('[Backup] Restore failed:', error);
-    throw new Error(`Backup restore failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(formatError('Backup restore failed', error));
   }
 }
 
@@ -89,9 +97,9 @@ export async function cleanupOldBackups(maxAgeHours: number = 24): Promise<void>
       
       if (now - stats.mtime.getTime() > maxAgeMs) {
         await fs.unlink(filePath).catch((error) => {
-      console.error('[Backup] Failed to delete old backup:', error);
-      throw new Error(`Backup cleanup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    });
+          console.error('[Backup] Failed to delete old backup:', error);
+          throw new Error(formatError('Backup cleanup failed', error));
+        });
       }
     }
   } catch {
