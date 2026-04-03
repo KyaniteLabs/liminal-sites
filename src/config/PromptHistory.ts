@@ -38,11 +38,17 @@ export class PromptHistory {
 
   /**
    * Save history to file
+   * @throws Error if save fails
    */
   private async saveData(data: HistoryData): Promise<void> {
-    const dir = path.dirname(this.filePath);
-    await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(this.filePath, JSON.stringify(data, null, 2));
+    try {
+      const dir = path.dirname(this.filePath);
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(this.filePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to save prompt history: ${message}`);
+    }
   }
 
   /**
