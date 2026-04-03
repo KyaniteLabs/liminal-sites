@@ -19,6 +19,8 @@ export const SERVICE_DEFAULTS = {
   P5_VERSION: '1.9.0',
   /** Three.js CDN version */
   THREE_VERSION: '0.160.0',
+  /** Default LLM model name */
+  DEFAULT_MODEL: 'qwen2.5-coder-7b-instruct',
 } as const;
 
 /** p5.js CDN URL */

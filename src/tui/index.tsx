@@ -18,6 +18,7 @@ import { XRayPanel } from "./components/XRayPanel";
 import { IterationTimeline } from "./components/IterationTimeline";
 import { TransparencyPanel } from "./components/TransparencyPanel";
 import { TransparencyViewer, type ProcessEvent } from "../ui/TransparencyViewer.js";
+import { SERVICE_DEFAULTS } from '../constants.js';
 import { validateImportPath } from '../security/ImportValidator.js';
 
 interface GalleryEntry {
@@ -174,7 +175,7 @@ const App = ({ initialGallery }: { initialGallery: GalleryEntry[] }) => {
     setCurrentIterations([]);
     setPlayerPianoIndex(0);
     addLog("info", `Starting: "${prompt.slice(0, 30)}..."`);
-    const model = process.env.LLM_MODEL || 'qwen2.5-coder-7b-instruct';
+    const model = process.env.LLM_MODEL || SERVICE_DEFAULTS.DEFAULT_MODEL;
     addLog("llm", `→ LLM Request: lmstudio/${model}`);
     addLog("llm", `  Prompt: ~${prompt.length + 2000} chars`);
 
