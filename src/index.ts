@@ -8,7 +8,7 @@
 // Core Ralph-Wiggum Loop components
 import { RalphLoop } from './core/RalphLoop.js';
 import { ValidationError } from './errors/ValidationError.js';
-import { GenerationError } from './errors/GenerationError.js';
+// import { GenerationError } from './errors/GenerationError.js'; // TODO: Create GenerationError.ts
 import { CodeValidator } from './core/CodeValidator.js';
 import { CreativeEvaluator } from './core/CreativeEvaluator.js';
 import { PromiseDetector } from './core/PromiseDetector.js';
@@ -135,11 +135,16 @@ export async function run(prompt: string, options: {
   /** Optional AbortSignal to stop the run (Stop button) */
   signal?: AbortSignal;
   /** Enable swarm generation */
+  /** @deprecated Use swarm.enabled instead */
   useSwarm?: boolean;
   /** Swarm generative mode */
+  /** @deprecated Use swarm.mode instead */
   swarmMode?: string;
   /** Swarm configuration overrides */
+  /** @deprecated Use swarm.config instead */
   swarmConfig?: Record<string, unknown>;
+  /** New nested swarm options (preferred) */
+  swarm?: import('./types/options/SwarmOptions.js').SwarmOptions;
 } = {}): Promise<{
   code: string;
   iterations: number;
@@ -207,6 +212,8 @@ export async function run(prompt: string, options: {
       evaluationCriteria,
       onProgress,
       signal,
+      swarm: options.swarm,
+      // Legacy flat properties (deprecated, use swarm instead)
       useSwarm: options.useSwarm,
       swarmMode: options.swarmMode as import('./swarm/types.js').SwarmMode,
       swarmConfig: options.swarmConfig as Partial<import('./swarm/types.js').SwarmConfig>,

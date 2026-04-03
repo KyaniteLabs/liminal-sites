@@ -96,7 +96,7 @@ export class CompostMill {
       try {
         stat = await fs.stat(inputPath);
       } catch (err) {
-        console.warn(`[CompostMill] Cannot access ${inputPath}:`, err instanceof Error ? err.message : err);
+        Logger.warn('CompostMill', `Cannot access ${inputPath}:`, err instanceof Error ? err.message : err);
         continue;
       }
 
@@ -164,10 +164,10 @@ export class CompostMill {
     const scored = await RetryManager.mapSettled(
       allFragments,
       async (frag) => {
-        const score = await this.fragmentScorer.score(frag);
-        frag.score = score.total;
-        const promote = await this.fragmentScorer.shouldPromote(frag);
-        return promote ? frag : null;
+        const scoreResult = await this.fragmentScorer.score(frag);
+        const fragWithScore = { ...frag, score: scoreResult.total };
+        const promote = await this.fragmentScorer.shouldPromote(fragWithScore);
+        return promote ? fragWithScore : null;
       },
       8, // scoring concurrency (local LLM)
     );
@@ -214,10 +214,10 @@ export class CompostMill {
     const scoredCollisions = await RetryManager.mapSettled(
       collisionFragments,
       async (frag) => {
-        const score = await this.fragmentScorer.score(frag);
-        frag.score = score.total;
-        const promote = await this.fragmentScorer.shouldPromote(frag);
-        return promote ? frag : null;
+        const scoreResult = await this.fragmentScorer.score(frag);
+        const fragWithScore = { ...frag, score: scoreResult.total };
+        const promote = await this.fragmentScorer.shouldPromote(fragWithScore);
+        return promote ? fragWithScore : null;
       },
       5, // collision scoring concurrency (primary LLM, longer creative prompts)
     );

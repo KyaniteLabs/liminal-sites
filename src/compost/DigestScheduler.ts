@@ -22,10 +22,10 @@ export class DigestScheduler {
         Logger.warn('DigestScheduler', 'scheduled digest failed:', err);
       }
       // Reschedule
-      this.timer = setTimeout(run, ms);
+      this.timer = setTimeout(() => void run(), ms);
     };
 
-    this.timer = setTimeout(run, ms);
+    this.timer = setTimeout(() => void run(), ms);
   }
 
   cancel(): void {

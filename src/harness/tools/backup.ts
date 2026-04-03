@@ -5,7 +5,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { formatError } from '../../utils/errors.js';
+import { formatErrorWithFallback } from '../../utils/errors.js';
 
 const BACKUP_DIR = path.join(os.tmpdir(), 'liminal-harness-backups');
 

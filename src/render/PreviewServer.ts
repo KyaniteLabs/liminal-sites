@@ -17,6 +17,7 @@ import { SERVICE_DEFAULTS } from '../constants.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { eventBus } from '../core/EventBus.js';
 import { HTMLWrapper } from '../utils/htmlWrapper.js';
+import { validateCode } from '../utils/validation.js';
 import type { BusEvent } from '../core/EventBus.js';
 import {
   standardLimiter,
@@ -315,12 +316,16 @@ export class PreviewServer {
           }
           await exporter.exportZIP(project, resolvedPath);
         } else if (fmt === 'html') {
-          if (!code || typeof code !== 'string' || code.trim() === '') {
+          try {
+            validateCode(code);
+          } catch {
             return res.status(400).json({ error: 'code is required for html export' });
           }
           await exporter.exportHTML(code, resolvedPath);
         } else {
-          if (!code || typeof code !== 'string' || code.trim() === '') {
+          try {
+            validateCode(code);
+          } catch {
             return res.status(400).json({ error: 'code is required for js export' });
           }
           await exporter.exportJS(code, resolvedPath);
