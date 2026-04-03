@@ -12,6 +12,7 @@ import { LLMClient, LLMConfig } from '../llm/LLMClient.js';
 import { PromptBuilder } from '../llm/PromptBuilder.js';
 import { detectModelTier, trimContext, type ModelTier } from '../llm/ModelTier.js';
 import { harnessMemory } from '../harness/HarnessMemory.js';
+import { GenerationError } from '../errors/GenerationError.js';
 
 export interface TierBasedGeneratorOptions {
   signal?: AbortSignal;
@@ -40,7 +41,7 @@ export abstract class TierBasedGenerator {
 
   async generate(prompt: string, options?: TierBasedGeneratorOptions): Promise<string> {
     if (!LLMClient.isConfigured()) {
-      throw new Error(`${this.constructor.name}: No LLM configured`);
+      throw new GenerationError(`${this.constructor.name}: No LLM configured`, this.domain);
     }
 
     // 1. Load context from markdown files and memory
@@ -79,13 +80,15 @@ export abstract class TierBasedGenerator {
     }
 
     if (!response.code || response.code.trim() === '') {
-      throw new Error(`${this.constructor.name}: LLM returned empty code`);
+      throw new GenerationError(`${this.constructor.name}: LLM returned empty code`, this.domain);
     }
 
     // 5. Domain-specific validation
     const validated = this.validateOutput(response.code);
     if (!validated.valid) {
-      throw new Error(`${this.constructor.name}: ${validated.error}`);
+      throw new GenerationError(`${this.constructor.name}: ${validated.error}`, this.domain, {
+        validationError: validated.error
+      });
     }
 
     // 6. Record to memory
