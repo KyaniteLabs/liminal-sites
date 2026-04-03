@@ -323,7 +323,7 @@ export class HarnessAgent {
     } catch (error) {
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : String(error),
+        error: formatError('HarnessAgent executeCommand', error),
       };
     }
   }

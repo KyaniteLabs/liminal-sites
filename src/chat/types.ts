@@ -118,7 +118,10 @@ export interface CreativeBrief {
   complexity: 'simple' | 'medium' | 'complex';
 
   // Generation strategy
+  /** @deprecated Use swarm.enabled instead */
   useSwarm?: boolean;
+  /** New nested swarm options (preferred over useSwarm) */
+  swarm?: import('../types/options/SwarmOptions.js').SwarmOptions;
   useArchiveLearning?: boolean;
   useCompostSeeds?: boolean;
 }

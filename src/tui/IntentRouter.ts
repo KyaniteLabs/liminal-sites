@@ -11,9 +11,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export type IntentType = 'chat' | 'agent' | 'command' | 'ambiguous';
+type IntentType = 'chat' | 'agent' | 'command' | 'ambiguous';
 
-export interface IntentResult {
+interface IntentResult {
   type: IntentType;
   confidence: number;
   extractedCommand?: string;
@@ -85,7 +85,7 @@ const CHAT_PATTERNS = [
 /**
  * Route natural language input to appropriate handler
  */
-export async function detectIntent(input: string): Promise<IntentResult> {
+async function detectIntent(input: string): Promise<IntentResult> {
   const trimmed = input.trim();
   // Unused: const lower = trimmed.toLowerCase();
   
@@ -189,7 +189,7 @@ When the user asks you to fix, add, or change code, you may invoke tools.`;
  * Check if input is likely a task for the agent (for chat escalation)
  * Synchronous version for quick checks
  */
-export function isLikelyAgentTask(input: string): boolean {
+function isLikelyAgentTask(input: string): boolean {
   // Quick check against agent patterns without full routing
   return AGENT_PATTERNS.some(pattern => pattern.test(input));
 }

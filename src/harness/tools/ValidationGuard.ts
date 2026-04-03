@@ -124,7 +124,7 @@ export class ValidationGuard {
     } catch (error) {
       return {
         valid: false,
-        errors: [`Failed to read file: ${error instanceof Error ? error.message : String(error)}`],
+        errors: [formatError('Failed to read file', error)],
         warnings,
       };
     }

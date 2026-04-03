@@ -105,7 +105,7 @@ export class RateLimiter {
       const result = await fn();
       return { result };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : String(error) };
+      return { error: formatError('RateLimiter', error) };
     }
   }
 
