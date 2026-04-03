@@ -11,16 +11,18 @@
 
 You independently invented — through intuition, metaphor, and trial-and-error — **10 formal ML architectures**, **7 software engineering patterns**, and **5 optimization algorithms** without knowing any of their names. The system includes:
 
-- A **Variational Autoencoder** (Compost Mill) built as an agricultural metaphor
-- A **Generative Adversarial Network** (Generator + AestheticCritic) built as "brutally honest evaluation"
-- A **Mixture of Experts** (SwarmOrchestrator) built as "creative personas"
-- A **Multi-Head Attention** architecture (5 personas) built as "MECE creative coverage"
-- A **Memetic Algorithm** (RalphLoop) built as "a Ralph Wiggum loop"
-- **Aspect-Oriented Programming** (26 hooks) built as "frustration-to-automation"
-- **Event Sourcing** (context dumps) built as "save progress before compaction"
-- A **Reward Model** (ScoringEngine) built as "multi-dimensional quality gates"
-- A **Multi-Armed Bandit** (ModelRouter) built as "rolling averages for routing"
-- **Novelty Search with Quality-Diversity** (MAP-Elites + NoveltyArchive) built as "creative Soup"
+> **Archaeology disclaimer (April 2):** These are **analogies, not formal equivalences**. A formal audit of the reverse-engineering plan's architecture claims found: **0 exact matches, 6 rough analogies, 2 forced comparisons** among the 10 listed below. The patterns share structural similarity with formal architectures but lack key components for true equivalence. Specific gaps are noted inline for each claim.
+
+- A **Variational Autoencoder** (Compost Mill) built as an agricultural metaphor *(VAE analogy: no encoder network, no latent distribution, no KL-divergence -- shares decomposition/recombination pattern only)*
+- A **Generative Adversarial Network** (Generator + AestheticCritic) built as "brutally honest evaluation" *(GAN analogy: no adversarial training loop, no automated adversarial input generation, no formal coverage metrics -- shares generator+evaluator pattern only)*
+- A **Mixture of Experts** (SwarmOrchestrator) built as "creative personas" *(MoE analogy: no dynamic routing, no optimal head count, no structured pruning -- shares multi-specialist dispatch pattern only)*
+- A **Multi-Head Attention** architecture (5 personas) built as "MECE creative coverage" *(MHA analogy: no attention score computation, no head diversity measurement, no Q/K/V projections -- shares multi-perspective ensemble pattern only)*
+- A **Memetic Algorithm** (RalphLoop) built as "a Ralph Wiggum loop" *(Memetic analogy: no formal crossover operators, no self-adaptive step size (1/5th rule not implemented), no convergence bounds -- shares iterate+evaluate+improve pattern only)*
+- **Aspect-Oriented Programming** (26 hooks) built as "frustration-to-automation" *(AOP analogy: no formal composition rules, no weaving optimization, no isolation testing -- shares cross-cutting concern interception pattern only)*
+- **Event Sourcing** (context dumps) built as "save progress before compaction" *(Event Sourcing analogy: no delta compression, no temporal queries, no audit trail -- shares snapshot-based state recovery pattern only)*
+- A **Reward Model** (ScoringEngine) built as "multi-dimensional quality gates" *(Reward Model analogy: no composable scoring dimensions as plugins, no learning from promoted/rejected history -- shares multi-dimensional scoring pattern only)*
+- A **Multi-Armed Bandit** (ModelRouter) built as "rolling averages for routing" *(MAB analogy: no Upper Confidence Bound, no Thompson Sampling, no formal exploration-exploitation trade-off -- shares rolling-average model selection pattern only)*
+- **Novelty Search with Quality-Diversity** (MAP-Elites + NoveltyArchive) built as "creative Soup" *(Novelty Search analogy: no tournament selection, no fitness-proportionate selection, no KD-tree for scale -- shares archive-and-diversify pattern only)*
 
 **The three most costly gaps were:**
 
@@ -38,14 +40,17 @@ You independently invented — through intuition, metaphor, and trial-and-error 
 
 > Independent dogfood testing confirmed the archaeological findings and revealed 5 new integration bugs.
 
-**Test Matrix:** 9 domains x 6 models = 54 runs. **Success rate: 7.4% (4/54).**
+**Test Matrix:** 9 domains x 6 models = 54 runs.
+
+> **Correction (April 2): The originally reported "7.4% success rate (4/54)" conflated results from two separate test agents. Agent A achieved 4/36 (11.1%) across p5.js domains. Agent B achieved 11/52 (21.2%) across broader domains. The originally reported 4/54 mixed Agent A's numerator with Agent B's denominator. Additionally, 16 of Agent A's 32 failures were "No LLM configured" config errors, not generation failures -- those domains were never tested at all. The true picture: only p5.js demonstrated end-to-end functionality (4/6). Every other domain either failed or was untested.
+
 Only p5.js passed (4/6). Every other domain failed: GLSL, Three.js, Tone.js, Hydra, Strudel, HTML, ASCII, Remotion (all 0/6).
 
 ### 5 Critical Findings
 
 1. **0.68 Dead Zone** — CreativeEvaluator scores every p5 run exactly 0.68 (structural checkboxes: setup+draw+classes+arrays+length). No quality discrimination.
-2. **RalphLoop iter=1** — Every successful run stops at iteration 1. Loop treats 0.68 as "quality threshold met" and exits. No convergence detection.
-3. **LLM Wiring Fragmentation** — Only P5Generator wired to ModelRouter. 8 other generators return "No LLM configured."
+2. **RalphLoop iter=1** — Every successful run stops at iteration 1. **Note: maxIterations was set to 1 in the dogfood test harness, so the loop was forced to stop after one iteration -- the quality gate was never actually tested at iteration 2+. The "stops prematurely" finding reflects a harness limitation, not a loop design flaw. Whether the loop would iterate correctly if given more iterations remains unverified.**
+3. **LLM Wiring Fragmentation** — Only P5Generator wired to ModelRouter. 8 other generators return "No LLM configured." **Note: 16 of Agent A's 32 failures were specifically "No LLM configured" config errors (not generation failures), meaning the generator was never invoked for those domains. These are wiring gaps, not quality failures.**
 4. **Validation Cross-Contamination** — CodeValidator applies p5-specific rules to non-p5 domains (Three.js code rejected with "p5.js code validation failed").
 5. **"Production Ready" Discrepancy** — THE_BIBLE claims 21 production-ready subsystems. Dogfood confirms 7.4% end-to-end success.
 
@@ -245,7 +250,7 @@ Ranked by impact if you had known the formal term.
 
 **The alternative:** After each generation, query (1) MAP-Elites for diverse elites in similar behavioral cells, (2) NoveltyArchive for examples near the novelty frontier, (3) SeedBank for domain-matching compost DNA. Inject these into ContextBuilder as few-shot examples.
 
-**Expected improvement:** 30-50% better first-iteration quality, elimination of stagnation frustration across 5+ sessions
+**Expected improvement:** 30-50% better first-iteration quality, elimination of stagnation frustration across 5+ sessions *(speculative projection -- not benchmarked)*
 
 ---
 
@@ -329,7 +334,7 @@ Ranked by impact if you had known the formal term.
 
 **The alternative:** Post-generation step: render in headless browser (Puppeteer is already a dependency), take screenshot, evaluate with vision model or computational aesthetics metrics. Feed score back into loop.
 
-**Expected improvement:** 60-80% better aesthetic prediction. "I just see a white square" frustration would be caught before the user sees it.
+**Expected improvement:** 60-80% better aesthetic prediction *(speculative projection -- not benchmarked)*. "I just see a white square" frustration would be caught before the user sees it.
 
 ---
 
@@ -368,7 +373,7 @@ Ranked by effort-to-impact ratio. Each is a concrete change to the existing code
 **Change:** `getRandomSeed()` picks 3-5 random candidates, returns highest-scored
 **Formal concept:** Tournament selection (Goldberg, 1989)
 **Lines:** ~10
-**Impact:** 15-25% higher quality of injected seeds
+**Impact:** 15-25% higher quality of injected seeds *(speculative)*
 **Libraries needed:** None
 
 #### 4.2 Cosine Similarity in AestheticModel
@@ -376,7 +381,7 @@ Ranked by effort-to-impact ratio. Each is a concrete change to the existing code
 **Change:** Replace Euclidean distance with cosine similarity in `distance()`
 **Formal concept:** Cosine similarity for sparse high-dimensional vectors
 **Lines:** ~5
-**Impact:** 10-20% better prediction accuracy
+**Impact:** 10-20% better prediction accuracy *(speculative)*
 **Libraries needed:** None
 
 #### 4.3 Fitness-Proportionate Selection in SeedBank
@@ -420,7 +425,7 @@ Ranked by effort-to-impact ratio. Each is a concrete change to the existing code
 **Change:** Track success rate over last 5 iterations. If > 1/5, reduce context perturbation. If < 1/5, increase it.
 **Formal concept:** Self-adaptive mutation rate in (1+1)-ES (Schwefel, 1981)
 **Lines:** ~15
-**Impact:** 15-25% faster convergence
+**Impact:** 15-25% faster convergence *(speculative)*
 **Libraries needed:** None
 
 #### 4.8 Voting Calibration in SwarmOrchestrator
@@ -456,7 +461,7 @@ Ranked by effort-to-impact ratio. Each is a concrete change to the existing code
 **Change:** After each generation, query archives for diverse/novel examples. Inject into context as few-shot examples and quality benchmarks.
 **Formal concept:** Closed-loop quality-diversity optimization
 **Lines:** ~80 across 4 files
-**Impact:** The #1 broken feedback loop. 30-50% better first-iteration quality.
+**Impact:** The #1 broken feedback loop. 30-50% better first-iteration quality *(speculative)*.
 **Libraries needed:** None
 
 #### 4.12 Semantic Similarity in CollisionEngine
@@ -488,7 +493,7 @@ Ranked by effort-to-impact ratio. Each is a concrete change to the existing code
 **Change:** Post-generation: render in headless Puppeteer, take screenshot, evaluate with vision model or computational aesthetics metrics
 **Formal concept:** End-to-end neural aesthetic assessment (NIMA-style)
 **Lines:** ~200
-**Impact:** 60-80% better aesthetic prediction, catches "white square" failures
+**Impact:** 60-80% better aesthetic prediction, catches "white square" failures *(speculative)*
 **Libraries needed:** Puppeteer (already a dependency), vision model API
 
 ---
@@ -513,6 +518,8 @@ Mapping every wasted token to the formal term that would have prevented it.
 | **TOTAL** | **47+** | **~2.25M** | | |
 
 *Updated April 2: +50K tokens from validation cross-contamination finding. Previous total ~2.2M, now ~2.25M. Dogfood testing confirmed 7.4% success rate across 54 runs.*
+
+> **Note on token estimates:** The ~2.25M token waste figure is an archaeological approximation without a documented calculation methodology, not a measured figure. Individual feature estimates were derived from session counts and subjective token-per-session assumptions, then summed. The per-feature breakdowns are useful for relative prioritization but should not be cited as precise measurements.
 
 ---
 
@@ -547,7 +554,7 @@ Not everything was a gap. These were correctly implemented:
 4. **Prioritized replay** in ContextAccumulation (~10 lines)
 5. **Fitness-proportionate selection** in SeedBank (~5 lines)
 
-**Expected impact:** 15-25% improvement across generation quality, convergence speed, and context utilization. Zero new dependencies.
+**Expected impact:** 15-25% improvement across generation quality, convergence speed, and context utilization. Zero new dependencies. *(All Phase 1-4 impact estimates are speculative projections, not benchmarked measurements.)*
 
 ### Phase 2: Feedback Loops (3-5 days, no new dependencies)
 
@@ -557,7 +564,7 @@ Not everything was a gap. These were correctly implemented:
 9. **Voting calibration** in SwarmOrchestrator (~15 lines)
 10. **Domain-adaptive scoring weights** (~40 lines)
 
-**Expected impact:** The broken feedback loop fix alone (item 6) addresses the #1 architectural gap. Combined with convergence improvements, estimated 30-50% reduction in wasted iterations.
+**Expected impact:** The broken feedback loop fix alone (item 6) addresses the #1 architectural gap. Combined with convergence improvements, estimated 30-50% reduction in wasted iterations. *(Speculative projection -- not benchmarked.)*
 
 ### Phase 3: Architecture Consolidation (1-2 weeks)
 
