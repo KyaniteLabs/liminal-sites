@@ -102,8 +102,10 @@ export interface LoopOptions {
   visualMappingParams?: Record<string, unknown>;
   /** Enable LIR-based evaluation — parses generated code into structured tokens for critics and evaluator */
   lirEnabled?: boolean;
-  /** Disable iteration extension (for testing). When true, maxIterations is strictly enforced. */
+  /** Disable iteration extension (for testing). When true, maxIteration is strictly enforced. */
   _disableIterationExtension?: boolean;
+  /** Debug and diagnostics configuration */
+  debug?: DebugOptions;
 }
 
 export interface LoopResult {
@@ -157,6 +159,7 @@ export interface NormalizedLoopOptions extends LoopOptions {
   visualMappingParams?: Record<string, unknown>;
   lirEnabled: boolean;
   _disableIterationExtension: boolean;
+  debug: Required<DebugOptions>;
 }
 
 /**
