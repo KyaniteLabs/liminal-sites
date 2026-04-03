@@ -128,9 +128,6 @@ export interface EffectiveConfig {
   apiKey?: string;
 }
 
-/** Routing mode for dual-model architecture */
-export type RoutingMode = 'cascade' | 'speculative' | 'ensemble' | 'specialized';
-
 /** Individual model configuration */
 export interface ModelConfig {
   /** @deprecated Provider is no longer used - baseUrl determines the endpoint */
