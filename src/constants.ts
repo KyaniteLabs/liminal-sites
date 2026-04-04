@@ -20,7 +20,7 @@ export const SERVICE_DEFAULTS = {
   /** Three.js CDN version */
   THREE_VERSION: '0.160.0',
   /** Default LLM model name */
-  DEFAULT_MODEL: 'qwen2.5-coder-7b-instruct',
+  DEFAULT_MODEL: 'auto',
 } as const;
 
 /** p5.js CDN URL */

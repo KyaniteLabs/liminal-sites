@@ -37,7 +37,7 @@ export interface QualityPrediction {
   predictedScore: number;
   /** Confidence in the prediction in the range [0, 1]. */
   confidence: number;
-  /** Recommended model identifier (e.g. "local-qwen", "cloud-minimax"). */
+  /** Recommended model tier identifier ("local", "cloud", or "premium"). */
   recommendedModel: string;
   /** Human-readable explanation of the prediction rationale. */
   reasoning: string;
@@ -122,8 +122,8 @@ const PREVIOUS_SCORE_BUMP = 0.08;
  *   previousScore: 0.85,
  *   modelTier: 'local',
  * });
- * // prediction.recommendedModel === 'local-qwen'
- * predictor.recordOutcome('local-qwen', 'code', 0.88);
+ * // prediction.recommendedModel === 'local'
+ * predictor.recordOutcome('local', 'code', 0.88);
  * ```
  */
 export class QualityPredictor {
@@ -328,7 +328,7 @@ export class QualityPredictor {
 
   /**
    * Derive the model tier from a model identifier string.
-   * @param modelId - Full model identifier (e.g. "local-qwen").
+   * @param modelId - Model tier identifier (e.g. "local", "cloud").
    * @returns The tier label, or null if unrecognised.
    */
   private tierFromModel(
