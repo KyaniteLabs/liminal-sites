@@ -154,7 +154,8 @@ export class TextGenerativeGenerator extends TierBasedGenerator {
 
     // Filter Unicode if requested
     if (options?.unicode === false) {
-      lines = lines.map(line => line.replace(/[^\x00-\x7F]/g, ''));
+      // Filter to ASCII range (1-127), remove null bytes
+      lines = lines.map(line => line.replace(/[\u0080-\uFFFF]/g, '').replace(/\0/g, ''));
     }
 
     return lines.join('\n');

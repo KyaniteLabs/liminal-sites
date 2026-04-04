@@ -130,6 +130,8 @@ export class StrudelAdapter implements LayerAdapter {
       // Evaluate the pattern in the Strudel REPL
       strudel.repl.evaluate(layer.code).then((result) => {
         pattern = result.pattern;
+      }).catch((err) => {
+        Logger.error('StrudelAdapter', 'Pattern evaluation failed:', err);
       });
     } catch (error) {
       Logger.error('StrudelAdapter', 'Error executing Strudel code:', error);
@@ -152,7 +154,7 @@ export class StrudelAdapter implements LayerAdapter {
     startBtn?.addEventListener('click', () => {
       instanceInfo.isPlaying = true;
       // Strudel auto-starts on evaluate, but we can re-evaluate if needed
-      strudel.repl.evaluate(layer.code);
+      void strudel.repl.evaluate(layer.code);
     });
 
     stopBtn?.addEventListener('click', () => {

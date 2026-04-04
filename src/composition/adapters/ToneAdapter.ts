@@ -126,7 +126,7 @@ export class ToneAdapter implements LayerAdapter {
     const stopBtn = document.getElementById(`tone-stop-${layer.id}`);
     
     startBtn?.addEventListener('click', () => {
-      Tone.start();
+      void Tone.start();
       Tone.Transport.start();
     });
     
