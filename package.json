@@ -105,10 +105,6 @@
     "unified": "^11.0.5",
     "zod": "^4.3.6"
   },
-  "overrides": {
-    "loader-utils": ">=2.0.4",
-    "flatted": ">=3.4.0"
-  },
   "engines": {
     "node": ">=18.0.0"
   },
@@ -126,6 +122,15 @@
       "esbuild",
       "protobufjs",
       "puppeteer"
-    ]
+    ],
+    "overrides": {
+      "loader-utils": "2.0.4",
+      "flatted": "3.4.2",
+      "picomatch": "2.3.2",
+      "brace-expansion": "2.0.3",
+      "lodash": "4.18.0",
+      "cookie": "0.7.0",
+      "path-to-regexp": "8.4.0"
+    }
   }
 }

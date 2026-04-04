@@ -77,6 +77,14 @@ export interface LLMResponse {
   error?: string;
   fromCache?: boolean;
   isComplete?: boolean;
+  /** Trace ID linking to a ReasoningCapture file */
+  reasoningTraceId?: string;
+  /** Source of thinking extraction (think_tags, narrative, provider_api, none) */
+  thinkingSource?: string;
+  /** Reasoning quality score 0-1 from ReasoningCapture */
+  reasoningQuality?: number;
+  /** Pattern types detected in reasoning */
+  detectedPatterns?: string[];
 }
 
 /**
@@ -537,7 +545,13 @@ export class LLMClient {
         provider: this.detectProvider(),
         model: this.config.model,
         success: true,
-        latencyMs: Date.now() - llmStartTime
+        latencyMs: Date.now() - llmStartTime,
+        reasoningTraceId: result.reasoningTraceId,
+        thinkingSource: result.thinkingSource,
+        reasoningQuality: result.reasoningQuality,
+        reasoningLength: result.reasoning?.length ?? result.thinking?.length,
+        detectedPatterns: result.detectedPatterns,
+        recoveredFromThinking: result.recoveredFromThinking,
       });
 
       return result;
