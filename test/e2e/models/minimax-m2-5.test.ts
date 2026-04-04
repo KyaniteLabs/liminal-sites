@@ -7,7 +7,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { run } from '../../../src/index.js';
 
 const MODEL_CONFIG = {
-  baseUrl: 'https://api.minimax.io/v1',
+  baseUrl: 'https://api.minimaxi.com/v1',
   model: 'MiniMax-M2.5',
 };
 

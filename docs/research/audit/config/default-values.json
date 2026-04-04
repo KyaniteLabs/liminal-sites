@@ -19,7 +19,7 @@
       "LOCAL_LLM_URL": "http://localhost:1234/v1",
       "OLLAMA_URL": "http://localhost:11434",
       "REASONING_URL": "http://localhost:8000",
-      "MINIMAX_URL": "https://api.minimax.io/v1",
+      "MINIMAX_URL": "https://api.minimaxi.com/v1",
       "P5_VERSION": "1.9.0",
       "THREE_VERSION": "0.160.0"
     },
