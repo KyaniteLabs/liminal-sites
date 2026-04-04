@@ -156,6 +156,7 @@ function gammaRandom(shape: number, scale: number): number {
   const d = shape - 1 / 3;
   const c = 1 / Math.sqrt(9 * d);
 
+  // eslint-disable-next-line no-constant-condition -- rejection sampling loop (Marsaglia & Tsang)
   while (true) {
     let x: number;
     let v: number;
