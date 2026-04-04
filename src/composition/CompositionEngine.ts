@@ -5,9 +5,10 @@
  * and exports to various formats.
  */
 
-import { Layer, Composition, DomainType, GlobalSettings, DEFAULT_GLOBAL_SETTINGS, LiminalProject, exportProject } from './types.js';
+import { Layer, Composition, DomainType, GlobalSettings, DEFAULT_GLOBAL_SETTINGS, LiminalProject, Animation, LayerMask } from './types.js';
 import { LayerManager } from './LayerManager.js';
 import { LayerAdapter, Import } from './adapters/index.js';
+import { LayerMaskManager } from './LayerMask.js';
 
 export interface CompositionEngineOptions {
   /** Container element for rendering */
@@ -81,6 +82,7 @@ export class StateManager {
 
 export class CompositionEngine {
   private layerManager: LayerManager;
+  private maskManager: LayerMaskManager;
   private adapters = new Map<DomainType, LayerAdapter>();
   private settings: GlobalSettings;
   private container?: HTMLElement;
@@ -95,6 +97,8 @@ export class CompositionEngine {
     this.layerManager = new LayerManager({
       onChange: () => this.handleLayersChange(),
     });
+    
+    this.maskManager = new LayerMaskManager();
   }
 
   /**
@@ -109,6 +113,13 @@ export class CompositionEngine {
    */
   getLayerManager(): LayerManager {
     return this.layerManager;
+  }
+
+  /**
+   * Get the mask manager.
+   */
+  getMaskManager(): LayerMaskManager {
+    return this.maskManager;
   }
 
   /**
@@ -261,30 +272,57 @@ export class CompositionEngine {
 
   /**
    * Export composition to Liminal project format.
+   * @deprecated Use ProjectSerializer.exportProject() instead
    */
-  exportProject(name: string): LiminalProject {
-    const composition: Composition = {
-      id: `comp_${Date.now()}`,
-      layers: this.layerManager.exportLayers(),
-      globalSettings: this.settings,
-      metadata: {
-        name,
-        createdAt: new Date().toISOString(),
-        modifiedAt: new Date().toISOString(),
-        tags: [],
-      },
-    };
-    
-    return exportProject(composition);
+  exportProject(_name: string): LiminalProject {
+    // Use dynamic import to avoid circular dependency issues
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { ProjectSerializer } = require('./ProjectSerializer.js');
+    const serializer = new ProjectSerializer();
+    return serializer.exportProject(this, { includeAssets: true });
   }
 
   /**
    * Import from Liminal project format.
+   * @deprecated Use ProjectSerializer.importProject() instead
    */
   importProject(project: LiminalProject): void {
-    this.cleanup();
-    this.layerManager.importLayers(project.composition.layers);
-    this.settings = { ...DEFAULT_GLOBAL_SETTINGS, ...project.composition.globalSettings };
+    // Use dynamic import to avoid circular dependency issues
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { ProjectSerializer } = require('./ProjectSerializer.js');
+    const serializer = new ProjectSerializer();
+    serializer.importProject(project, this).catch((err: Error) => {
+      console.error('Import failed:', err);
+    });
+  }
+
+  /**
+   * Get all animations from the keyframe animation system.
+   * This is a placeholder - animations should be managed by the caller.
+   */
+  getAnimations(): Animation[] {
+    return [];
+  }
+
+  /**
+   * Get all masks from the mask manager.
+   */
+  getMasks(): LayerMask[] {
+    return this.maskManager.getAllMasks();
+  }
+
+  /**
+   * Export layers for serialization.
+   */
+  exportLayers(): Layer[] {
+    return this.layerManager.exportLayers();
+  }
+
+  /**
+   * Import layers from serialized data.
+   */
+  importLayers(layers: Layer[]): void {
+    this.layerManager.importLayers(layers);
   }
 
   /**
