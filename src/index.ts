@@ -159,6 +159,8 @@ export async function run(prompt: string, options: {
   htmlPath?: string;
   jsPath?: string;
   zipPath?: string;
+  thinking?: string;
+  model?: string;
 }> {
   const startTime = Date.now();
 
@@ -288,17 +290,17 @@ export async function run(prompt: string, options: {
     const duration = Date.now() - startTime;
 
     // Report SUCCESS to Meta-Harness for analysis
-    // NOTE: Generators also report individually with thinking traces
-    // This provides the overall loop-level view
+    // NOTE: RalphLoop already reports with thinking, but we also report here
+    // to ensure the top-level run() result is captured
     if (process.env.NODE_ENV !== 'test') {
       await metaHarness.onGenerationComplete({
         success: true,
-        model: 'local',
+        model: loopResult.model || 'local',
         domain: 'unknown', // Generators report their own domain with thinking
         prompt: prompt,
         code: loopResult.code,
         duration: duration,
-        // Note: Individual generator thinking is captured by TierBasedGenerator
+        thinking: loopResult.thinking,
       });
     }
 
@@ -315,7 +317,9 @@ export async function run(prompt: string, options: {
       prompt,
       htmlPath,
       jsPath,
-      zipPath
+      zipPath,
+      thinking: loopResult.thinking,
+      model: loopResult.model,
     };
 
   } catch (error) {

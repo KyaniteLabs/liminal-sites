@@ -14,7 +14,7 @@
 
 import { Domain } from '../types/domains.js';
 import { generatorRegistry } from '../generators/GeneratorRegistry.js';
-import type { GeneratorEntry } from '../generators/GeneratorRegistry.js';
+import type { GeneratorEntry, GeneratorResult as GeneratorResultType } from '../generators/GeneratorRegistry.js';
 import { registerAllGenerators } from '../generators/registerGenerators.js';
 import { Gallery } from '../gallery/Gallery.js';
 import { CollaborationEngine, type PhaseUpdate } from '../collab/CollaborationEngine.js';
@@ -28,6 +28,37 @@ type DispatchResult = { entry: GeneratorEntry; confidence: number } | null;
 
 export interface GenerationResult {
   code: string;
+  thinking?: string;
+  model?: string;
+  recoveredFromThinking?: boolean;
+}
+
+/**
+ * Normalize generator result to GenerationResult format.
+ * Handles backward compatibility with string returns.
+ */
+function normalizeGeneratorResult(
+  result: string | GeneratorResultType
+): GenerationResult {
+  if (typeof result === 'string') {
+    return { code: result };
+  }
+  return {
+    code: result.code,
+    thinking: result.thinking,
+    model: result.model,
+    recoveredFromThinking: result.recoveredFromThinking,
+  };
+}
+
+/**
+ * Extracts code string from generator result (handles both string and GeneratorResult).
+ */
+function extractCode(result: string | GeneratorResultType): string {
+  if (typeof result === 'string') {
+    return result;
+  }
+  return result.code;
 }
 
 /**
@@ -44,13 +75,13 @@ async function collabLLMCaller(
     return normalizedOptions.collabConfig.callLLM(prompt, _systemPrompt);
   }
   if (dispatched?.entry.name === 'llm') {
-    const result = dispatched.entry.generate(prompt, {});
-    return typeof result === 'string' ? result : await result;
+    const result = await dispatched.entry.generate(prompt, {});
+    return extractCode(result);
   }
   const { P5GeneratorLLM } = await import('../generators/p5/P5GeneratorLLM.js');
   const generator = new P5GeneratorLLM();
-  const result = generator.generate(prompt);
-  return typeof result === 'string' ? result : await result;
+  const result = await generator.generate(prompt);
+  return extractCode(result);
 }
 
 /**
@@ -88,14 +119,14 @@ export class GenerationOrchestrator {
 
     if (dispatched) {
       const genPrompt = dispatched.entry.name === 'llm' ? usedPrompt : loadedPrompt;
-      const code = await dispatched.entry.generate(genPrompt);
-      return { code };
+      const result = await dispatched.entry.generate(genPrompt);
+      return normalizeGeneratorResult(result);
     }
 
     const { P5GeneratorLLM } = await import('../generators/p5/P5GeneratorLLM.js');
     const generator = new P5GeneratorLLM(undefined, { bypassCache });
-    const code = await generator.generate(usedPrompt, { bypassCache });
-    return { code };
+    const result = await generator.generate(usedPrompt, { bypassCache });
+    return normalizeGeneratorResult(result);
   }
 
   private async generateWithSwarm(prompt: string): Promise<GenerationResult> {
