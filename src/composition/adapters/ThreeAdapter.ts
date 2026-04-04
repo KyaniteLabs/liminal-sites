@@ -8,7 +8,7 @@
  * @example
  * ```typescript
  * const adapter = new ThreeAdapter();
- * await adapter.initialize();
+ * await adapter.async initialize();
  * const instance = adapter.render(layer, container, context);
  * const exports = adapter.getExports(layer);
  * adapter.destroy(layer, instance);
@@ -105,12 +105,12 @@ export class ThreeAdapter implements LayerAdapter {
    * @param container - DOM element to render into
    * @param context - Optional render context with settings and state
    * @returns The Three.js instance with scene, camera, renderer, and objects
-   * @throws Error if Three.js is not loaded (call initialize() first)
+   * @throws Error if Three.js is not loaded (call async initialize() first)
    */
   render(layer: Layer, container: HTMLElement, context?: RenderContext): ThreeInstance {
     const THREE = this.threeModule;
     if (!THREE) {
-      throw new Error('Three.js not loaded. Call initialize() first.');
+      throw new Error('Three.js not loaded. Call async initialize() first.');
     }
 
     // Create canvas container

@@ -56,7 +56,7 @@ export class ToneAdapter implements LayerAdapter {
   render(layer: Layer, container: HTMLElement, context?: RenderContext): unknown {
     const Tone = this.toneModule;
     if (!Tone) {
-      throw new Error('Tone.js not loaded. Call initialize() first.');
+      throw new Error('Tone.js not loaded. Call async initialize() first.');
     }
 
     // Create controls container

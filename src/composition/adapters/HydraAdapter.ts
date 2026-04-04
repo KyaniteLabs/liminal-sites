@@ -78,7 +78,7 @@ export class HydraAdapter implements LayerAdapter {
   render(layer: Layer, container: HTMLElement, context?: RenderContext): HydraSynth {
     const Hydra = this.hydraModule?.default;
     if (!Hydra) {
-      throw new Error('Hydra not loaded. Call initialize() first.');
+      throw new Error('Hydra not loaded. Call async initialize() first.');
     }
 
     // Create canvas element
