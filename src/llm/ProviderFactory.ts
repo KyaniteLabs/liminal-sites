@@ -12,8 +12,9 @@ import { AnthropicProvider } from './providers/AnthropicProvider.js';
 import { OllamaProvider } from './providers/OllamaProvider.js';
 import { OpenRouterProvider } from './providers/OpenRouterProvider.js';
 import { GoogleProvider } from './providers/GoogleProvider.js';
+import { MiniMaxProvider } from './providers/MiniMaxProvider.js';
 
-export type ProviderName = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'google' | 'custom';
+export type ProviderName = 'openai' | 'anthropic' | 'ollama' | 'openrouter' | 'google' | 'minimax' | 'custom';
 
 /**
  * Detect provider from baseUrl or config hints.
@@ -25,7 +26,7 @@ export function detectProvider(config: ProviderConfig): ProviderName {
   if (baseUrl.includes('anthropic') || baseUrl.includes('api.anthropic')) return 'anthropic';
   if (baseUrl.includes('generativelanguage') || baseUrl.includes('googleapis')) return 'google';
   if (baseUrl.includes(':11434') || baseUrl.includes('ollama')) return 'ollama';
-  if (baseUrl.includes('minimax')) return 'openai'; // OpenAI-compatible
+  if (baseUrl.includes('minimaxi')) return 'minimax'; // MiniMax specific provider
   if (baseUrl.includes('openai') || baseUrl.includes('api.openai')) return 'openai';
 
   // Local endpoints: check model name for hints
@@ -57,6 +58,8 @@ export function createProvider(
       return new OpenRouterProvider(config);
     case 'google':
       return new GoogleProvider(config);
+    case 'minimax':
+      return new MiniMaxProvider(config);
     case 'openai':
     case 'custom':
     default:

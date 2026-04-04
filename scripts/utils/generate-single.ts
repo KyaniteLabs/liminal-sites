@@ -42,8 +42,8 @@ interface ModelConfig {
 }
 
 const MODEL_CONFIGS: Record<string, ModelConfig> = {
-  'MiniMax-M2.7': { baseUrl: 'https://api.minimax.io/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
-  'MiniMax-M2.5': { baseUrl: 'https://api.minimax.io/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
+  'MiniMax-M2.7': { baseUrl: 'https://api.minimaxi.com/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
+  'MiniMax-M2.5': { baseUrl: 'https://api.minimaxi.com/v1', apiKeyEnv: 'MINIMAX_API_KEY' },
   'Qwen3.5-9B': { baseUrl: 'http://localhost:1234/v1', apiKeyEnv: 'LMSTUDIO_API_KEY', modelId: 'qwen3.5-9b' },
   'Qwen3-Coder-40B': { baseUrl: 'http://localhost:1234/v1', apiKeyEnv: 'LMSTUDIO_API_KEY', modelId: 'qwen3-coder-next-reap-40b-a3b-i1' },
   'Gemma3-4B': { baseUrl: 'http://localhost:11434/v1', apiKeyEnv: 'OLLAMA_API_KEY', modelId: 'gemma3:4b' },

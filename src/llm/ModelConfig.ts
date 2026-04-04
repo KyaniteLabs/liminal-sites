@@ -260,8 +260,8 @@ LIMINAL_EVALUATOR_MODEL=qwen2.5-coder-14b
 # Different providers:
 LIMINAL_HARNESS_BASE_URL=http://localhost:1234/v1
 LIMINAL_HARNESS_MODEL=qwen2.5-coder-7b
-LIMINAL_LLM_BASE_URL=https://api.minimax.chat/v1
-LIMINAL_LLM_MODEL=MiniMax-Text-01
+LIMINAL_LLM_BASE_URL=https://api.minimaxi.com/v1
+LIMINAL_LLM_MODEL=MiniMax-M2.7
 LIMINAL_LLM_API_KEY=sk-...
 LIMINAL_EVALUATOR_BASE_URL=https://openrouter.ai/api/v1
 LIMINAL_EVALUATOR_MODEL=google/gemini-2.0-flash

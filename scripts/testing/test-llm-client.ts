@@ -3,7 +3,7 @@ import { LLMClient } from '../src/llm/LLMClient.js';
 async function main() {
   console.log("Creating LLMClient...");
   const client = new LLMClient({
-    baseUrl: 'https://api.minimax.io/v1',
+    baseUrl: 'https://api.minimaxi.com/v1',
     apiKey: process.env.LIMINAL_LLM_API_KEY,
     model: 'MiniMax-M2.7'
   });
