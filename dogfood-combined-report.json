@@ -1,71 +1,10 @@
 {
-  "generatedAt": "2026-04-04T10:39:47.540Z",
+  "generatedAt": "2026-04-04T14:42:14.210Z",
   "campaignsAnalyzed": 3,
-  "totalRuns": 173,
-  "totalSuccesses": 120,
-  "overallSuccessRate": 0.6936416184971098,
+  "totalRuns": 324,
+  "totalSuccesses": 209,
+  "overallSuccessRate": 0.6450617283950617,
   "models": [
-    {
-      "model": "phi4-mini:latest",
-      "source": "ollama-local",
-      "totalRuns": 11,
-      "successes": 9,
-      "failures": 2,
-      "successRate": 0.8181818181818182,
-      "avgDuration": 78402.45454545454,
-      "avgCodeLength": 4248.111111111111,
-      "domainResults": {
-        "p5": {
-          "ok": 2,
-          "fail": 0,
-          "avgDuration": 70938.5
-        },
-        "glsl": {
-          "ok": 2,
-          "fail": 0,
-          "avgDuration": 61339
-        },
-        "three": {
-          "ok": 1,
-          "fail": 0,
-          "avgDuration": 145390
-        },
-        "strudel": {
-          "ok": 0,
-          "fail": 1,
-          "avgDuration": 70971
-        },
-        "hydra": {
-          "ok": 1,
-          "fail": 0,
-          "avgDuration": 41901
-        },
-        "remotion": {
-          "ok": 1,
-          "fail": 0,
-          "avgDuration": 75535
-        },
-        "html": {
-          "ok": 1,
-          "fail": 0,
-          "avgDuration": 206955
-        },
-        "ascii": {
-          "ok": 0,
-          "fail": 1,
-          "avgDuration": 2167
-        },
-        "tone": {
-          "ok": 1,
-          "fail": 0,
-          "avgDuration": 54953
-        }
-      },
-      "errorBreakdown": {
-        "StrudelGenerator: No sound source found (need s(), sound(), ": 1,
-        "ASCIIArtGenerator: Generated code contains invalid character": 1
-      }
-    },
     {
       "model": "MiniMax-M2.7",
       "source": "minimax-cloud",
@@ -126,6 +65,67 @@
         "RemotionGenerator: Generated code does not appear to be a va": 3,
         "ASCIIArtGenerator: Generated code contains invalid character": 1,
         "ThreeGenerator: Generated code does not appear to use Three.": 1
+      }
+    },
+    {
+      "model": "lfm2.5-thinking:1.2b",
+      "source": "ollama-local",
+      "totalRuns": 27,
+      "successes": 22,
+      "failures": 5,
+      "successRate": 0.8148148148148148,
+      "avgDuration": 87148.25925925926,
+      "avgCodeLength": 4069.6363636363635,
+      "domainResults": {
+        "p5": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 68284.33333333333
+        },
+        "glsl": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 66525.33333333333
+        },
+        "three": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 176598.33333333334
+        },
+        "strudel": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 39871.666666666664
+        },
+        "hydra": {
+          "ok": 1,
+          "fail": 2,
+          "avgDuration": 75743.33333333333
+        },
+        "remotion": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 63735
+        },
+        "html": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 216413.33333333334
+        },
+        "ascii": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 22382
+        },
+        "tone": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 54781
+        }
+      },
+      "errorBreakdown": {
+        "StrudelGenerator: No sound source found (need s(), sound(), ": 3,
+        "HydraGenerator: No Hydra syntax found": 2
       }
     },
     {
@@ -191,6 +191,68 @@
       }
     },
     {
+      "model": "granite4:350m",
+      "source": "ollama-local",
+      "totalRuns": 27,
+      "successes": 21,
+      "failures": 6,
+      "successRate": 0.7777777777777778,
+      "avgDuration": 78919.92592592593,
+      "avgCodeLength": 4045.8571428571427,
+      "domainResults": {
+        "p5": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 61472
+        },
+        "glsl": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 69249.33333333333
+        },
+        "three": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 123543
+        },
+        "strudel": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 41855.333333333336
+        },
+        "hydra": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 56062.666666666664
+        },
+        "remotion": {
+          "ok": 2,
+          "fail": 1,
+          "avgDuration": 66642.33333333333
+        },
+        "html": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 209303
+        },
+        "ascii": {
+          "ok": 1,
+          "fail": 2,
+          "avgDuration": 21488.333333333332
+        },
+        "tone": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 60663.333333333336
+        }
+      },
+      "errorBreakdown": {
+        "StrudelGenerator: No sound source found (need s(), sound(), ": 3,
+        "ASCIIArtGenerator: Generated code contains invalid character": 2,
+        "RemotionGenerator: Generated code does not appear to be a va": 1
+      }
+    },
+    {
       "model": "gemma3:4b",
       "source": "ollama-local",
       "totalRuns": 27,
@@ -250,6 +312,131 @@
         "StrudelGenerator: No sound source found (need s(), sound(), ": 3,
         "ASCIIArtGenerator: Generated code contains invalid character": 3,
         "RemotionGenerator: Generated code does not appear to be a va": 1
+      }
+    },
+    {
+      "model": "phi4-mini:latest",
+      "source": "ollama-local",
+      "totalRuns": 27,
+      "successes": 20,
+      "failures": 7,
+      "successRate": 0.7407407407407407,
+      "avgDuration": 80710.70370370371,
+      "avgCodeLength": 4641.1,
+      "domainResults": {
+        "p5": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 68618.66666666667
+        },
+        "glsl": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 63758.333333333336
+        },
+        "three": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 164100.33333333334
+        },
+        "strudel": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 54851.666666666664
+        },
+        "hydra": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 46946.333333333336
+        },
+        "remotion": {
+          "ok": 2,
+          "fail": 1,
+          "avgDuration": 60495.333333333336
+        },
+        "html": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 211362
+        },
+        "ascii": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 7636
+        },
+        "tone": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 48627.666666666664
+        }
+      },
+      "errorBreakdown": {
+        "StrudelGenerator: No sound source found (need s(), sound(), ": 3,
+        "ASCIIArtGenerator: Generated code contains invalid character": 3,
+        "RemotionGenerator: Generated code does not appear to be a va": 1
+      }
+    },
+    {
+      "model": "granite4:1b",
+      "source": "ollama-local",
+      "totalRuns": 27,
+      "successes": 20,
+      "failures": 7,
+      "successRate": 0.7407407407407407,
+      "avgDuration": 78994.44444444444,
+      "avgCodeLength": 4345.45,
+      "domainResults": {
+        "p5": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 70701
+        },
+        "glsl": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 64829
+        },
+        "three": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 123533
+        },
+        "strudel": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 43897
+        },
+        "hydra": {
+          "ok": 1,
+          "fail": 2,
+          "avgDuration": 73590
+        },
+        "remotion": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 67164.33333333333
+        },
+        "html": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 220035.33333333334
+        },
+        "ascii": {
+          "ok": 2,
+          "fail": 1,
+          "avgDuration": 10489.333333333334
+        },
+        "tone": {
+          "ok": 2,
+          "fail": 1,
+          "avgDuration": 36711
+        }
+      },
+      "errorBreakdown": {
+        "StrudelGenerator: No sound source found (need s(), sound(), ": 3,
+        "HydraGenerator: No Hydra syntax found": 2,
+        "ASCIIArtGenerator: Generated code contains invalid character": 1,
+        "ToneGenerator: Generated code does not use Tone.js": 1
       }
     },
     {
@@ -443,62 +630,195 @@
         "ToneGenerator: LLM returned empty code": 1,
         "RemotionGenerator: LLM returned empty code": 1
       }
+    },
+    {
+      "model": "qwen3.5:0.8b",
+      "source": "ollama-local",
+      "totalRuns": 27,
+      "successes": 8,
+      "failures": 19,
+      "successRate": 0.2962962962962963,
+      "avgDuration": 89546.74074074074,
+      "avgCodeLength": 5925.75,
+      "domainResults": {
+        "p5": {
+          "ok": 2,
+          "fail": 1,
+          "avgDuration": 66522.66666666667
+        },
+        "glsl": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 113195
+        },
+        "three": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 57875.666666666664
+        },
+        "strudel": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 56369
+        },
+        "hydra": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 58525
+        },
+        "remotion": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 113388.66666666667
+        },
+        "html": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 113513
+        },
+        "ascii": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 113193.66666666667
+        },
+        "tone": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 113338
+        }
+      },
+      "errorBreakdown": {
+        "ShaderGenerator: LLM returned empty code": 3,
+        "StrudelGenerator: No sound source found (need s(), sound(), ": 3,
+        "HydraGenerator: No Hydra syntax found": 3,
+        "RemotionGenerator: LLM returned empty code": 3,
+        "ASCIIArtGenerator: LLM returned empty code": 3,
+        "ToneGenerator: LLM returned empty code": 3,
+        "P5GeneratorLLM: LLM returned empty code for prompt: Create a": 1
+      }
+    },
+    {
+      "model": "qwen3.5:2b",
+      "source": "ollama-local",
+      "totalRuns": 27,
+      "successes": 7,
+      "failures": 20,
+      "successRate": 0.25925925925925924,
+      "avgDuration": 146555.03703703705,
+      "avgCodeLength": 5523.142857142857,
+      "domainResults": {
+        "p5": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 121083
+        },
+        "glsl": {
+          "ok": 1,
+          "fail": 2,
+          "avgDuration": 163058.33333333334
+        },
+        "three": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 76147
+        },
+        "strudel": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 151738
+        },
+        "hydra": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 164699.66666666666
+        },
+        "remotion": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 164369.66666666666
+        },
+        "html": {
+          "ok": 3,
+          "fail": 0,
+          "avgDuration": 148698.66666666666
+        },
+        "ascii": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 164571
+        },
+        "tone": {
+          "ok": 0,
+          "fail": 3,
+          "avgDuration": 164630
+        }
+      },
+      "errorBreakdown": {
+        "P5GeneratorLLM: LLM returned empty code for prompt: Create a": 3,
+        "StrudelGenerator: LLM returned empty code": 2,
+        "HydraGenerator: LLM returned empty code": 3,
+        "RemotionGenerator: LLM returned empty code": 3,
+        "ASCIIArtGenerator: LLM returned empty code": 3,
+        "ToneGenerator: LLM returned empty code": 3,
+        "ShaderGenerator: LLM returned empty code": 2,
+        "StrudelGenerator: No sound source found (need s(), sound(), ": 1
+      }
     }
   ],
   "domainSummary": {
     "p5": {
-      "totalRuns": 20,
-      "successRate": 0.85,
-      "bestModel": "phi4-mini:latest",
-      "worstModel": "qwen3.5:cloud"
+      "totalRuns": 36,
+      "successRate": 0.8055555555555556,
+      "bestModel": "MiniMax-M2.7",
+      "worstModel": "qwen3.5:2b"
     },
     "glsl": {
-      "totalRuns": 20,
-      "successRate": 1,
-      "bestModel": "phi4-mini:latest",
-      "worstModel": "qwen3.5:cloud"
+      "totalRuns": 36,
+      "successRate": 0.8611111111111112,
+      "bestModel": "MiniMax-M2.7",
+      "worstModel": "qwen3.5:0.8b"
     },
     "three": {
-      "totalRuns": 19,
-      "successRate": 0.8421052631578947,
-      "bestModel": "phi4-mini:latest",
+      "totalRuns": 36,
+      "successRate": 0.9166666666666666,
+      "bestModel": "lfm2.5-thinking:1.2b",
       "worstModel": "qwen3.5:cloud"
     },
     "strudel": {
-      "totalRuns": 19,
-      "successRate": 0.15789473684210525,
+      "totalRuns": 36,
+      "successRate": 0.08333333333333333,
       "bestModel": "MiniMax-M2.7",
-      "worstModel": "qwen3.5:cloud"
+      "worstModel": "qwen3.5:2b"
     },
     "hydra": {
-      "totalRuns": 19,
-      "successRate": 0.5789473684210527,
-      "bestModel": "phi4-mini:latest",
-      "worstModel": "qwen3.5:cloud"
+      "totalRuns": 36,
+      "successRate": 0.5,
+      "bestModel": "MiniMax-M2.7",
+      "worstModel": "qwen3.5:2b"
     },
     "remotion": {
-      "totalRuns": 19,
-      "successRate": 0.631578947368421,
-      "bestModel": "phi4-mini:latest",
-      "worstModel": "qwen3.5:cloud"
+      "totalRuns": 36,
+      "successRate": 0.5833333333333334,
+      "bestModel": "lfm2.5-thinking:1.2b",
+      "worstModel": "qwen3.5:2b"
     },
     "html": {
-      "totalRuns": 19,
+      "totalRuns": 36,
       "successRate": 1,
-      "bestModel": "phi4-mini:latest",
-      "worstModel": "qwen3.5:cloud"
+      "bestModel": "MiniMax-M2.7",
+      "worstModel": "qwen3.5:2b"
     },
     "ascii": {
-      "totalRuns": 19,
-      "successRate": 0.21052631578947367,
-      "bestModel": "MiniMax-M2.7",
-      "worstModel": "qwen3.5:cloud"
+      "totalRuns": 36,
+      "successRate": 0.2777777777777778,
+      "bestModel": "lfm2.5-thinking:1.2b",
+      "worstModel": "qwen3.5:2b"
     },
     "tone": {
-      "totalRuns": 19,
-      "successRate": 0.9473684210526315,
-      "bestModel": "phi4-mini:latest",
-      "worstModel": "qwen3.5:cloud"
+      "totalRuns": 36,
+      "successRate": 0.7777777777777778,
+      "bestModel": "MiniMax-M2.7",
+      "worstModel": "qwen3.5:2b"
     }
   }
 }
