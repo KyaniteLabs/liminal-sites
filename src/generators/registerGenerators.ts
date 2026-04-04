@@ -22,6 +22,7 @@ import { ASCIIArtGenerator } from './ascii/ASCIIArtGenerator.js';
 import { StrudelGenerator } from './strudel/StrudelGenerator.js';
 import { HydraGenerator } from './hydra/HydraGenerator.js';
 import { ToneGenerator } from './tone/ToneGenerator.js';
+import { TextGenerativeGenerator } from './textgen/TextGenerativeGenerator.js';
 import { pluginLoader } from '../plugins/PluginLoader.js';
 
 // --- Shared canHandle helpers ---
@@ -68,6 +69,33 @@ const asciiConfidence = (prompt: string): number => {
   // Character/text art patterns
   if (/text\s*art|character\s*art|glyph|symbol.*art/.test(lower)) return 0.75;
   if (/\bart\b.*\btext\b|\btext\b.*\bpattern/.test(lower)) return 0.65;
+  return 0;
+};
+
+/**
+ * Confidence for text generative art (concrete poetry, word art, etc.)
+ * 
+ * HIGHER confidence than ASCII for creative text prompts to ensure
+ * textgen wins over ascii for poetry/word-art requests.
+ */
+const textgenConfidence = (prompt: string): number => {
+  const lower = prompt.toLowerCase();
+  // Explicit text generative mentions (highest priority)
+  if (/\bconcrete\s+poetry\b|\bword\s+art\b|\btypographic\s+art\b/.test(lower)) return 0.95;
+  if (/\btext\s+generative\b|\bexperimental\s+poetry\b/.test(lower)) return 0.95;
+  
+  // Strong creative text patterns
+  if (/\bpoem\b|\bpoetry\b.*\b(visual|shape|form)\b/.test(lower)) return 0.90;
+  if (/\bwords\b.*\b(arranged|scattered|cascade|flow|drip)\b/.test(lower)) return 0.90;
+  if (/\btypography\b.*\b(experimental|creative|art)\b/.test(lower)) return 0.85;
+  
+  // Moderate creative text patterns
+  if (/\btext\s+(only|based)\s+(art|composition)\b/.test(lower)) return 0.80;
+  if (/\bletters?\b.*\b(form|shape|pattern)\b/.test(lower)) return 0.75;
+  
+  // Avoid capturing pure ASCII requests (let ascii generator handle those)
+  if (/\bascii\b/.test(lower)) return 0;
+  
   return 0;
 };
 
@@ -193,6 +221,27 @@ const toneEntry: GeneratorEntry = {
   },
 };
 
+/**
+ * Text Generative Art entry
+ * 
+ * Handles concrete poetry, word art, experimental typography.
+ * Optimized for small/fast models due to low token count.
+ */
+const textgenEntry: GeneratorEntry = {
+  name: 'textgen',
+  canHandle: textgenConfidence,
+  generate: async (prompt: string) => {
+    const gen = new TextGenerativeGenerator();
+    return gen.generate(prompt, {
+      form: 'freeform',
+      style: 'minimal',
+      maxLines: 30,
+      maxWidth: 60,
+      unicode: true,
+    });
+  },
+};
+
 const p5Entry: GeneratorEntry = {
   name: 'p5',
   canHandle: () => 0.1, // fallback: low confidence but always available
@@ -237,6 +286,7 @@ function registerStaticGenerators(): void {
   generatorRegistry.register(remotionEntry);
   generatorRegistry.register(htmlEntry);
   generatorRegistry.register(asciiEntry);
+  generatorRegistry.register(textgenEntry);  // textgen before strudel for priority
   generatorRegistry.register(strudelEntry);
   generatorRegistry.register(hydraEntry);
   generatorRegistry.register(toneEntry);
@@ -272,6 +322,7 @@ export {
   threeConfidence,
   htmlConfidence,
   asciiConfidence,
+  textgenConfidence,
   strudelConfidence,
   hydraConfidence,
   toneConfidence,

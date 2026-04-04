@@ -610,6 +610,7 @@ export { ToneGenerator } from './generators/tone/ToneGenerator.js';
 export { RemotionGenerator } from './generators/remotion/RemotionGenerator.js';
 export { HTMLWebGenerator } from './generators/html/HTMLWebGenerator.js';
 export { ASCIIArtGenerator } from './generators/ascii/ASCIIArtGenerator.js';
+export { TextGenerativeGenerator } from './generators/textgen/TextGenerativeGenerator.js';
 
 export type { PersistedLoopState } from './core/ContextAccumulation.js';
 
@@ -693,7 +694,8 @@ export { SERVICE_DEFAULTS } from './constants.js';
 // HTML Web Generator & ASCII Art Generator types (classes exported above with tier-based generators)
 export type { HTMLGeneratorOptions } from './generators/html/HTMLWebGenerator.js';
 export type { ASCIIOptions, ASCIIStyle } from './generators/ascii/ASCIIArtGenerator.js';
-// Note: ShaderGenerator, ThreeGenerator, HTMLWebGenerator, ASCIIArtGenerator exported below with TierBasedGenerator
+export type { TextGenOptions, TextGenForm, TextGenStyle } from './generators/textgen/TextGenerativeGenerator.js';
+// Note: ShaderGenerator, ThreeGenerator, HTMLWebGenerator, ASCIIArtGenerator, TextGenerativeGenerator exported below with TierBasedGenerator
 
 // Meta-Harness - Self-improving infrastructure
 export {
