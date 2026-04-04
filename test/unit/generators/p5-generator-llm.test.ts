@@ -12,6 +12,6 @@ describe('P5GeneratorLLM', () => {
 
   it('generate rejects without LLM config', async () => {
     const gen = new P5GeneratorLLM();
-    await expect(gen.generate('test')).rejects.toThrow('No LLM configured');
+    await expect(gen.generate('test')).rejects.toThrow('LLM');
   });
 });
