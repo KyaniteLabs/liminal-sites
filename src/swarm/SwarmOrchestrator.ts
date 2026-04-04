@@ -8,6 +8,7 @@ import { VotingEngine } from './VotingEngine.js';
 import { HeuristicScorer } from './HeuristicScorer.js';
 import { MiningEngine } from './MiningEngine.js';
 import { SERVICE_DEFAULTS } from '../constants.js';
+import { TIMEOUT_DEFAULT_MS, TOKEN_LIMIT_LARGE, TRUNCATE_MEDIUM } from '../constants/limits.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { Logger } from '../utils/Logger.js';
@@ -55,7 +56,7 @@ export class SwarmOrchestrator {
   constructor(config?: Partial<SwarmConfig>, options?: SwarmOrchestratorOptions) {
     this.config = {
       ollamaHost: config?.ollamaHost ?? SERVICE_DEFAULTS.OLLAMA_URL,
-      ollamaTimeout: config?.ollamaTimeout ?? 300,
+      ollamaTimeout: config?.ollamaTimeout ?? (TIMEOUT_DEFAULT_MS / 1000),
       maxRounds: config?.maxRounds ?? 10,
       convergenceThreshold: config?.convergenceThreshold ?? 3,
       musicalChairs: config?.musicalChairs ?? false,
@@ -191,7 +192,7 @@ export class SwarmOrchestrator {
         model: 'qwen2.5-coder:7b',
         // All experts use same temperature - differentiation from system prompts
         temperature: 0.7,
-        maxTokens: 1500,
+        maxTokens: TOKEN_LIMIT_LARGE,
         systemPrompt: expert.systemPrompt,
         voice: expert.description,
         thinkingStyle: `Creative approach: ${expert.description}`,
@@ -580,7 +581,7 @@ export class SwarmOrchestrator {
     for (const persona of personas) {
       const startTime = Date.now();
       try {
-        const chainContext = currentChain.length > 300 ? currentChain.slice(-300) : currentChain;
+        const chainContext = currentChain.length > TRUNCATE_MEDIUM ? currentChain.slice(-TRUNCATE_MEDIUM) : currentChain;
         const userPrompt = `Context from previous outputs:\n${chainContext}\n\n${persona.constraints.map(c => `Constraint: ${c}`).join('\n')}`;
 
         const content = await this.callOllama(

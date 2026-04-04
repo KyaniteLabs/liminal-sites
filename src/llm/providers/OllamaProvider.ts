@@ -14,6 +14,7 @@ import type {
 } from '../ProviderTypes.js';
 import { BaseProvider } from './BaseProvider.js';
 import { CapabilityRegistry } from '../CapabilityRegistry.js';
+import { TIMEOUT_DEFAULT_MS, TIMEOUT_OLLAMA_MS } from '../../constants/limits.js';
 import { normalizeThinking, stripThinkTags } from '../ThinkingNormalizer.js';
 import { parseOllamaStream, parseOpenAIStream } from '../StreamParser.js';
 
@@ -54,7 +55,7 @@ export class OllamaProvider extends BaseProvider {
       },
     };
 
-    const signal = req.signal || AbortSignal.timeout(120000);
+    const signal = req.signal || AbortSignal.timeout(TIMEOUT_OLLAMA_MS);
 
     const response = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
@@ -119,7 +120,7 @@ export class OllamaProvider extends BaseProvider {
       max_tokens: req.maxTokens ?? this.config.maxTokens,
     };
 
-    const signal = req.signal || AbortSignal.timeout(300000);
+    const signal = req.signal || AbortSignal.timeout(TIMEOUT_DEFAULT_MS);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -175,7 +176,7 @@ export class OllamaProvider extends BaseProvider {
       },
     };
 
-    const signal = req.signal || AbortSignal.timeout(120000);
+    const signal = req.signal || AbortSignal.timeout(TIMEOUT_OLLAMA_MS);
 
     const response = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',

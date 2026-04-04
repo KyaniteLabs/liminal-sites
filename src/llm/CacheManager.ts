@@ -14,6 +14,8 @@ export interface CacheOptions {
   maxEntries?: number;
 }
 
+import { CACHE_TTL_MS, CACHE_MAX_ENTRIES } from '../constants/limits.js';
+
 interface CacheEntry {
   value: string;
   timestamp: number;
@@ -38,8 +40,8 @@ export class CacheManager {
   constructor(options?: CacheOptions) {
     this.options = {
       enabled: options?.enabled ?? true,
-      ttlMs: options?.ttlMs ?? 60 * 60 * 1000, // 1 hour
-      maxEntries: options?.maxEntries ?? 1000,
+      ttlMs: options?.ttlMs ?? CACHE_TTL_MS,
+      maxEntries: options?.maxEntries ?? CACHE_MAX_ENTRIES,
     };
   }
 

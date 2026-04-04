@@ -1,4 +1,5 @@
 import type { SwarmPersona } from './types.js';
+import { TOKEN_LIMIT_SMALL, TOKEN_LIMIT_MEDIUM, TOKEN_LIMIT_LARGE } from '../constants/limits.js';
 
 // Canonical persona system prompts (also registered in PromptLibrary as swarm.persona.*)
 const PERSONA_PROMPTS: Record<string, string> = {
@@ -16,7 +17,7 @@ export const DEFAULT_PERSONAS: SwarmPersona[] = [
     displayName: 'The Architect',
     model: 'lfm2.5-thinking:1.2b',
     temperature: 0.7,
-    maxTokens: 1000,
+    maxTokens: TOKEN_LIMIT_MEDIUM,
     systemPrompt: PERSONA_PROMPTS.kai,
     voice: 'Analytical, structural. Maps the hidden architecture.',
     thinkingStyle: 'Top-down. Identify the frame, then fill it.',
@@ -30,7 +31,7 @@ export const DEFAULT_PERSONAS: SwarmPersona[] = [
     displayName: 'The Synthesizer',
     model: 'gemma3:4b',
     temperature: 0.8,
-    maxTokens: 1500,
+    maxTokens: TOKEN_LIMIT_LARGE,
     systemPrompt: PERSONA_PROMPTS.nova,
     voice: 'Connective, integrative. Finds the bridge between worlds.',
     thinkingStyle: 'Convergent. Pull disparate threads into one coherent vision.',
@@ -44,7 +45,7 @@ export const DEFAULT_PERSONAS: SwarmPersona[] = [
     displayName: 'The Explorer',
     model: 'phi4-mini',
     temperature: 0.9,
-    maxTokens: 1000,
+    maxTokens: TOKEN_LIMIT_MEDIUM,
     systemPrompt: PERSONA_PROMPTS.rex,
     voice: 'Provocative, boundary-pushing. Finds the unexpected angle.',
     thinkingStyle: 'Lateral. Invert assumptions. Find the blind spot.',
@@ -58,7 +59,7 @@ export const DEFAULT_PERSONAS: SwarmPersona[] = [
     displayName: 'The Muse',
     model: 'qwen3.5:2b',
     temperature: 0.85,
-    maxTokens: 1500,
+    maxTokens: TOKEN_LIMIT_LARGE,
     systemPrompt: PERSONA_PROMPTS.sam,
     voice: 'Warm, sensory, evocative. Makes the abstract visceral.',
     thinkingStyle: 'Experiential. Start from feeling, build outward.',
@@ -72,7 +73,7 @@ export const DEFAULT_PERSONAS: SwarmPersona[] = [
     displayName: 'The Distiller',
     model: 'granite4:1b',
     temperature: 0.5,
-    maxTokens: 500,
+    maxTokens: TOKEN_LIMIT_SMALL,
     systemPrompt: PERSONA_PROMPTS.max,
     voice: 'Precise, compressed. Every word is load-bearing.',
     thinkingStyle: 'Reductive. Strip to essence. What remains when everything else is removed?',

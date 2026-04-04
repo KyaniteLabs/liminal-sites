@@ -6,6 +6,7 @@ export { LLMError, LLMTimeoutError, LLMRateLimitError, LLMAuthError } from './er
 import { SERVICE_DEFAULTS } from '../constants.js';
 import { PromptLibrary } from '../prompts/index.js';
 import { RetryManager } from './RetryManager.js';
+import { TIMEOUT_OLLAMA_MS, TRUNCATE_SHORT, TRUNCATE_LONG, TOKEN_LIMIT_XL } from '../constants/limits.js';
 import { CacheManager } from './CacheManager.js';
 import { eventBus, EventTypes } from '../core/EventBus.js';
 import { validateUrl, getAllowedHostsFromEnv, SSRFError } from '../security/UrlValidator.js';
@@ -192,7 +193,7 @@ export class LLMClient {
         apiKey,
         temperature: role === 'generator' ? 0.7 : role === 'evaluator' ? 0.2 : 0.5,
         maxTokens: 4096,
-        timeout: 120000,
+        timeout: TIMEOUT_OLLAMA_MS,
         thinking: { enabled: false },
         streaming: role === 'harness',
       };
@@ -349,7 +350,7 @@ export class LLMClient {
         model: this.config.model,
         temperature: this.config.temperature,
         maxTokens: this.config.maxTokens,
-        timeout: 120000,
+        timeout: TIMEOUT_OLLAMA_MS,
         headers: this.config.headers,
       });
     }
@@ -487,7 +488,7 @@ export class LLMClient {
       eventBus.emit(EventTypes.LLM_REQUEST, 'LLMClient', {
         provider: this.detectProvider(),
         model: this.config.model,
-        promptPreview: userPrompt.slice(0, 100)
+        promptPreview: userPrompt.slice(0, TRUNCATE_SHORT)
       });
 
       const result = await RetryManager.executeWithRetry(async () => {
@@ -577,7 +578,7 @@ export class LLMClient {
       failureLogger.log({
         model: this.config.model,
         domain: 'unknown', // Will be determined by caller context
-        prompt: userPrompt.slice(0, 500), // Truncate for privacy/size
+        prompt: userPrompt.slice(0, TRUNCATE_LONG), // Truncate for privacy/size
         error: errMsg,
         errorType: error instanceof LLMTimeoutError ? 'timeout' :
                    error instanceof LLMAuthError ? 'validation' : 'generation',
@@ -642,7 +643,7 @@ Rules:
     const {
       prompt,
       systemPrompt = 'You are a helpful assistant.',
-      maxTokens = 2000,
+      maxTokens = TOKEN_LIMIT_XL,
       temperature = 0.7,
       signal,
     } = options;
