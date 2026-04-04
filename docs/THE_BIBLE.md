@@ -34,6 +34,13 @@ Failures:   Some unit test failures
 - Note: Tests frequently timeout on first run without `--run` flag
 - Some GLSL validator tests currently failing
 
+### Dogfood Metrics
+- Command: Run with `npm run dogfood:report` to generate a fresh report
+- Last run: Apr 3, 2026 — 66.7% success rate (12/18 tests passed)
+- Failures captured: 3,238 files in `~/.liminal/failures/`
+- Active providers: LM Studio, Ollama, MiniMax
+- Domains tested: p5, GLSL, Three.js, Tone.js, Hydra, HTML/Web
+
 ### Recent Test Fixes (Other Agent's Work)
 
 **Bucket A - Fixture Size Fixes:**
