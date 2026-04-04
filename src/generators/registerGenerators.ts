@@ -24,6 +24,7 @@ import { HydraGenerator } from './hydra/HydraGenerator.js';
 import { ToneGenerator } from './tone/ToneGenerator.js';
 import { TextGenerativeGenerator } from './textgen/TextGenerativeGenerator.js';
 import { pluginLoader } from '../plugins/PluginLoader.js';
+import { Logger } from '../utils/Logger.js';
 
 // --- Shared canHandle helpers ---
 
@@ -271,7 +272,7 @@ async function loadPlugins(): Promise<boolean> {
     
     return results.some(r => r.success);
   } catch (error) {
-    console.warn('[registerGenerators] Failed to load plugins:', error);
+    Logger.warn('registerGenerators', 'Failed to load plugins:', error);
     return false;
   }
 }
@@ -309,10 +310,10 @@ export async function registerAllGenerators(): Promise<void> {
   pluginsLoaded = await loadPlugins();
   
   if (!pluginsLoaded) {
-    console.log('[registerGenerators] Falling back to static generator registration');
+    Logger.info('registerGenerators', 'Falling back to static generator registration');
     registerStaticGenerators();
   } else {
-    console.log(`[registerGenerators] Loaded ${pluginLoader.getAllPlugins().length} plugins`);
+    Logger.info('registerGenerators', `Loaded ${pluginLoader.getAllPlugins().length} plugins`);
   }
 }
 

@@ -5,6 +5,7 @@
 import type { Seed } from './types.js';
 import type { CompostMill } from './CompostMill.js';
 import { formatSeedForDisplay } from '../core/lir/LIRPromptFormatter.js';
+import { Logger } from '../utils/Logger.js';
 
 export type CLIAction =
   | { command: 'add'; paths: string[] }
@@ -44,22 +45,22 @@ export async function execute(action: CLIAction, mill: CompostMill): Promise<voi
     case 'add':
       if (action.paths.length > 0) {
         await mill.add(action.paths);
-        console.log('Added ' + action.paths.length + ' item(s) to heap.');
+        Logger.info('CompostCLI', 'Added ' + action.paths.length + ' item(s) to heap.');
       } else {
-        console.log('Usage: liminal compost add <file-or-directory>...');
+        Logger.info('CompostCLI', 'Usage: liminal compost add <file-or-directory>...');
       }
       break;
 
     case 'digest': {
-      console.log('Starting digestion...');
+      Logger.info('CompostCLI', 'Starting digestion...');
       const result = await mill.digest();
-      console.log('Digestion complete.');
-      console.log('  Files processed: ' + result.stats.filesProcessed);
-      console.log('  Fragments: ' + result.stats.fragmentCount);
-      console.log('  Collisions: ' + result.stats.collisionCount);
-      console.log('  Seeds promoted: ' + result.stats.seedsPromoted);
+      Logger.info('CompostCLI', 'Digestion complete.');
+      Logger.info('CompostCLI', '  Files processed: ' + result.stats.filesProcessed);
+      Logger.info('CompostCLI', '  Fragments: ' + result.stats.fragmentCount);
+      Logger.info('CompostCLI', '  Collisions: ' + result.stats.collisionCount);
+      Logger.info('CompostCLI', '  Seeds promoted: ' + result.stats.seedsPromoted);
       if (result.digestPath) {
-        console.log('  Digest saved to: ' + result.digestPath);
+        Logger.info('CompostCLI', '  Digest saved to: ' + result.digestPath);
       }
       break;
     }
@@ -67,14 +68,14 @@ export async function execute(action: CLIAction, mill: CompostMill): Promise<voi
     case 'soup':
       if (action.subcommand === 'start') {
         await mill.startSoup();
-        console.log('Soup started. Press Ctrl+C to stop.');
+        Logger.info('CompostCLI', 'Soup started. Press Ctrl+C to stop.');
       } else if (action.subcommand === 'stop') {
         mill.stopSoup();
-        console.log('Soup stopped.');
+        Logger.info('CompostCLI', 'Soup stopped.');
       } else if (action.subcommand === 'status') {
         const status = await mill.statusAsync();
-        console.log('Soup running: ' + status.soupRunning);
-        console.log('Generation: ' + status.soupGeneration);
+        Logger.info('CompostCLI', 'Soup running: ' + status.soupRunning);
+        Logger.info('CompostCLI', 'Generation: ' + status.soupGeneration);
       }
       break;
 
@@ -82,9 +83,9 @@ export async function execute(action: CLIAction, mill: CompostMill): Promise<voi
       if (action.subcommand === 'list') {
         const seeds = await mill.listSeeds();
         if (seeds.length === 0) {
-          console.log('No seeds yet. Run `liminal compost digest` first.');
+          Logger.info('CompostCLI', 'No seeds yet. Run `liminal compost digest` first.');
         } else {
-          console.log('Seeds (' + seeds.length + '):');
+          Logger.info('CompostCLI', 'Seeds (' + seeds.length + '):');
           for (const seed of seeds) {
             const badge = seed.lir ? '[' + seed.lir.type + '] ' : '';
             let preview: string;
@@ -103,32 +104,32 @@ export async function execute(action: CLIAction, mill: CompostMill): Promise<voi
             } else {
               preview = seed.content.length > 60 ? seed.content.slice(0, 57) + '...' : seed.content;
             }
-            console.log('  [' + seed.score.toFixed(1) + '] ' + badge + seed.id + ' — ' + preview.replace(/\n/g, ' '));
+            Logger.info('CompostCLI', '  [' + seed.score.toFixed(1) + '] ' + badge + seed.id + ' — ' + preview.replace(/\n/g, ' '));
           }
         }
       } else if (action.subcommand === 'show') {
         const seedId = action.args?.[0];
         if (!seedId) {
-          console.log('Usage: liminal compost seeds show <seed-id>');
-          console.log('Run `liminal compost seeds list` to see available seeds.');
+          Logger.info('CompostCLI', 'Usage: liminal compost seeds show <seed-id>');
+          Logger.info('CompostCLI', 'Run `liminal compost seeds list` to see available seeds.');
         } else {
           const seeds = await mill.listSeeds();
           const match = seeds.find((s: Seed) => s.id === seedId || s.id.startsWith(seedId));
           if (!match) {
-            console.log('Seed not found: ' + seedId);
+            Logger.info('CompostCLI', 'Seed not found: ' + seedId);
           } else {
-            console.log('# ' + match.id);
-            console.log('Score: ' + match.score);
-            console.log('Domains: ' + match.source.domains.join(', '));
-            console.log('Collision: ' + match.source.collisionType);
-            console.log('Promoted: ' + match.promotedAt);
-            console.log('Used by: ' + (match.usedBy.length > 0 ? match.usedBy.join(', ') : '(none)'));
+            Logger.info('CompostCLI', '# ' + match.id);
+            Logger.info('CompostCLI', 'Score: ' + match.score);
+            Logger.info('CompostCLI', 'Domains: ' + match.source.domains.join(', '));
+            Logger.info('CompostCLI', 'Collision: ' + match.source.collisionType);
+            Logger.info('CompostCLI', 'Promoted: ' + match.promotedAt);
+            Logger.info('CompostCLI', 'Used by: ' + (match.usedBy.length > 0 ? match.usedBy.join(', ') : '(none)'));
             if (match.lir) {
-              console.log('');
-              console.log(formatSeedForDisplay(match));
+              Logger.info('CompostCLI', '');
+              Logger.info('CompostCLI', formatSeedForDisplay(match));
             } else {
-              console.log('');
-              console.log(match.content);
+              Logger.info('CompostCLI', '');
+              Logger.info('CompostCLI', match.content);
             }
           }
         }
@@ -137,12 +138,12 @@ export async function execute(action: CLIAction, mill: CompostMill): Promise<voi
 
     case 'status': {
       const status = await mill.statusAsync();
-      console.log('Compost Mill Status:');
-      console.log('  Heap size: ' + status.heapSize + ' bytes');
-      console.log('  Heap files: ' + status.heapFileCount);
-      console.log('  Seeds: ' + status.seedCount);
-      console.log('  Soup: ' + (status.soupRunning ? 'running' : 'stopped'));
-      console.log('  Soup generation: ' + status.soupGeneration);
+      Logger.info('CompostCLI', 'Compost Mill Status:');
+      Logger.info('CompostCLI', '  Heap size: ' + status.heapSize + ' bytes');
+      Logger.info('CompostCLI', '  Heap files: ' + status.heapFileCount);
+      Logger.info('CompostCLI', '  Seeds: ' + status.seedCount);
+      Logger.info('CompostCLI', '  Soup: ' + (status.soupRunning ? 'running' : 'stopped'));
+      Logger.info('CompostCLI', '  Soup generation: ' + status.soupGeneration);
       break;
     }
   }

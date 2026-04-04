@@ -9,6 +9,7 @@
  */
 
 import { P5GeneratorLLM } from './P5GeneratorLLM.js';
+import { Logger } from '../../utils/Logger.js';
 
 export class P5Generator {
   /**
@@ -22,7 +23,7 @@ export class P5Generator {
   static async generate(prompt: unknown, _context?: unknown): Promise<string> {
     const promptStr = this.normalizeInput(prompt);
     
-    console.warn('[P5Generator] Using LLM-based generation. Ensure LIMINAL_LLM_BASE_URL and LIMINAL_LLM_MODEL are set.');
+    Logger.warn('P5Generator', 'Using LLM-based generation. Ensure LIMINAL_LLM_BASE_URL and LIMINAL_LLM_MODEL are set.');
     
     const generator = new P5GeneratorLLM();
     return generator.generate(promptStr);

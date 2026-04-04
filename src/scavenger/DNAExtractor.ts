@@ -1,6 +1,7 @@
 import type { ProjectDNA } from './types.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { Logger } from '../utils/Logger.js';
 
 const INDICATOR_FILES = [
   'package.json',
@@ -114,7 +115,7 @@ export class DNAExtractor {
         }
       }
     } catch (err) {
-      console.warn('DNAExtractor.scanForCarcasses failed:', err);
+      Logger.warn('DNAExtractor', 'scanForCarcasses failed: ' + err);
     }
 
     return carcasses;
@@ -129,7 +130,7 @@ export class DNAExtractor {
       const content = await fs.readFile(filePath, 'utf-8');
       return JSON.parse(content) as ProjectDNA;
     } catch (err) {
-      console.warn('DNAExtractor.loadDNAForDomain failed:', err);
+      Logger.warn('DNAExtractor', 'loadDNAForDomain failed: ' + err);
       return null;
     }
   }
@@ -143,7 +144,7 @@ export class DNAExtractor {
       const pkgContent = await fs.readFile(pkgPath, 'utf-8');
       return this.detectDomainFromContent(pkgContent);
     } catch (err) {
-      console.warn('DNAExtractor.detectDomain (package.json) failed:', err);
+      Logger.warn('DNAExtractor', 'detectDomain (package.json) failed: ' + err);
       // Fall through to scanning files
     }
 
@@ -154,7 +155,7 @@ export class DNAExtractor {
         const domain = this.detectDomainFromContent(content);
         if (domain !== 'unknown') return domain;
       } catch (err) {
-        console.warn(`DNAExtractor.detectDomain (${file}) failed:`, err);
+        Logger.warn('DNAExtractor', `detectDomain (${file}) failed: ` + err);
         continue;
       }
     }
@@ -190,7 +191,7 @@ export class DNAExtractor {
         const section = this.extractSection(lines, ['architecture', 'engine', 'core logic', 'system', 'how it works', 'pipeline', 'methodology']);
         if (section) return section;
       } catch (err) {
-        console.warn(`DNAExtractor.extractCoreLogic (${file}) failed:`, err);
+        Logger.warn('DNAExtractor', `extractCoreLogic (${file}) failed: ` + err);
         continue;
       }
     }
@@ -209,7 +210,7 @@ export class DNAExtractor {
             .filter(l => l.length > 5);
         }
       } catch (err) {
-        console.warn(`DNAExtractor.extractConstraints (${file}) failed:`, err);
+        Logger.warn('DNAExtractor', `extractConstraints (${file}) failed: ` + err);
         continue;
       }
     }
@@ -223,12 +224,12 @@ export class DNAExtractor {
     try {
       const testDir = path.join(projectPath, 'test');
       const entries = await fs.readdir(testDir).catch((err) => {
-        console.warn(`[DNAExtractor] Cannot read test directory:`, err instanceof Error ? err.message : err);
+        Logger.warn('DNAExtractor', 'Cannot read test directory: ' + (err instanceof Error ? err.message : err));
         return [];
       });
       if (entries.length > 0) patterns.push('has-test-suite');
     } catch (err) {
-      console.warn('DNAExtractor.extractPatterns (test directory) failed:', err);
+      Logger.warn('DNAExtractor', 'extractPatterns (test directory) failed: ' + err);
       // No test directory
     }
 
@@ -239,7 +240,7 @@ export class DNAExtractor {
         await fs.access(path.join(projectPath, cf));
         patterns.push(`uses-${cf.replace(/^\./, '').replace(/\..*/, '')}`);
       } catch (err) {
-        console.warn(`DNAExtractor.extractPatterns (${cf}) failed:`, err);
+        Logger.warn('DNAExtractor', `extractPatterns (${cf}) failed: ` + err);
         continue;
       }
     }
@@ -247,13 +248,13 @@ export class DNAExtractor {
     // Check source structure
     try {
       const srcFiles: string[] = await fs.readdir(path.join(projectPath, 'src')).catch((err) => {
-        console.warn('[DNAExtractor] Cannot read src directory:', err instanceof Error ? err.message : err);
+        Logger.warn('DNAExtractor', 'Cannot read src directory: ' + (err instanceof Error ? err.message : err));
         return [] as string[];
       });
       if (srcFiles.includes('core')) patterns.push('has-core-module');
       if (srcFiles.includes('utils')) patterns.push('has-utils-module');
     } catch (err) {
-      console.warn('DNAExtractor.extractPatterns (src directory) failed:', err);
+      Logger.warn('DNAExtractor', 'extractPatterns (src directory) failed: ' + err);
       // No src directory
     }
 
@@ -266,7 +267,7 @@ export class DNAExtractor {
     // Look for prompt-related files
     const promptPatterns = ['prompt', 'PROMPT', 'template'];
     for (const entry of await fs.readdir(projectPath).catch((err) => {
-      console.warn(`[DNAExtractor] Cannot read project directory ${projectPath}:`, err instanceof Error ? err.message : err);
+      Logger.warn('DNAExtractor', `Cannot read project directory ${projectPath}: ` + (err instanceof Error ? err.message : err));
       return [];
     })) {
       if (promptPatterns.some(p => entry.toLowerCase().includes(p.toLowerCase())) && entry.endsWith('.md')) {
@@ -276,7 +277,7 @@ export class DNAExtractor {
             prompts.push(content);
           }
         } catch (err) {
-          console.warn(`DNAExtractor.extractPrompts (${entry}) failed:`, err);
+          Logger.warn('DNAExtractor', `extractPrompts (${entry}) failed: ` + err);
           continue;
         }
       }
@@ -314,7 +315,7 @@ export class DNAExtractor {
       const entries = await fs.readdir(dirPath);
       return entries.some(e => INDICATOR_FILES.includes(e));
     } catch (err) {
-      console.warn('DNAExtractor.isProjectDir failed:', err);
+      Logger.warn('DNAExtractor', 'isProjectDir failed: ' + err);
       return false;
     }
   }

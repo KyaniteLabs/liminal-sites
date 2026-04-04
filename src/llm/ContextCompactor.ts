@@ -10,6 +10,7 @@
  */
 
 import type { LLMClient } from './LLMClient.js';
+import { Logger } from '../utils/Logger.js';
 
 interface CompactorMessage {
   role: 'system' | 'user' | 'assistant';
@@ -109,8 +110,8 @@ export class ContextCompactor {
       if (response.success && response.text) {
         return response.text.trim();
       }
-    } catch {
-      // Intentional bare catch: Fallback to extractive summary is expected behavior
+    } catch (err) {
+      Logger.warn('ContextCompactor', 'LLM summarization failed, falling back to extractive summary:', err);
     }
 
     return this.extractiveSummary(messages);

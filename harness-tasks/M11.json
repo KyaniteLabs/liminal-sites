@@ -13,5 +13,5 @@
     "Code with growing array (memory leak) → Should FAIL after 30s",
     "Code with object pooling → Should PASS"
   ],
-  "approved": false
+  "approved": true
 }

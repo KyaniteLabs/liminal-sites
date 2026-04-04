@@ -8,6 +8,7 @@
 import type { Layer, GlobalSettings } from '../types.js';
 import type { LayerAdapter, Export, Import } from './index.js';
 import type { RenderContext } from '../CompositionEngine.js';
+import { Logger } from '../../utils/Logger.js';
 
 /** Tone.js types (simplified) */
 interface ToneSynth {
@@ -109,7 +110,7 @@ export class ToneAdapter implements LayerAdapter {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (window as any).__trackSynth;
     } catch (error) {
-      console.error('Error executing Tone.js code:', error);
+      Logger.error('ToneAdapter', 'Error executing Tone.js code:', error);
     }
 
     // Store instance info

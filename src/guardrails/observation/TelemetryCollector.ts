@@ -7,6 +7,7 @@
 
 import { writeFile } from 'fs/promises';
 import { ExecutionTrace, TelemetryConfig, ResourceUsage } from '../core/types.js';
+import { Logger } from '../../utils/Logger.js';
 
 export interface TelemetryEvent {
   timestamp: number;
@@ -354,7 +355,7 @@ export class TelemetryCollector {
     try {
       await writeFile(filename, JSON.stringify(data, null, 2));
     } catch (error) {
-      console.error(`Failed to persist telemetry: ${error}`);
+      Logger.error('TelemetryCollector', `Failed to persist telemetry: ${error}`);
     }
   }
 }

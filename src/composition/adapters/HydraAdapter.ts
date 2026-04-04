@@ -9,6 +9,7 @@ import type { Layer, GlobalSettings } from '../types.js';
 import type { LayerAdapter, Export, Import } from './index.js';
 import type { RenderContext } from '../CompositionEngine.js';
 import { getWebGLBlendFunc } from '../utils/blendModes.js';
+import { Logger } from '../../utils/Logger.js';
 
 /** Hydra synth instance type */
 interface HydraSynth {
@@ -135,7 +136,7 @@ export class HydraAdapter implements LayerAdapter {
       const runCode = new Function(userCode);
       runCode();
     } catch (error) {
-      console.error('Error executing Hydra code:', error);
+      Logger.error('HydraAdapter', 'Error executing Hydra code:', error);
     }
 
     return hydra;

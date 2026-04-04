@@ -10,6 +10,7 @@
  */
 
 import { CodeParser } from '../parsing/CodeParser.js';
+import { Logger } from '../../utils/Logger.js';
 import type { LIRCodeToken } from './types.js';
 
 export class GeneratedCodeParser {
@@ -28,7 +29,8 @@ export class GeneratedCodeParser {
     }
     try {
       return this.parser.parse(generatedCode, 'generated.js');
-    } catch {
+    } catch (err) {
+      Logger.debug('GeneratedCodeParser', 'Parse failed, returning empty:', err);
       return [];
     }
   }

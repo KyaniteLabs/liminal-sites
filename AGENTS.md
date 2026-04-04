@@ -594,16 +594,6 @@ Before ANY dashboard work:
 
 **Remember:** There is ONE dashboard. It is called **Visual Bible**. It lives at `docs/visual-bible.html`. Everything else is wrong.
 
-### Prevention Checklist
-Before ANY dashboard work:
-- [ ] Confirmed `docs/visual-bible.html` is the target
-- [ ] Verified `gui/` files are NOT being modified
-- [ ] No new dashboard files created
-- [ ] Original format preserved (Kanban, sections)
-- [ ] Content matches current THE_BIBLE.md
-
-**Remember:** There is ONE dashboard. It is the **Visual Bible**. It lives at `docs/visual-bible.html`. Everything else is wrong.
-
 ---
 
 **Last Updated:** 2026-04-01  

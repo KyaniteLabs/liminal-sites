@@ -11,6 +11,7 @@
 
 import { CreativeEvaluator } from './CreativeEvaluator.js';
 import { AestheticCritic } from '../aesthetic/AestheticCritic.js';
+import { Logger } from '../utils/Logger.js';
 import { HeuristicScorer } from '../swarm/HeuristicScorer.js';
 import { quickScore } from '../collab/Scoring.js';
 import { Domain } from '../types/domains.js';
@@ -276,7 +277,8 @@ class AestheticStrategy implements ScoringStrategy {
       const llm = new LLMClient({ role: 'evaluator' });
       this.critic.setLLMClient(llm as any);
       this.llmWired = true;
-    } catch {
+    } catch (err) {
+      Logger.debug('ScoringEngine', 'Failed to wire LLM for dual-path evaluation:', err);
       this.llmWired = true; // Don't retry
     }
   }
@@ -364,7 +366,8 @@ Return ONLY a JSON object with this exact structure:
         issues: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
         report: { reasoning: parsed.reasoning || '' },
       };
-    } catch {
+    } catch (err) {
+      Logger.warn('ScoringEngine', 'LLM evaluation parse failed:', err);
       return { score: 0.5, dimensions: {}, strategy: this.name, issues: ['LLM evaluation error'] };
     }
   }

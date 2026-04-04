@@ -9,6 +9,7 @@
  */
 
 import { LLMClient } from '../llm/LLMClient.js';
+import { Logger } from '../utils/Logger.js';
 import type { NormalizedThinking } from '../llm/ProviderTypes.js';
 
 // ---------------------------------------------------------------------------
@@ -86,7 +87,8 @@ Return ONLY a JSON object with this exact structure:
           ? { text: response.thinking, source: 'none' }
           : undefined,
       };
-    } catch {
+    } catch (err) {
+      Logger.warn('LLMEvaluator', 'Failed to parse evaluation JSON:', err);
       return {
         score: 0.5,
         reasoning: 'Failed to parse evaluation JSON',

@@ -644,10 +644,6 @@ export type { ProjectDNA, ScavengerConfig } from './scavenger/types.js';
 // Routing
 /** @library Public API — not wired into RalphLoop */
 export {
-  SmartRouter,
-  defaultRouter,
-  route,
-  routeByPrompt,
   AB_TEST_RESULTS,
   DOMAIN_ROUTING_DATA,
   OVERALL_FITNESS,

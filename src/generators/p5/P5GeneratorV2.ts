@@ -5,6 +5,7 @@
  */
 
 import { TierBasedGenerator, type TierBasedGeneratorOptions } from '../TierBasedGenerator.js';
+import { Logger } from '../../utils/Logger.js';
 
 export interface P5GeneratorV2Options extends TierBasedGeneratorOptions {
   // P5-specific options can be added here
@@ -19,7 +20,7 @@ export class P5GeneratorV2 extends TierBasedGenerator {
     // Check if prompt suggests sound for additional context
     const needsSound = this.promptSuggestsSound(prompt.toLowerCase());
     if (needsSound) {
-      console.log('[P5GeneratorV2] Sound detected in prompt, will include audio guidance');
+      Logger.info('P5GeneratorV2', 'Sound detected in prompt, will include audio guidance');
     }
     
     return super.generate(prompt, options);
@@ -43,7 +44,7 @@ export class P5GeneratorV2 extends TierBasedGenerator {
 
     // Check for createCanvas (usually required)
     if (!code.includes('createCanvas')) {
-      console.warn('[P5GeneratorV2] Warning: Code may be missing createCanvas()');
+      Logger.warn('P5GeneratorV2', 'Code may be missing createCanvas()');
     }
 
     return { valid: true };

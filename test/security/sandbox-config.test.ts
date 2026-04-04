@@ -73,9 +73,9 @@ describe('SandboxConfig', () => {
       expect(args).toContain('--no-sandbox');
       expect(args).toContain('--disable-setuid-sandbox');
       
-      // Warning SHOULD be logged
+      // Warning SHOULD be logged (via Logger which prefixes with [SandboxConfig])
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[SECURITY WARNING]')
+        expect.stringContaining('[SandboxConfig]')
       );
     });
 

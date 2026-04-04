@@ -11,6 +11,7 @@
 
 import fs from 'fs/promises';
 import { normalizePath, assertSafeSegment } from '../utils/normalizePath.js';
+import { Logger } from '../utils/Logger.js';
 import type { SwarmResult } from '../swarm/types.js';
 
 export interface Iteration {
@@ -250,7 +251,7 @@ export class Gallery {
 
       return Array.from(byVersion.values()).sort((a, b) => a.version - b.version);
     } catch (error) {
-      console.error(`Gallery.loadHistory("${project}") failed:`, error instanceof Error ? error.message : error);
+      Logger.error('Gallery', `Gallery.loadHistory("${project}") failed:`, error instanceof Error ? error.message : error);
       return [];
     }
   }
@@ -304,7 +305,7 @@ export class Gallery {
         .filter(name => /^\d{4}-\d{2}-\d{2}--.+/.test(name));
       return dirs.sort((a, b) => b.localeCompare(a));
     } catch (error) {
-      console.error('Gallery.listProjectDirs() failed:', error instanceof Error ? error.message : error);
+      Logger.error('Gallery', 'Gallery.listProjectDirs() failed:', error instanceof Error ? error.message : error);
       return [];
     }
   }
@@ -350,7 +351,7 @@ export class Gallery {
       const iterations: GalleryIteration[] = [];
       for (const result of results) {
         if (result.status !== 'fulfilled') {
-          console.error(`Gallery.loadHistoryFromDir: failed to read:`, result.reason instanceof Error ? result.reason.message : result.reason);
+          Logger.error('Gallery', 'Gallery.loadHistoryFromDir: failed to read:', result.reason instanceof Error ? result.reason.message : result.reason);
           continue;
         }
         const { version, raw, stat } = result.value;
@@ -362,7 +363,7 @@ export class Gallery {
       iterations.sort((a, b) => a.version - b.version);
       return iterations;
     } catch (error) {
-      console.error(`Gallery.loadHistoryFromDir("${projectDirName}") failed:`, error instanceof Error ? error.message : error);
+      Logger.error('Gallery', `Gallery.loadHistoryFromDir("${projectDirName}") failed:`, error instanceof Error ? error.message : error);
       return [];
     }
   }

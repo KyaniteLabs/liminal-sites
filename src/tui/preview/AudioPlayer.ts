@@ -11,6 +11,7 @@ import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { formatError } from '../../utils/errors.js';
+import { Logger } from '../../utils/Logger.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -29,7 +30,8 @@ export class AudioPlayer {
     try {
       await execFileAsync('which', [cmd]);
       return true;
-    } catch {
+    } catch (err) {
+      Logger.debug('AudioPlayer', `Command check failed for ${cmd}:`, err);
       return false;
     }
   }
@@ -93,8 +95,8 @@ export class AudioPlayer {
       this.currentProcess = proc;
 
       proc.on('error', (err) => {
-        console.error('Audio playback error:', err);
-      });
+        Logger.error('AudioPlayer', 'Audio playback error:', err);
+      })
 
       // Clear reference when process exits so isPlaying() stays accurate
       proc.on('exit', () => {
