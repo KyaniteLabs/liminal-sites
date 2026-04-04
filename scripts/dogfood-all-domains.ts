@@ -109,6 +109,11 @@ interface DogfoodResult {
 
 const RESULTS: DogfoodResult[] = [];
 
+function formatError(context: string, error: unknown): string {
+  if (error instanceof Error) return `${context}: ${error.message}`;
+  return `${context}: ${String(error)}`;
+}
+
 async function runSingleTest(domain: typeof DOMAINS[0], model: typeof MODELS[0]): Promise<DogfoodResult> {
   console.log(`\n🔄 Running: ${domain.name} × ${model.name}`);
   
@@ -118,17 +123,20 @@ async function runSingleTest(domain: typeof DOMAINS[0], model: typeof MODELS[0])
   const tempOutputDir = path.join(PROJECT_ROOT, `dogfood-temp/${domain.name}-${model.name}-${timestamp}`);
   const fullOutputPath = path.join(PROJECT_ROOT, outputPath);
   
-  // Set environment for this model
-  for (const [key, value] of Object.entries(model.env)) {
-    process.env[key] = value;
-  }
-  
   // Clean up temp dir if exists
   if (fs.existsSync(tempOutputDir)) {
     fs.rmSync(tempOutputDir, { recursive: true });
   }
   
+  // Snapshot current environment before applying model overrides
+  const originalEnv = { ...process.env };
+  
   try {
+    // Set environment for this model
+    for (const [key, value] of Object.entries(model.env)) {
+      process.env[key] = value;
+    }
+    
     const result = await run(domain.prompt, {
       maxIterations: 1, // Single iteration for speed
       output: tempOutputDir,
@@ -170,6 +178,15 @@ async function runSingleTest(domain: typeof DOMAINS[0], model: typeof MODELS[0])
       error: errorMsg,
       duration,
     };
+  } finally {
+    // Restore original environment so subsequent tests get clean state
+    for (const key of Object.keys(model.env)) {
+      if (originalEnv[key] !== undefined) {
+        process.env[key] = originalEnv[key];
+      } else {
+        delete process.env[key];
+      }
+    }
   }
 }
 
