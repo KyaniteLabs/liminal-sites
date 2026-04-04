@@ -11,6 +11,7 @@
 
 import type { LLMClient } from './LLMClient.js';
 import { Logger } from '../utils/Logger.js';
+import { TRUNCATE_MEDIUM } from '../constants/limits.js';
 
 interface CompactorMessage {
   role: 'system' | 'user' | 'assistant';
@@ -96,7 +97,7 @@ export class ContextCompactor {
     // LLM-based summarization
     try {
       const conversation = messages
-        .map(m => `${m.role}: ${m.content.slice(0, 300)}`)
+        .map(m => `${m.role}: ${m.content.slice(0, TRUNCATE_MEDIUM)}`)
         .join('\n\n');
 
       const prompt = `Summarize this conversation briefly (2-3 sentences). Focus on key topics, decisions, and context needed to continue:\n\n${conversation}`;

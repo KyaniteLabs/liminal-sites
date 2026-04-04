@@ -16,6 +16,7 @@ import type {
 } from '../ProviderTypes.js';
 import { BaseProvider } from './BaseProvider.js';
 import { CapabilityRegistry } from '../CapabilityRegistry.js';
+import { TIMEOUT_DEFAULT_MS } from '../../constants/limits.js';
 
 export class GoogleProvider extends BaseProvider {
   readonly name = 'google';
@@ -75,7 +76,7 @@ export class GoogleProvider extends BaseProvider {
       }
     }
 
-    const signal = req.signal || AbortSignal.timeout(this.config.timeout || 300000);
+    const signal = req.signal || AbortSignal.timeout(this.config.timeout || TIMEOUT_DEFAULT_MS);
 
     const response = await fetch(url, {
       method: 'POST',
