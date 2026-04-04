@@ -66,7 +66,7 @@ const DEFAULT_DURATION_IN_FRAMES = 150;
  * @example
  * ```typescript
  * const adapter = new RemotionAdapter();
- * await adapter.initialize();
+ * await adapter.async initialize();
  * const instance = adapter.render(layer, container, context);
  * ```
  */
@@ -110,11 +110,11 @@ export class RemotionAdapter implements LayerAdapter {
    * @param container - The container element to render into
    * @param context - Optional render context with settings and state
    * @returns The Remotion instance object
-   * @throws Error if initialize() was not called first
+   * @throws Error if async initialize() was not called first
    */
   render(layer: Layer, container: HTMLElement, context?: RenderContext): RemotionInstance {
     if (!this.isReady()) {
-      throw new Error('Remotion not loaded. Call initialize() first.');
+      throw new Error('Remotion not loaded. Call async initialize() first.');
     }
 
     // Create container for the Remotion player

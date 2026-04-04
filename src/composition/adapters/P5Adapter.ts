@@ -51,7 +51,7 @@ export class P5Adapter implements LayerAdapter {
   render(layer: Layer, container: HTMLElement, context?: RenderContext): P5Instance {
     const p5 = this.p5Module?.default;
     if (!p5) {
-      throw new Error('p5.js not loaded. Call initialize() first.');
+      throw new Error('p5.js not loaded. Call async initialize() first.');
     }
 
     // Create canvas container

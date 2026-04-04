@@ -91,7 +91,7 @@ export class StrudelAdapter implements LayerAdapter {
   render(layer: Layer, container: HTMLElement, context?: RenderContext): StrudelInstance {
     const strudel = this.strudelModule;
     if (!strudel) {
-      throw new Error('Strudel not loaded. Call initialize() first.');
+      throw new Error('Strudel not loaded. Call async initialize() first.');
     }
 
     // Create controls container
