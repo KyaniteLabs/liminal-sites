@@ -503,7 +503,7 @@ export class LayerManager {
     let depth = 0;
     let currentId = layerId;
 
-    while (true) {
+    while (currentId) {
       const layer = this.layers.find(l => l.id === currentId);
       if (!layer || !layer.parentLayerId) break;
 
@@ -691,7 +691,8 @@ export class LayerManager {
   // ==================== PRIVATE HELPERS ====================
 
   private emitChange(): void {
-    this.onChange?.(this.getLayers());
+    // Use void operator to handle both sync and async callbacks
+    void this.onChange?.(this.getLayers());
   }
 
   private generateLayerId(): string {

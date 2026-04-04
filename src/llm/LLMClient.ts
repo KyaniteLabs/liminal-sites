@@ -207,12 +207,16 @@ export class LLMClient {
   static async loadRoles(projectDir?: string): Promise<void> {
     try {
       const { configs, rawFile } = await LLMClient.loadRoleConfigWithFile(projectDir);
+      // eslint-disable-next-line require-atomic-updates
       LLMClient.roleConfigs = configs;
+      // eslint-disable-next-line require-atomic-updates
       LLMClient.roleConfigFile = rawFile;
     } catch (err) {
       Logger.warn('LLMClient', 'Role config loading failed:', err);
       // Role config loading failure is non-fatal — env vars still work
+      // eslint-disable-next-line require-atomic-updates
       LLMClient.roleConfigs = null;
+      // eslint-disable-next-line require-atomic-updates
       LLMClient.roleConfigFile = null;
     }
   }
@@ -741,7 +745,7 @@ Rules:
       signal,
     };
 
-    let streamGen = provider.stream(req);
+    const streamGen = provider.stream(req);
 
     try {
       for await (const event of streamGen) {

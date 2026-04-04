@@ -636,7 +636,7 @@ export class RalphLoop {
 
         // Archive learning: store high-quality outputs
         if (archiveLearning && evaluation.score >= 0.65) {
-          await archiveLearning.addOutput(
+          archiveLearning.addOutput(
             loadedPrompt, currentCode,
             normalizedOptions.collabDomain || 'p5',
             evaluation.score,
