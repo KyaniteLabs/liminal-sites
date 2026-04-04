@@ -37,6 +37,20 @@ export interface GenerationTelemetry {
   userRating?: number;
   /** Any error that occurred */
   error?: string;
+
+  // ── Reasoning trace fields ──
+  /** ID linking to a ReasoningCapture trace file */
+  reasoningTraceId?: string;
+  /** Source of thinking extraction (think_tags, narrative, provider_api, none) */
+  thinkingSource?: string;
+  /** Reasoning quality score 0-1 from ReasoningCapture */
+  reasoningQuality?: number;
+  /** Character length of extracted reasoning text */
+  reasoningLength?: number;
+  /** Pattern types detected in reasoning */
+  detectedPatterns?: string[];
+  /** Whether code was recovered from thinking trace */
+  recoveredFromThinking?: boolean;
 }
 
 export interface ModelStats {
@@ -83,8 +97,18 @@ export interface TrendBucket {
   successRate: number;
 }
 
+export interface ReasoningTrendBucket {
+  date: string;
+  total: number;
+  avgQuality: number;
+  avgReasoningLength: number;
+  patternCounts: Record<string, number>;
+  recoveryRate: number;
+}
+
 export interface TrendResult {
   buckets: TrendBucket[];
+  reasoning?: ReasoningTrendBucket[];
 }
 
 export interface QualityAlert {
@@ -378,6 +402,13 @@ export class TelemetryAggregator {
     const end = endDate ? new Date(endDate + 'T00:00:00Z') : undefined;
 
     const bucketMap = new Map<string, { total: number; successful: number }>();
+    const reasoningMap = new Map<string, {
+      total: number;
+      qualitySum: number;
+      lengthSum: number;
+      patternCounts: Record<string, number>;
+      recoveredCount: number;
+    }>();
 
     for (const g of this.generations) {
       if (model && g.modelId !== model) continue;
@@ -400,6 +431,25 @@ export class TelemetryAggregator {
       current.total++;
       if (g.success) current.successful++;
       bucketMap.set(bucketKey, current);
+
+      // Accumulate reasoning data if present
+      if (g.reasoningQuality !== undefined || g.reasoningLength !== undefined) {
+        const rc = reasoningMap.get(bucketKey) || {
+          total: 0,
+          qualitySum: 0,
+          lengthSum: 0,
+          patternCounts: {} as Record<string, number>,
+          recoveredCount: 0,
+        };
+        rc.total++;
+        if (g.reasoningQuality !== undefined) rc.qualitySum += g.reasoningQuality;
+        if (g.reasoningLength !== undefined) rc.lengthSum += g.reasoningLength;
+        if (g.recoveredFromThinking) rc.recoveredCount++;
+        for (const p of g.detectedPatterns ?? []) {
+          rc.patternCounts[p] = (rc.patternCounts[p] || 0) + 1;
+        }
+        reasoningMap.set(bucketKey, rc);
+      }
     }
 
     const buckets = Array.from(bucketMap.entries())
@@ -411,7 +461,22 @@ export class TelemetryAggregator {
         successRate: stats.total > 0 ? stats.successful / stats.total : 0,
       }));
 
-    return { buckets };
+    // Build reasoning trends if any reasoning data exists
+    let reasoning: ReasoningTrendBucket[] | undefined;
+    if (reasoningMap.size > 0) {
+      reasoning = Array.from(reasoningMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, rc]) => ({
+          date,
+          total: rc.total,
+          avgQuality: rc.total > 0 ? Math.round((rc.qualitySum / rc.total) * 100) / 100 : 0,
+          avgReasoningLength: rc.total > 0 ? Math.round(rc.lengthSum / rc.total) : 0,
+          patternCounts: rc.patternCounts,
+          recoveryRate: rc.total > 0 ? rc.recoveredCount / rc.total : 0,
+        }));
+    }
+
+    return { buckets, reasoning };
   }
 
   private formatISODate(date: Date): string {

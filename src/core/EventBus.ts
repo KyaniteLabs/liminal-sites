@@ -55,6 +55,13 @@ export interface LLMResponseData {
   latencyMs: number;
   error?: string;
   cached?: boolean;
+  domain?: string;
+  reasoningTraceId?: string;
+  thinkingSource?: string;
+  reasoningQuality?: number;
+  reasoningLength?: number;
+  detectedPatterns?: string[];
+  recoveredFromThinking?: boolean;
 }
 
 export interface CompostStageData {
