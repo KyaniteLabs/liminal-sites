@@ -17,6 +17,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Logger } from '../utils/Logger.js';
 import { failureLogger, type FailureRecord } from './FailureLogger.js';
 import { patternDetector, type Pattern } from './PatternDetector.js';
 import { harnessUpdater, type HarnessAdaptation } from './HarnessUpdater.js';
@@ -55,38 +56,38 @@ export class MetaHarnessIntegration {
   async initialize(): Promise<void> {
     if (this.initialized) return;
     
-    console.log('[MetaHarness] Initializing...');
+    Logger.debug('MetaHarnessIntegration', 'Initializing...');
     
     // Initialize persistent memory FIRST
     await harnessMemory.initialize();
     const memoryStatus = harnessMemory.getStatus();
-    console.log(`[MetaHarness] Memory loaded: ${memoryStatus.tasksTotal} tasks, ${memoryStatus.adaptationsTotal} adaptations, ${memoryStatus.episodesTotal} episodes`);
+    Logger.debug('MetaHarnessIntegration', `Memory loaded: ${memoryStatus.tasksTotal} tasks, ${memoryStatus.adaptationsTotal} adaptations, ${memoryStatus.episodesTotal} episodes`);
     
     // Detect available providers
     const providers = listConfiguredProviders();
     const activeProvider = getActiveProvider();
     
-    console.log(`[MetaHarness] Available providers: ${providers.join(', ') || 'none'}`);
-    console.log(`[MetaHarness] Active provider: ${activeProvider}`);
+    Logger.debug('MetaHarnessIntegration', `Available providers: ${providers.join(', ') || 'none'}`);
+    Logger.debug('MetaHarnessIntegration', `Active provider: ${activeProvider}`);
     
     // Initialize LLM client with harness-specific config (lower temp for code fixes)
     const config = getHarnessProviderConfig() || getActiveProviderConfig();
     if (config) {
       this.llmClient = new LLMClient({ ...config, role: 'harness' });
-      console.log(`[MetaHarness] LLM client configured: ${config.model} @ ${config.baseUrl} (temp: ${config.temperature})`);
+      Logger.debug('MetaHarnessIntegration', `LLM client configured: ${config.model} @ ${config.baseUrl} (temp: ${config.temperature})`);
     } else {
-      console.warn('[MetaHarness] No LLM provider configured. Set LIMINAL_LLM_BASE_URL or provider API key.');
+      Logger.warn('MetaHarnessIntegration', 'No LLM provider configured. Set LIMINAL_LLM_BASE_URL or provider API key.');
     }
     
     // Load recent failures for pattern detection
     const recentFailures = failureLogger.getRecentFailures(100);
-    console.log(`[MetaHarness] Loaded ${recentFailures.length} recent failures`);
+    Logger.debug('MetaHarnessIntegration', `Loaded ${recentFailures.length} recent failures`);
     
     // Detect patterns from history and record to memory
     for (const failure of recentFailures) {
       const patterns = patternDetector.analyze(failure);
       if (patterns.length > 0) {
-        console.log(`[MetaHarness] Detected patterns in historical failure: ${patterns.map((p: Pattern) => p.name).join(', ')}`);
+        Logger.debug('MetaHarnessIntegration', `Detected patterns in historical failure: ${patterns.map((p: Pattern) => p.name).join(', ')}`);
         for (const pattern of patterns) {
           harnessMemory.recordPatternOccurrence(pattern.name, failure.domain);
         }
@@ -94,16 +95,16 @@ export class MetaHarnessIntegration {
     }
     
     this.initialized = true;
-    console.log('[MetaHarness] Initialization complete');
+    Logger.debug('MetaHarnessIntegration', 'Initialization complete');
   }
 
   /**
    * Shutdown - save all persistent state
    */
   async shutdown(): Promise<void> {
-    console.log('[MetaHarness] Shutting down...');
+    Logger.debug('MetaHarnessIntegration', 'Shutting down...');
     await harnessMemory.shutdown();
-    console.log('[MetaHarness] Shutdown complete');
+    Logger.debug('MetaHarnessIntegration', 'Shutdown complete');
   }
 
   /**
@@ -189,7 +190,7 @@ export class MetaHarnessIntegration {
       
       // Apply adaptations for detected patterns
       for (const pattern of detectedPatterns) {
-        console.log(`[MetaHarness] Applying adaptation for pattern: ${pattern.name}`);
+        Logger.debug('MetaHarnessIntegration', `Applying adaptation for pattern: ${pattern.name}`);
         const adaptation = harnessUpdater.applyAdaptation(pattern);
         if (adaptation) {
           this.appliedAdaptations.push(adaptation);
@@ -229,7 +230,7 @@ export class MetaHarnessIntegration {
   }): Promise<void> {
     if (!this.llmClient || !result.thinking) return;
     
-    console.log('[MetaHarness] Analyzing generator thinking...');
+    Logger.debug('MetaHarnessIntegration', 'Analyzing generator thinking...');
     
     // Build the prompt for the harness model
     const analysisPrompt = `
@@ -285,9 +286,9 @@ Respond with a JSON object:
         if (jsonMatch) {
           const analysis = JSON.parse(jsonMatch[0]);
           
-          console.log('[MetaHarness] Analysis complete:');
-          console.log(`  Where wrong: ${analysis.whereWentWrong?.slice(0, 80)}...`);
-          console.log(`  How to improve: ${analysis.howToCommunicateBetter?.slice(0, 80)}...`);
+          Logger.debug('MetaHarnessIntegration', 'Analysis complete:');
+          Logger.debug('MetaHarnessIntegration', `Where wrong: ${analysis.whereWentWrong?.slice(0, 80)}...`);
+          Logger.debug('MetaHarnessIntegration', `How to improve: ${analysis.howToCommunicateBetter?.slice(0, 80)}...`);
           
           // Store this insight
           harnessMemory.recordEpisode({
@@ -318,20 +319,20 @@ Respond with a JSON object:
               confidence: analysis.confidence,
             };
             await fs.writeFile(traceFile, JSON.stringify(tracePayload, null, 2), 'utf-8');
-            console.log(`[MetaHarness] Insight persisted to ${traceFile}`);
+            Logger.debug('MetaHarnessIntegration', `Insight persisted to ${traceFile}`);
           } catch (writeErr) {
-            console.warn('[MetaHarness] Failed to persist insight:', (writeErr as Error).message);
+            Logger.warn('MetaHarnessIntegration', `Failed to persist insight: ${(writeErr as Error).message}`);
           }
           
           // If high confidence suggestion, could auto-adapt prompt templates
           if (analysis.confidence > 0.8 && analysis.systemImprovement) {
-            console.log('[MetaHarness] High-confidence system improvement suggested:');
-            console.log(`  ${analysis.systemImprovement}`);
+            Logger.debug('MetaHarnessIntegration', 'High-confidence system improvement suggested:');
+            Logger.debug('MetaHarnessIntegration', `${analysis.systemImprovement}`);
           }
         }
       }
     } catch (err) {
-      console.warn('[MetaHarness] Failed to analyze thinking:', (err as Error).message);
+      Logger.warn('MetaHarnessIntegration', `Failed to analyze thinking: ${(err as Error).message}`);
     }
   }
 
@@ -467,7 +468,7 @@ export function canHandle(prompt: string): number {
 
       await fs.writeFile(path.join(pluginDir, 'index.ts'), indexContent);
 
-      console.log(`[MetaHarness] Converted ${generatorName} to plugin at ${pluginDir}`);
+      Logger.debug('MetaHarnessIntegration', `Converted ${generatorName} to plugin at ${pluginDir}`);
       
       return { success: true, pluginPath: pluginDir };
     } catch (error) {
@@ -557,7 +558,7 @@ if (typeof process !== 'undefined' && process.stdout?.isTTY) {
       try {
         await metaHarness.initialize();
       } catch (err) {
-        console.warn('[MetaHarness] Auto-initialization failed:', err);
+        Logger.warn('MetaHarnessIntegration', `Auto-initialization failed: ${err}`);
       }
     })();
   }, 100);

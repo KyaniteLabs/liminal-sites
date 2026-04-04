@@ -9,6 +9,7 @@ import { Layer, Composition, DomainType, GlobalSettings, DEFAULT_GLOBAL_SETTINGS
 import { LayerManager } from './LayerManager.js';
 import { LayerAdapter, Import } from './adapters/index.js';
 import { LayerMaskManager } from './LayerMask.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface CompositionEngineOptions {
   /** Container element for rendering */
@@ -205,7 +206,7 @@ export class CompositionEngine {
     for (const layer of layers) {
       const adapter = this.adapters.get(layer.type);
       if (!adapter) {
-        console.warn(`No adapter registered for layer type: ${layer.type}`);
+        Logger.warn('CompositionEngine', `No adapter registered for layer type: ${layer.type}`);
         continue;
       }
 
@@ -244,7 +245,7 @@ export class CompositionEngine {
         const instance = adapter.render(layer, layerContainer, this.renderContext);
         layerInstances.set(layer.id, instance);
       } catch (error) {
-        console.error(`Error rendering layer ${layer.id}:`, error);
+        Logger.error('CompositionEngine', `Error rendering layer ${layer.id}:`, error);
       }
     }
   }
@@ -292,7 +293,7 @@ export class CompositionEngine {
     const { ProjectSerializer } = require('./ProjectSerializer.js');
     const serializer = new ProjectSerializer();
     serializer.importProject(project, this).catch((err: Error) => {
-      console.error('Import failed:', err);
+      Logger.error('CompositionEngine', 'Import failed:', err);
     });
   }
 

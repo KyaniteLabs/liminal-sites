@@ -16,6 +16,7 @@ import {
   type ModelTier 
 } from './ModelTier.js';
 import type { LLMConfig } from './LLMClient.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface PromptContext {
   // Core identity
@@ -190,16 +191,16 @@ export class PromptBuilder {
     // Try to load SOUL.md
     try {
       ctx.soul = await readFile(join(process.cwd(), 'SOUL.md'), 'utf-8');
-    } catch {
-      // Intentional bare catch: Optional file loading, failure is acceptable
+    } catch (err) {
+      Logger.debug('PromptBuilder', 'SOUL.md not found, using default soul:', err);
       ctx.soul = 'You are Liminal, a creative coding assistant.';
     }
 
     // Try to load PROJECT_RULES.md
     try {
       ctx.rules = await readFile(join(process.cwd(), 'PROJECT_RULES.md'), 'utf-8');
-    } catch {
-      // Intentional bare catch: Optional file loading, failure is acceptable
+    } catch (err) {
+      Logger.debug('PromptBuilder', 'PROJECT_RULES.md not found, using default rules:', err);
       ctx.rules = 'Output valid, working code only.';
     }
 
@@ -209,8 +210,8 @@ export class PromptBuilder {
         join(process.cwd(), 'docs', 'domains', `${domain}.md`),
         'utf-8'
       );
-    } catch {
-      // Intentional bare catch: Optional file loading, failure is acceptable
+    } catch (err) {
+      Logger.debug('PromptBuilder', `Domain docs for '${domain}' not found:`, err);
     }
 
     // Add memory if provided

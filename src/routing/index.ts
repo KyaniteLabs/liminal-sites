@@ -19,16 +19,8 @@ export type {
   DomainRoutingConfig,
 } from './RoutingData.js';
 
-export {
-  SmartRouter,
-  defaultRouter,
-  route,
-  routeByPrompt,
-} from './SmartRouter.js';
-export type {
-  RoutingDecision,
-  RoutingConfig,
-} from './SmartRouter.js';
+// Note: SmartRouter is deprecated. Use GeneratorRegistry.route() instead.
+// Kept for backward compatibility but will be removed in a future version.
 
 export {
   GeneratorBanditRouter,
@@ -38,3 +30,9 @@ export type {
   BanditArm,
   BanditState,
 } from './GeneratorBanditRouter.js';
+
+// Re-export routing types from GeneratorRegistry (where they're now defined)
+export type {
+  RoutingDecision,
+  RoutingConfig,
+} from '../generators/GeneratorRegistry.js';

@@ -1,6 +1,7 @@
 import readline from 'readline';
 import { PromptHistory } from '../config/PromptHistory.js';
 import { Provider } from '../types/providers.js';
+import { Logger } from '../utils/Logger.js';
 
 interface InteractiveOptions {
   provider?: string;
@@ -37,14 +38,14 @@ export class InteractiveMode {
       return null;
     }
 
-    console.log('');
-    console.log('Recent Prompts:');
+    Logger.info('InteractiveMode', '');
+    Logger.info('InteractiveMode', 'Recent Prompts:');
     recent.forEach((p, i) => {
       const display = p.slice(0, 60) + (p.length > 60 ? '...' : '');
-      console.log('  ' + (i + 1) + '. ' + display);
+      Logger.info('InteractiveMode', '  ' + (i + 1) + '. ' + display);
     });
-    console.log('  0. Enter custom prompt');
-    console.log('');
+    Logger.info('InteractiveMode', '  0. Enter custom prompt');
+    Logger.info('InteractiveMode', '');
 
     return new Promise((resolve) => {
       this.rl.question('Select (0-10): ', (answer) => {
@@ -75,10 +76,10 @@ export class InteractiveMode {
    */
   async selectProvider(): Promise<string> {
     const providers = this.getProviders();
-    console.log('');
-    console.log('Providers:');
-    providers.forEach((p, i) => console.log('  ' + (i + 1) + '. ' + p));
-    console.log('');
+    Logger.info('InteractiveMode', '');
+    Logger.info('InteractiveMode', 'Providers:');
+    providers.forEach((p, i) => Logger.info('InteractiveMode', '  ' + (i + 1) + '. ' + p));
+    Logger.info('InteractiveMode', '');
 
     return new Promise((resolve) => {
       this.rl.question('Select provider (1-' + providers.length + '): ', (answer) => {
@@ -92,10 +93,10 @@ export class InteractiveMode {
    * Run full interactive session
    */
   async run(): Promise<{ prompt: string; options: InteractiveOptions }> {
-    console.log('');
-    console.log('Liminal - Interactive Mode');
-    console.log('==========================');
-    console.log('');
+    Logger.info('InteractiveMode', '');
+    Logger.info('InteractiveMode', 'Liminal - Interactive Mode');
+    Logger.info('InteractiveMode', '==========================');
+    Logger.info('InteractiveMode', '');
 
     // Get prompt
     let prompt = await this.selectPrompt();

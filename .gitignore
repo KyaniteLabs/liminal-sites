@@ -90,3 +90,6 @@ dogfood-report-*.md
 *.log
 regeneration.log
 test-qwen*.log
+
+# Compost state file
+compost/soup-state.json

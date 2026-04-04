@@ -17,6 +17,7 @@ import { SERVICE_DEFAULTS } from '../constants.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { eventBus } from '../core/EventBus.js';
 import { HTMLWrapper } from '../utils/htmlWrapper.js';
+import { Logger } from '../utils/Logger.js';
 import { validateCode } from '../utils/validation.js';
 import type { BusEvent } from '../core/EventBus.js';
 import {
@@ -60,7 +61,7 @@ export class PreviewServer {
         try {
           client.write(data);
         } catch (err) {
-          console.warn('[PreviewServer] Failed to write to SSE client, removing:', err);
+          Logger.warn('PreviewServer', 'Failed to write to SSE client, removing:', err);
           this.sseClients.delete(client);
         }
       }
@@ -116,7 +117,7 @@ export class PreviewServer {
 
     // CSP report endpoint
     this.app.post('/api/csp-report', express.json({ type: 'application/csp-report' }), (req, res) => {
-      console.warn('[CSP Violation]', req.body);
+      Logger.warn('PreviewServer', '[CSP Violation]', req.body);
       res.status(204).send();
     });
 

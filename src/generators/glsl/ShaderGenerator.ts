@@ -3,6 +3,7 @@
  */
 
 import { TierBasedGenerator, type TierBasedGeneratorOptions } from '../TierBasedGenerator.js';
+import { Logger } from '../../utils/Logger.js';
 
 export class ShaderGenerator extends TierBasedGenerator {
   constructor(llmOrConfig?: ConstructorParameters<typeof TierBasedGenerator>[1]) {
@@ -26,7 +27,7 @@ export class ShaderGenerator extends TierBasedGenerator {
           error: 'Generated code is critically incomplete (missing main or gl_FragColor)',
         };
       }
-      console.warn('[ShaderGenerator] Warning: Code may be truncated, attempting to use anyway');
+      Logger.warn('ShaderGenerator', 'Code may be truncated, attempting to use anyway');
     }
 
     return { valid: true };

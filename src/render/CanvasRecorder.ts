@@ -5,6 +5,7 @@ import { formatError } from '../utils/errors.js';
 import { VideoExporter } from '../export/VideoExporter.js';
 import { HTMLWrapper } from '../utils/htmlWrapper.js';
 import { Domain } from '../types/domains.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface RecordingOptions {
   fps: number;
@@ -95,7 +96,7 @@ export class CanvasRecorder {
         await fs.rm(framesDir, { recursive: true, force: true });
       } catch (error) {
         const message = this.formatErrorMessage(error);
-        console.error('[CanvasRecorder] Cleanup failed:', message);
+        Logger.error('CanvasRecorder', 'Cleanup failed:', message);
       }
     }
   }

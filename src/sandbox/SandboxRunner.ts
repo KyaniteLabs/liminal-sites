@@ -8,6 +8,7 @@
 import puppeteer, { Browser } from 'puppeteer';
 import { generateHTML } from '../utils/generateHTML.js';
 import { getChromeArgs } from '../security/SandboxConfig.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface SandboxResult {
   stdout?: string;
@@ -76,7 +77,7 @@ export async function runInSandbox(
   } finally {
     if (browser) {
       await browser.close().catch((err) => {
-        console.warn('[SandboxRunner] Failed to close browser:', err instanceof Error ? err.message : err);
+        Logger.warn('SandboxRunner', 'Failed to close browser: ' + (err instanceof Error ? err.message : err));
       });
     }
   }

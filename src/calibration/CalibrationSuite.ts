@@ -12,6 +12,7 @@
 import { CorrelationCalculator, type CorrelationResult, type RegressionResult } from './CorrelationCalculator.js';
 import type { AssessmentResult } from '../core/CreativeEvaluator.js';
 import type { AestheticReport } from '../aesthetic/types.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface CalibrationSample {
   id: string;
@@ -354,7 +355,7 @@ export class CalibrationSuite {
    */
   deserialize(data: CalibrationData): void {
     if (data.version !== CALIBRATION_VERSION) {
-      console.warn(`[CalibrationSuite] Version mismatch: ${data.version} vs ${CALIBRATION_VERSION}`);
+      Logger.warn('CalibrationSuite', `Version mismatch: ${data.version} vs ${CALIBRATION_VERSION}`);
     }
 
     this.sessions.clear();

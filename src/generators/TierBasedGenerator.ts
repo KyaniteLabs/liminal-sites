@@ -15,6 +15,7 @@ import { harnessMemory } from '../harness/HarnessMemory.js';
 import { metaHarness } from '../harness/MetaHarnessIntegration.js';
 import { GenerationError } from '../errors/GenerationError.js';
 import { Layer, createLayer, DomainType } from '../composition/types.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface TierBasedGeneratorOptions {
   signal?: AbortSignal;
@@ -94,7 +95,7 @@ export abstract class TierBasedGenerator {
     // 3. Build tier-appropriate prompt
     const builtPrompt = this.promptBuilder.build(context);
 
-    console.log(`[${this.constructor.name}] Using ${this.tier} tier (${budget} token budget)`);
+    Logger.info('TierBasedGenerator', `Using ${this.tier} tier (${budget} token budget)`);
 
     // 4. Generate based on tier capabilities
     let response: LLMResponse;

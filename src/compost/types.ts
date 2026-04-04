@@ -85,6 +85,7 @@ export interface FragmentMetadata {
   dimensions?: { width: number; height: number };
   format?: string;
   sampleRate?: number;
+  bitrate?: number;
   duration?: number;
   channels?: number;
   bpm?: number;

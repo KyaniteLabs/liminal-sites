@@ -9,6 +9,7 @@
  */
 
 import type { StreamEvent, TokenUsage } from './ProviderTypes.js';
+import { Logger } from '../utils/Logger.js';
 
 /**
  * Parse SSE stream from OpenAI-compatible endpoints.
@@ -62,8 +63,8 @@ export async function* parseOpenAIStream(
               yield { type: 'content', content: delta.content };
             }
           }
-        } catch {
-          // Skip malformed JSON
+        } catch (err) {
+          Logger.debug('StreamParser', 'Failed to parse OpenAI stream JSON chunk:', err);
         }
       }
     }
@@ -141,8 +142,8 @@ export async function* parseAnthropicStream(
               yield { type: 'done' };
             }
           }
-        } catch {
-          // Skip malformed JSON
+        } catch (err) {
+          Logger.debug('StreamParser', 'Failed to parse Anthropic stream JSON chunk:', err);
         }
       }
     }
@@ -198,8 +199,8 @@ export async function* parseOllamaStream(
             yield { type: 'done', usage };
             return;
           }
-        } catch {
-          // Skip malformed lines
+        } catch (err) {
+          Logger.debug('StreamParser', 'Failed to parse Ollama stream JSON line:', err);
         }
       }
     }

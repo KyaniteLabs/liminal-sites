@@ -12,6 +12,7 @@
 
 import { LLMClient } from '../llm/LLMClient.js';
 import { formatError } from '../utils/errors.js';
+import { Logger } from '../utils/Logger.js';
 
 export interface SemanticValidationResult {
   aligned: boolean;
@@ -97,6 +98,7 @@ Does the code match the user's request? Analyze and return JSON.`;
         explanation: result.explanation || 'No explanation provided',
       };
     } catch (error) {
+      Logger.warn('SemanticValidator', 'Semantic validation failed:', error);
       return {
         aligned: false,
         score: 0,

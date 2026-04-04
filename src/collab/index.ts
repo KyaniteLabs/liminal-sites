@@ -31,6 +31,4 @@ export type {
   DomainType,
 } from './types.js';
 
-// Legacy exports (deprecated, will be removed in future version)
-// These now throw errors directing users to use CollaborationEngine instead
-export { DeprecatedCollaboration } from './DeprecatedCollaboration.js';
+// Note: DeprecatedCollaboration has been removed. Use CollaborationEngine instead.

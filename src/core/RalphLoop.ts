@@ -326,7 +326,8 @@ export class RalphLoop {
                         lirEnabled: true,
                       };
                     }
-                  } catch {
+                  } catch (err) {
+                    Logger.debug('RalphLoop', 'LIR parsing failed, regex fallback will be used:', err);
                     // LIR parsing failed — regex fallback will be used
                   }
                 }
@@ -430,7 +431,8 @@ export class RalphLoop {
                   lirEnabled: true,
                 };
               }
-            } catch {
+            } catch (err) {
+              Logger.debug('RalphLoop', 'LIR parsing failed, regex fallback will be used:', err);
               // LIR parsing failed — regex fallback will be used
             }
           }
@@ -455,7 +457,8 @@ export class RalphLoop {
             try {
               const llmForCritic = new LLMClient({ role: 'evaluator' });
               critic.setLLMClient(llmForCritic as any);
-            } catch {
+            } catch (err) {
+              Logger.debug('RalphLoop', 'LLM client creation for AestheticCritic failed, heuristic-only path will be used:', err);
               // LLM client creation failed — heuristic-only path will be used
             }
             const aestheticReport = critic.critique(

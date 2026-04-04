@@ -9,6 +9,7 @@ import type { Layer, GlobalSettings } from '../types.js';
 import type { LayerAdapter, Export, Import } from './index.js';
 import type { RenderContext } from '../CompositionEngine.js';
 import { getCanvasCompositeOp } from '../utils/blendModes.js';
+import { Logger } from '../../utils/Logger.js';
 
 /** p5.js sketch instance */
 interface P5Instance {
@@ -94,7 +95,7 @@ export class P5Adapter implements LayerAdapter {
               const setupFn = new Function('p', setupMatch[1]);
               setupFn(p);
             } catch (e) {
-              console.error('Error in setup:', e);
+              Logger.error('P5Adapter', 'Error in setup:', e);
             }
           }
         }
@@ -110,7 +111,7 @@ export class P5Adapter implements LayerAdapter {
               const drawFn = new Function('p', drawMatch[1]);
               drawFn(p);
             } catch (e) {
-              console.error('Error in draw:', e);
+              Logger.error('P5Adapter', 'Error in draw:', e);
             }
           }
         }

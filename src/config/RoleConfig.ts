@@ -16,6 +16,7 @@ import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { env } from '../utils/env.js';
 import { CapabilityRegistry } from '../llm/CapabilityRegistry.js';
+import { Logger } from '../utils/Logger.js';
 import type { ModelCapabilities } from '../llm/CapabilityRegistry.js';
 import type { ThinkingConfig } from '../llm/ProviderTypes.js';
 
@@ -204,7 +205,8 @@ async function loadProjectConfig(projectDir?: string): Promise<RoleConfigFile | 
 
     // Project config uses different shape — extract role info from it
     return projectToRoleConfig(parsed);
-  } catch {
+  } catch (err) {
+    Logger.debug('RoleConfig', `Failed to load role config from ${configPath}:`, err);
     return null;
   }
 }

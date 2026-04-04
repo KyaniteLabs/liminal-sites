@@ -6,6 +6,8 @@
  * In production, always use the sandbox.
  */
 
+import { Logger } from '../utils/Logger.js';
+
 export interface SandboxConfig {
   /** When true, disables Chrome sandbox (USE WITH CAUTION) */
   disableSandbox: boolean;
@@ -47,7 +49,7 @@ export function getChromeArgs(options?: { forceDisableSandbox?: boolean }): stri
   const args = [...SECURE_CHROME_ARGS];
   
   if (shouldDisableSandbox) {
-    console.warn('[SECURITY WARNING] Chrome sandbox is disabled. This should only be used in containerized environments with seccomp/AppArmor profiles.');
+    Logger.warn('SandboxConfig', 'Chrome sandbox is disabled. This should only be used in containerized environments with seccomp/AppArmor profiles.');
     args.push(...DANGEROUS_CHROME_ARGS);
   }
   

@@ -14,6 +14,7 @@
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { Logger } from '../utils/Logger.js';
 import { Status } from '../types/status.js';
 import type { CalibrationWeights, CalibrationData } from '../calibration/CalibrationSuite.js';
 import { getGlobalEmbeddingService } from '../embeddings/EmbeddingService.js';
@@ -145,10 +146,10 @@ export class HarnessMemory {
         
         // Migrate if needed
         this.state = this.migrate(loaded);
-        console.log(`[HarnessMemory] Loaded ${this.state.tasks.length} tasks, ${this.state.adaptations.length} adaptations, ${this.state.episodes.length} episodes, ${this.state.calibration.length} calibrations`);
+        Logger.debug('HarnessMemory', `Loaded ${this.state.tasks.length} tasks, ${this.state.adaptations.length} adaptations, ${this.state.episodes.length} episodes, ${this.state.calibration.length} calibrations`);
       } catch (err) {
         // File doesn't exist, use defaults
-        console.log('[HarnessMemory] No previous memory found, starting fresh');
+        Logger.debug('HarnessMemory', 'No previous memory found, starting fresh');
         this.state = { ...DEFAULT_STATE };
         await this.save();
       }
@@ -156,12 +157,12 @@ export class HarnessMemory {
       // Auto-save every 30 seconds if dirty
       this.saveInterval = setInterval(() => {
         if (this.dirty) {
-          this.save().catch(console.error);
+          this.save().catch((err) => Logger.error('HarnessMemory', `Auto-save failed: ${err}`));
         }
       }, 30000);
 
     } catch (err) {
-      console.error('[HarnessMemory] Initialization failed:', err);
+      Logger.error('HarnessMemory', `Initialization failed: ${err}`);
       this.state = { ...DEFAULT_STATE };
     }
   }
@@ -191,7 +192,7 @@ export class HarnessMemory {
       );
       this.dirty = false;
     } catch (err) {
-      console.error('[HarnessMemory] Save failed:', err);
+      Logger.error('HarnessMemory', `Save failed: ${err}`);
     }
   }
 
@@ -435,7 +436,7 @@ export class HarnessMemory {
       return neighborIndices.map(idx => embedded[idx].episode);
     } catch (error) {
       // Embedding service unavailable — fall back to chronological
-      console.warn('[HarnessMemory] Semantic retrieval failed, using chronological fallback:', error);
+      Logger.warn('HarnessMemory', `Semantic retrieval failed, using chronological fallback: ${error}`);
       return this.getRecentEpisodes(k);
     }
   }

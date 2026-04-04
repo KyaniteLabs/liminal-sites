@@ -19,6 +19,7 @@ import type { Layer, GlobalSettings } from '../types.js';
 import type { LayerAdapter, Export, Import } from './index.js';
 import type { RenderContext } from '../CompositionEngine.js';
 import { getWebGLBlendFunc } from '../utils/blendModes.js';
+import { Logger } from '../../utils/Logger.js';
 
 /** Three.js Scene type (simplified) */
 interface THREEScene {
@@ -167,7 +168,7 @@ export class ThreeAdapter implements LayerAdapter {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (window as any).__trackObject;
     } catch (error) {
-      console.error('Error executing Three.js code:', error);
+      Logger.error('ThreeAdapter', 'Error executing Three.js code:', error);
     }
 
     // Apply WebGL blend mode if not normal

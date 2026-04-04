@@ -8,6 +8,7 @@
  */
 
 import { LLMClient } from '../../llm/LLMClient.js';
+import { Logger } from '../../utils/Logger.js';
 import { failureLogger } from '../FailureLogger.js';
 import { Status } from '../../types/status.js';
 import { rateLimiter } from '../tools/RateLimiter.js';
@@ -122,8 +123,8 @@ export class HarnessAgent {
     this.sessions.set(task.id, session);
     this.currentSession = session;
 
-    console.log(`[HarnessAgent] Starting task: ${task.title}`);
-    console.log(`[HarnessAgent] Budget: ${maxSteps} steps, ${timeoutMs}ms timeout`);
+    Logger.debug('HarnessAgent', `Starting task: ${task.title}`);
+    Logger.debug('HarnessAgent', `Budget: ${maxSteps} steps, ${timeoutMs}ms timeout`);
 
     try {
       // Step 1: Read the target file if specified
@@ -150,17 +151,17 @@ export class HarnessAgent {
           throw new Error(`Failed to apply edit: ${editResult.error}`);
         }
 
-        console.log(`[HarnessAgent] Applied edit to ${task.targetFile}`);
+        Logger.debug('HarnessAgent', `Applied edit to ${task.targetFile}`);
       }
 
       // Step 3: Verify with build
       const buildResult = await this.callTool('runBuild', {});
       
       if (!buildResult.success) {
-        console.error(`[HarnessAgent] Build failed:`, buildResult.error);
+        Logger.error('HarnessAgent', `Build failed: ${buildResult.error}`);
         
         if (autoRollback) {
-          console.log(`[HarnessAgent] Rolling back changes...`);
+          Logger.debug('HarnessAgent', 'Rolling back changes...');
           await this.rollback(session);
           session.status = Status.ROLLED_BACK;
         } else {
@@ -192,8 +193,8 @@ export class HarnessAgent {
       session.status = Status.SUCCESS;
       session.endTime = new Date().toISOString();
       
-      console.log(`[HarnessAgent] Task completed successfully!`);
-      console.log(`[HarnessAgent] Steps executed: ${session.steps.length}`);
+      Logger.debug('HarnessAgent', 'Task completed successfully!');
+      Logger.debug('HarnessAgent', `Steps executed: ${session.steps.length}`);
       
       // Self-evaluation: Record success
       selfEvaluation.recordOutcome({
@@ -213,7 +214,7 @@ export class HarnessAgent {
       session.endTime = new Date().toISOString();
       
       const errorMsg = formatError('HarnessAgent', error);
-      console.error(errorMsg);
+      Logger.error('HarnessAgent', errorMsg);
       
       // Log failure
       failureLogger.log({
@@ -239,12 +240,12 @@ export class HarnessAgent {
       // Self-correction: Check if retry is warranted
       const retryDecision = selfEvaluation.shouldRetry(task.id, task.verifyCommand ? 'verify-first' : 'direct');
       if (retryDecision.shouldRetry && autoRollback) {
-        console.log(`[HarnessAgent] Self-correction: ${retryDecision.reason}`);
+        Logger.debug('HarnessAgent', `Self-correction: ${retryDecision.reason}`);
         await this.rollback(session);
         session.status = Status.ROLLED_BACK;
         
         // Log the retry strategy
-        console.log(`[HarnessAgent] Will retry with strategy: ${retryDecision.newStrategy}`);
+        Logger.debug('HarnessAgent', `Will retry with strategy: ${retryDecision.newStrategy}`);
       }
       
       if (autoRollback && session.steps.length > 0 && !retryDecision.shouldRetry) {
@@ -326,7 +327,7 @@ export class HarnessAgent {
    * Rollback all changes in a session
    */
   private async rollback(session: AgentSession): Promise<void> {
-    console.log(`[HarnessAgent] Rolling back ${session.steps.length} steps...`);
+    Logger.debug('HarnessAgent', `Rolling back ${session.steps.length} steps...`);
     
     for (const step of [...session.steps].reverse()) {
       const data = step.result.data as { backupPath?: string } | undefined;
@@ -338,7 +339,7 @@ export class HarnessAgent {
       }
     }
     
-    console.log(`[HarnessAgent] Rollback complete`);
+    Logger.debug('HarnessAgent', 'Rollback complete');
   }
 
   /**

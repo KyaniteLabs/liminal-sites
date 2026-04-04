@@ -8,6 +8,7 @@
 import { LLMClient } from './llm/LLMClient.js';
 import { PromptLibrary } from './prompts/index.js';
 import { validatePrompt } from './utils/validation.js';
+import { Logger } from './utils/Logger.js';
 
 export interface GenerateVisualsOptions {
   prompt: string;
@@ -48,7 +49,7 @@ export async function generateVisuals(
       if (code) return { code };
     } catch (err) {
       // Fall through to template
-      console.warn('[generateVisuals] LLM generation failed, falling back to template:', err);
+      Logger.warn('generateVisuals', 'LLM generation failed, falling back to template: ' + err);
     }
   }
 

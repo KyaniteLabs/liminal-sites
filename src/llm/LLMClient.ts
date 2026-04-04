@@ -209,7 +209,8 @@ export class LLMClient {
       const { configs, rawFile } = await LLMClient.loadRoleConfigWithFile(projectDir);
       LLMClient.roleConfigs = configs;
       LLMClient.roleConfigFile = rawFile;
-    } catch {
+    } catch (err) {
+      Logger.warn('LLMClient', 'Role config loading failed:', err);
       // Role config loading failure is non-fatal — env vars still work
       LLMClient.roleConfigs = null;
       LLMClient.roleConfigFile = null;
@@ -243,7 +244,8 @@ export class LLMClient {
       const userPath = join(homedir(), '.liminal', 'config.json');
       const content = await readFile(userPath, 'utf-8');
       rawFile = JSON.parse(content) as RoleConfigFile;
-    } catch {
+    } catch (err) {
+      Logger.debug('LLMClient', 'No config file found, fallbacks come from env or are empty:', err);
       // No config file — fallbacks come from env or are empty
     }
 
@@ -558,7 +560,7 @@ export class LLMClient {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error';
       const isRetryable = error instanceof LLMError && error.retryable;
-      console.error('LLMClient.generate failed:', errMsg, isRetryable ? '(retryable, retries exhausted)' : '');
+      Logger.error('LLMClient', 'LLMClient.generate failed:', errMsg, isRetryable ? '(retryable, retries exhausted)' : '');
       eventBus.emit(EventTypes.LLM_RESPONSE, 'LLMClient', {
         provider: this.detectProvider(),
         model: this.config.model,
@@ -697,7 +699,8 @@ Rules:
               Logger.info('LLMClient.fallback', `complete() fallback succeeded: ${fallback.getModel()}`);
               return { text: response.content, success: true as const };
             }
-          } catch {
+          } catch (err) {
+            Logger.debug('LLMClient', 'Fallback provider failed in complete():', err);
             continue;
           }
         }
@@ -775,7 +778,8 @@ Rules:
           }
           Logger.info('LLMClient.fallback', `stream() fallback succeeded: ${fallback.getModel()}`);
           return;
-        } catch {
+        } catch (err) {
+          Logger.debug('LLMClient', 'Fallback provider failed in stream():', err);
           continue;
         }
       }
@@ -848,7 +852,8 @@ Rules:
           }
           Logger.info('LLMClient.fallback', `streamWithThinking() fallback succeeded: ${fallback.getModel()}`);
           return;
-        } catch {
+        } catch (err) {
+          Logger.debug('LLMClient', 'Fallback provider failed in streamWithThinking():', err);
           continue;
         }
       }

@@ -4,6 +4,8 @@
  * Validates LLM outputs against expected schemas.
  */
 
+import { Logger } from '../../utils/Logger.js';
+
 export interface ValidationResult<T = unknown> {
   success: boolean;
   data?: T;
@@ -116,6 +118,7 @@ export class SchemaValidator {
       const parsed = JSON.parse(jsonString);
       return this.validate<T>(schemaName, parsed);
     } catch (error) {
+      Logger.warn('SchemaValidator', 'Failed to parse JSON string:', error);
       return {
         success: false,
         errors: [{ path: '', message: `Invalid JSON: ${error}`, code: 'INVALID_JSON' }],

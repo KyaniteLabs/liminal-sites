@@ -15,6 +15,7 @@
 import type { Layer, GlobalSettings } from '../types.js';
 import type { LayerAdapter, Export, Import } from './index.js';
 import type { RenderContext } from '../CompositionEngine.js';
+import { Logger } from '../../utils/Logger.js';
 
 /** Strudel REPL interface */
 interface StrudelRepl {
@@ -131,7 +132,7 @@ export class StrudelAdapter implements LayerAdapter {
         pattern = result.pattern;
       });
     } catch (error) {
-      console.error('Error executing Strudel code:', error);
+      Logger.error('StrudelAdapter', 'Error executing Strudel code:', error);
     }
 
     // Store instance info

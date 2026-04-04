@@ -9,6 +9,7 @@ import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
+import { Logger } from '../../utils/Logger.js';
 import {
   GuardrailRule,
   GuardrailResult,
@@ -39,7 +40,8 @@ async function findProjectRoot(): Promise<string> {
     try {
       await readFile(join(current, 'package.json'), 'utf8');
       return current;
-    } catch {
+    } catch (err) {
+      Logger.warn('SupplyChainGuardrail', 'Failed to read package.json while finding project root:', err);
       const parent = dirname(current);
       if (parent === current) break;
       current = parent;
@@ -65,7 +67,8 @@ async function runNpmAudit(): Promise<AuditResult> {
   let projectRoot: string;
   try {
     projectRoot = await findProjectRoot();
-  } catch {
+  } catch (err) {
+    Logger.warn('SupplyChainGuardrail', 'Failed to find project root for npm audit:', err);
     return empty;
   }
 
@@ -92,7 +95,8 @@ async function runNpmAudit(): Promise<AuditResult> {
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(stdout);
-  } catch {
+  } catch (err) {
+    Logger.warn('SupplyChainGuardrail', 'Failed to parse npm audit JSON output:', err);
     return empty;
   }
 
@@ -178,7 +182,8 @@ async function generateSBOM(): Promise<Record<string, unknown>> {
   let projectRoot: string;
   try {
     projectRoot = await findProjectRoot();
-  } catch {
+  } catch (err) {
+    Logger.warn('SupplyChainGuardrail', 'Failed to find project root for SBOM generation:', err);
     return skeleton;
   }
 
@@ -204,7 +209,8 @@ async function generateSBOM(): Promise<Record<string, unknown>> {
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(stdout);
-  } catch {
+  } catch (err) {
+    Logger.warn('SupplyChainGuardrail', 'Failed to parse npm ls JSON output for SBOM:', err);
     return skeleton;
   }
 

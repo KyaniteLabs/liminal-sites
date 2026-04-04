@@ -8,6 +8,7 @@
 import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { Logger } from '../utils/Logger.js';
 
 export interface ReasoningTrace {
   id: string;
@@ -306,7 +307,8 @@ export class ReasoningCapture {
         try {
           const content = readFileSync(join(this.logDir, f), 'utf-8');
           return JSON.parse(content) as ReasoningTrace;
-        } catch {
+        } catch (err) {
+          Logger.warn('ReasoningCapture', `Failed to parse trace file ${f}:`, err);
           return null;
         }
       })

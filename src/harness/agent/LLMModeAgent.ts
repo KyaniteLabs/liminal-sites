@@ -9,6 +9,7 @@
  */
 
 import { LLMClient } from '../../llm/LLMClient.js';
+import { Logger } from '../../utils/Logger.js';
 import { failureLogger } from '../FailureLogger.js';
 import { Status } from '../../types/status.js';
 import { rateLimiter } from '../tools/RateLimiter.js';
@@ -98,8 +99,8 @@ export class LLMModeAgent {
     this.sessions.set(task.id, session);
     this.currentSession = session;
 
-    console.log(`[LLMModeAgent] Starting autonomous task: ${task.title}`);
-    console.log(`[LLMModeAgent] Budget: ${maxSteps} LLM calls`);
+    Logger.debug('LLMModeAgent', `Starting autonomous task: ${task.title}`);
+    Logger.debug('LLMModeAgent', `Budget: ${maxSteps} LLM calls`);
 
     // Initialize conversation with system prompt
     session.messages.push({
@@ -130,13 +131,13 @@ When the task is complete and build passes, respond with tool "complete".`;
     try {
       while (session.stepCount < maxSteps) {
         session.stepCount++;
-        console.log(`\n[LLMModeAgent] Step ${session.stepCount}/${maxSteps}`);
+        Logger.debug('LLMModeAgent', `Step ${session.stepCount}/${maxSteps}`);
 
         // Get LLM's plan
         const toolCall = await this.getLLMPlan(session);
         
         if (!toolCall) {
-          console.error('[LLMModeAgent] Failed to parse LLM response');
+          Logger.error('LLMModeAgent', 'Failed to parse LLM response');
           break;
         }
 
@@ -149,7 +150,7 @@ When the task is complete and build passes, respond with tool "complete".`;
 
         // Check for completion
         if (toolCall.tool === 'complete') {
-          console.log('[LLMModeAgent] Task completed by LLM');
+          Logger.debug('LLMModeAgent', 'Task completed by LLM');
           session.status = Status.SUCCESS;
           session.endTime = new Date().toISOString();
           return session;
@@ -167,7 +168,7 @@ When the task is complete and build passes, respond with tool "complete".`;
 
         // Check for critical failures
         if (toolCall.tool === 'runBuild' && !result.success) {
-          console.error('[LLMModeAgent] Build failed - entering reflection mode');
+          Logger.error('LLMModeAgent', 'Build failed - entering reflection mode');
           
           // Try to fix the error
           const fixed = await this.attemptErrorRecovery(session, result);
@@ -175,7 +176,7 @@ When the task is complete and build passes, respond with tool "complete".`;
           if (!fixed) {
             // Rollback if we have backups
             if (session.backups.length > 0) {
-              console.log('[LLMModeAgent] Rolling back changes...');
+              Logger.debug('LLMModeAgent', 'Rolling back changes...');
               await this.rollback(session);
               session.status = Status.ROLLED_BACK;
             } else {
@@ -201,7 +202,7 @@ When the task is complete and build passes, respond with tool "complete".`;
       }
 
       // Max steps reached
-      console.error(`[LLMModeAgent] Max steps (${maxSteps}) reached`);
+        Logger.error('LLMModeAgent', `Max steps (${maxSteps}) reached`);
       session.status = Status.FAILED;
       session.endTime = new Date().toISOString();
       
@@ -214,7 +215,7 @@ When the task is complete and build passes, respond with tool "complete".`;
       return session;
 
     } catch (error) {
-      console.error('[LLMModeAgent] Unexpected error:', error);
+      Logger.error('LLMModeAgent', `Unexpected error: ${error}`);
       session.status = Status.FAILED;
       session.endTime = new Date().toISOString();
       
@@ -267,7 +268,7 @@ When the task is complete and build passes, respond with tool "complete".`;
     });
 
     if (!rateLimitResult.result) {
-      console.error('[LLMModeAgent] Rate limit hit for LLM call');
+      Logger.error('LLMModeAgent', 'Rate limit hit for LLM call');
       return null;
     }
 
@@ -314,13 +315,13 @@ When the task is complete and build passes, respond with tool "complete".`;
         this.storeAnalysis(analysis);
       } catch (analysisErr) {
         // Analysis failure must not break the agent loop
-        console.warn('[LLMModeAgent] ThinkingAnalyzer failed:', analysisErr);
+        Logger.warn('LLMModeAgent', `ThinkingAnalyzer failed: ${analysisErr}`);
       }
 
       return toolCall;
     } catch (e) {
-      console.error('[LLMModeAgent] Failed to parse LLM response:', e);
-      console.error('Raw response:', rateLimitResult.result);
+      Logger.error('LLMModeAgent', `Failed to parse LLM response: ${e}`);
+      Logger.error('LLMModeAgent', `Raw response: ${rateLimitResult.result}`);
       return null;
     }
   }
@@ -331,8 +332,8 @@ When the task is complete and build passes, respond with tool "complete".`;
   private async executeTool(toolCall: ToolCall): Promise<ToolResult> {
     const { tool, params, thought } = toolCall;
     
-    console.log(`[LLMModeAgent] ${thought}`);
-    console.log(`[LLMModeAgent] Executing: ${tool}(${JSON.stringify(params)})`);
+    Logger.debug('LLMModeAgent', `${thought}`);
+    Logger.debug('LLMModeAgent', `Executing: ${tool}(${JSON.stringify(params)})`);
 
     const rateLimitResult = await rateLimiter.execute(
       tool === 'readFile' ? 'fileRead' :
@@ -383,9 +384,9 @@ When the task is complete and build passes, respond with tool "complete".`;
       error: rateLimitResult.error || 'Rate limit exceeded',
     };
 
-    console.log(`[LLMModeAgent] Result: ${result.success ? '✅ SUCCESS' : '❌ FAILED'}`);
+    Logger.debug('LLMModeAgent', `Result: ${result.success ? 'SUCCESS' : 'FAILED'}`);
     if (result.error) {
-      console.log(`[LLMModeAgent] Error: ${result.error.substring(0, 200)}`);
+      Logger.debug('LLMModeAgent', `Error: ${result.error.substring(0, 200)}`);
     }
 
     return result;
@@ -395,7 +396,7 @@ When the task is complete and build passes, respond with tool "complete".`;
    * Attempt to recover from build errors
    */
   private async attemptErrorRecovery(session: LLMSession, buildError: ToolResult): Promise<boolean> {
-    console.log('[LLMModeAgent] Attempting error recovery...');
+    Logger.debug('LLMModeAgent', 'Attempting error recovery...');
 
     // Add reflection prompt
     session.messages.push({
@@ -405,7 +406,7 @@ When the task is complete and build passes, respond with tool "complete".`;
 
     // Give LLM 3 attempts to fix
     for (let i = 0; i < 3; i++) {
-      console.log(`[LLMModeAgent] Recovery attempt ${i + 1}/3`);
+      Logger.debug('LLMModeAgent', `Recovery attempt ${i + 1}/3`);
       
       const toolCall = await this.getLLMPlan(session);
       if (!toolCall || toolCall.tool === 'complete') {
@@ -426,12 +427,12 @@ When the task is complete and build passes, respond with tool "complete".`;
       });
 
       if (toolCall.tool === 'runBuild' && result.success) {
-        console.log('[LLMModeAgent] Recovery successful!');
+        Logger.debug('LLMModeAgent', 'Recovery successful!');
         return true;
       }
     }
 
-    console.log('[LLMModeAgent] Recovery failed after 3 attempts');
+    Logger.debug('LLMModeAgent', 'Recovery failed after 3 attempts');
     return false;
   }
 
@@ -439,7 +440,7 @@ When the task is complete and build passes, respond with tool "complete".`;
    * Rollback all changes
    */
   private async rollback(session: LLMSession): Promise<void> {
-    console.log(`[LLMModeAgent] Rolling back ${session.backups.length} backups...`);
+    Logger.debug('LLMModeAgent', `Rolling back ${session.backups.length} backups...`);
     
     for (const backupPath of [...session.backups].reverse()) {
       await rateLimiter.execute('fileWrite', async () => {
@@ -447,7 +448,7 @@ When the task is complete and build passes, respond with tool "complete".`;
       });
     }
     
-    console.log('[LLMModeAgent] Rollback complete');
+    Logger.debug('LLMModeAgent', 'Rollback complete');
   }
 
   /**

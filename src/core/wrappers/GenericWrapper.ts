@@ -211,14 +211,14 @@ export class GenericWrapper {
                 const app = await repl({
                     code: code,
                     onError: (err) => {
-                        console.error('Strudel error:', err);
+                        Logger.error('GenericWrapper', 'Strudel error:', err);
                         statusEl.className = 'error';
                         statusEl.textContent = 'Error: ' + err.message;
                     }
                 });
                 return app;
             } catch (err) {
-                console.error('Failed to init Strudel:', err);
+                Logger.error('GenericWrapper', 'Failed to init Strudel:', err);
                 statusEl.className = 'error';
                 statusEl.textContent = 'Failed to initialize';
                 return null;
@@ -332,7 +332,7 @@ export class GenericWrapper {
             ${safeCode}
             
         } catch (err) {
-            console.error('Hydra error:', err);
+            Logger.error('GenericWrapper', 'Hydra error:', err);
             errorDiv.style.display = 'block';
             errorDiv.innerHTML = '<strong>Hydra Error:</strong><br>' + err.message;
         }
@@ -381,7 +381,7 @@ export class GenericWrapper {
             gl.shaderSource(shader, source);
             gl.compileShader(shader);
             if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+                Logger.error('GenericWrapper', 'Shader compile error:', gl.getShaderInfoLog(shader));
                 gl.deleteShader(shader);
                 return null;
             }
@@ -392,7 +392,7 @@ export class GenericWrapper {
         const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
         if (!vertexShader || !fragmentShader) {
-            console.error('Shader compilation failed');
+            Logger.error('GenericWrapper', 'Shader compilation failed');
             document.body.innerHTML = '<div style="color:#f66;padding:2rem;font-family:monospace;">Shader compile error — see console</div>';
         } else {
             const shaderProgram = gl.createProgram();
@@ -401,7 +401,7 @@ export class GenericWrapper {
             gl.linkProgram(shaderProgram);
 
             if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-                console.error('Program link error:', gl.getProgramInfoLog(shaderProgram));
+                Logger.error('GenericWrapper', 'Program link error:', gl.getProgramInfoLog(shaderProgram));
             } else {
                 const positions = new Float32Array([-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
                 const positionBuffer = gl.createBuffer();

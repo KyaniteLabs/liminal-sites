@@ -13,6 +13,7 @@ import {
   GuardrailTier,
 } from './types.js';
 import { TelemetryCollector, getTelemetry } from '../observation/TelemetryCollector.js';
+import { Logger } from '../../utils/Logger.js';
 
 export interface RegistryEvaluationResult {
   /** Whether all guardrails passed */
@@ -149,7 +150,7 @@ export class GuardrailRegistry {
             
           case 'warn':
             // Advisory: log warning but continue
-            console.warn(`[Guardrail Warning] ${guardrail.id}: ${result.message}`);
+            Logger.warn('GuardrailRegistry', `[Guardrail Warning] ${guardrail.id}: ${result.message}`);
             break;
             
           case 'block':

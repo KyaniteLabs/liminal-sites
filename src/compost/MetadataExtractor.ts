@@ -1,11 +1,16 @@
 /**
  * MetadataExtractor — structured metadata extraction for compost files.
  * No LLM needed — pure parsing and filesystem operations.
+ * 
+ * Optional dependencies:
+ * - sharp: For image dimension extraction
+ * - music-metadata: For audio metadata extraction
  */
 
 import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import type { FragmentMetadata } from './types.js';
+import { Logger } from '../utils/Logger.js';
 
 /** Map of file extensions to programming languages. */
 const EXTENSION_LANGUAGES: Record<string, string> = {
@@ -15,6 +20,42 @@ const EXTENSION_LANGUAGES: Record<string, string> = {
   h: 'c', hpp: 'cpp', cs: 'csharp', scala: 'scala',
   glsl: 'glsl', frag: 'glsl', vert: 'glsl',
 };
+
+/** Lazy-loaded sharp module */
+let sharpModule: unknown = null;
+
+/** Lazy-loaded music-metadata module */
+let musicMetadataModule: unknown = null;
+
+/**
+ * Dynamically import sharp for image processing.
+ * Returns null if not installed.
+ */
+async function getSharp(): Promise<unknown> {
+  if (sharpModule) return sharpModule;
+  try {
+    const mod = await import('sharp');
+    // Handle both ESM and CommonJS exports
+    sharpModule = (mod && typeof mod === 'object' && 'default' in mod) ? mod.default : mod;
+    return sharpModule;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Dynamically import music-metadata for audio processing.
+ * Returns null if not installed.
+ */
+async function getMusicMetadata(): Promise<unknown> {
+  if (musicMetadataModule) return musicMetadataModule;
+  try {
+    musicMetadataModule = await import('music-metadata');
+    return musicMetadataModule;
+  } catch {
+    return null;
+  }
+}
 
 export class MetadataExtractor {
   /** Extract structured metadata from a single file. */
@@ -37,21 +78,72 @@ export class MetadataExtractor {
       metadata.loc = await this.countLines(filePath);
     }
 
-    // Image metadata stubs
-    // @todo Extract actual dimensions when sharp or image-size is available as a dependency
+    // Image metadata with optional sharp
     if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'tiff'].includes(ext)) {
       metadata.format = ext.toUpperCase();
-      metadata.dimensions = { width: 0, height: 0 };
+      const dims = await this.extractImageDimensions(filePath);
+      metadata.dimensions = dims;
     }
 
-    // Audio metadata stubs
-    // @todo Extract actual duration when a media parsing library is available
+    // Audio metadata with optional music-metadata
     if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].includes(ext)) {
       metadata.format = ext.toUpperCase();
-      metadata.duration = 0;
+      const audioMeta = await this.extractAudioMetadata(filePath);
+      metadata.duration = audioMeta.duration;
+      if (audioMeta.sampleRate) {
+        metadata.sampleRate = audioMeta.sampleRate;
+      }
     }
 
     return metadata;
+  }
+
+  /**
+   * Extract image dimensions using sharp (if available).
+   * Falls back to zeros if sharp is not installed.
+   */
+  private static async extractImageDimensions(filePath: string): Promise<{ width: number; height: number }> {
+    const sharp = await getSharp();
+    if (!sharp || typeof sharp !== 'function') {
+      return { width: 0, height: 0 };
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const metadata = await (sharp(filePath) as any).metadata();
+      return {
+        width: metadata?.width ?? 0,
+        height: metadata?.height ?? 0,
+      };
+    } catch (err) {
+      Logger.warn('MetadataExtractor', `Failed to extract image dimensions from ${filePath}:`, err);
+      return { width: 0, height: 0 };
+    }
+  }
+
+  /**
+   * Extract audio metadata using music-metadata (if available).
+   * Falls back to zeros if music-metadata is not installed.
+   */
+  private static async extractAudioMetadata(filePath: string): Promise<{ duration: number; sampleRate?: number; bitrate?: number }> {
+    const mm = await getMusicMetadata();
+    if (!mm || typeof mm !== 'object' || !('parseFile' in mm)) {
+      return { duration: 0 };
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const metadata = await (mm as any).parseFile(filePath);
+      const format = metadata?.format;
+      return {
+        duration: format?.duration ?? 0,
+        sampleRate: format?.sampleRate,
+        bitrate: format?.bitrate,
+      };
+    } catch (err) {
+      Logger.warn('MetadataExtractor', `Failed to extract audio metadata from ${filePath}:`, err);
+      return { duration: 0 };
+    }
   }
 
   /** Extract metadata for multiple files in parallel. */

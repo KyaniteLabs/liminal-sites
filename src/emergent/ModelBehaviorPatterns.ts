@@ -8,6 +8,7 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { Logger } from '../utils/Logger.js';
 
 export type BehaviorPatternType =
   | 'code_in_thinking'        // Model puts code in <think> tags
@@ -379,7 +380,7 @@ export class ModelBehaviorPatterns {
         JSON.stringify(data, null, 2)
       );
     } catch (err) {
-      console.warn('[ModelBehaviorPatterns] Failed to save:', err);
+      Logger.warn('ModelBehaviorPatterns', 'Failed to save: ' + err);
     }
   }
 
@@ -396,7 +397,7 @@ export class ModelBehaviorPatterns {
         this.patterns.set(pattern.id, pattern);
       }
     } catch (err) {
-      console.warn('[ModelBehaviorPatterns] Failed to load:', err);
+      Logger.warn('ModelBehaviorPatterns', 'Failed to load: ' + err);
     }
   }
 
