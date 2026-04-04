@@ -35,6 +35,18 @@ export interface WrapOptions {
 }
 
 export class HTMLWrapper {
+  private static readonly SECURITY_HEADERS = [
+    '<meta http-equiv="X-Frame-Options" content="DENY">',
+    '<meta http-equiv="X-Content-Type-Options" content="nosniff">',
+    '<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">',
+    '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\' \'unsafe-inline\' cdnjs.cloudflare.com cdn.jsdelivr.net unpkg.com; style-src \'unsafe-inline\'; img-src \'self\' blob:; connect-src \'none\'; font-src \'self\';">',
+  ];
+
+  private static injectSecurityHeaders(html: string): string {
+    const headers = this.SECURITY_HEADERS.join('\n    ');
+    return html.replace('</head>', `    ${headers}\n</head>`);
+  }
+
   /**
    * Detect if code is already wrapped in HTML
    * Checks for complete, valid HTML document structure
@@ -139,27 +151,39 @@ export class HTMLWrapper {
     const detectedDomain = domain || this.detectDomain(code);
 
     // Route to appropriate wrapper
+    let wrapped: string;
     switch (detectedDomain) {
       case 'strudel':
-        return GenericWrapper.wrap(code, { domain: 'strudel', autoPlay });
+        wrapped = GenericWrapper.wrap(code, { domain: 'strudel', autoPlay });
+        break;
       case 'hydra':
-        return GenericWrapper.wrap(code, { domain: 'hydra', hydraResolution });
+        wrapped = GenericWrapper.wrap(code, { domain: 'hydra', hydraResolution });
+        break;
       case 'tone':
-        return GenericWrapper.wrap(code, { domain: 'tone' });
+        wrapped = GenericWrapper.wrap(code, { domain: 'tone' });
+        break;
       case 'shader':
-        return GenericWrapper.wrap(code, { domain: 'shader' });
+        wrapped = GenericWrapper.wrap(code, { domain: 'shader' });
+        break;
       case 'three':
-        return ThreeWrapper.wrap(code, { title });
+        wrapped = ThreeWrapper.wrap(code, { title });
+        break;
       case 'remotion':
-        return GenericWrapper.wrap(code, { domain: 'remotion', showPreview });
+        wrapped = GenericWrapper.wrap(code, { domain: 'remotion', showPreview });
+        break;
       case 'ascii':
-        return GenericWrapper.wrap(code, { domain: 'ascii', asciiWidth });
+        wrapped = GenericWrapper.wrap(code, { domain: 'ascii', asciiWidth });
+        break;
       case 'html':
         return code;
       case 'p5':
       default:
-        return P5Wrapper.wrap(code, { includeP5Sound, title });
+        wrapped = P5Wrapper.wrap(code, { includeP5Sound, title });
+        break;
     }
+
+    // Inject security headers at a single central point for all wrapped outputs
+    return this.injectSecurityHeaders(wrapped);
   }
 
   /**
