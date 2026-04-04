@@ -3,6 +3,8 @@
  * Handles: Strudel, Hydra, Tone.js, Shader, Remotion, ASCII
  */
 
+import { SECURITY_HEADERS } from './SecurityHeaders.js';
+
 const STRUDEL_CDN = 'https://unpkg.com/@strudel/repl@latest';
 const HYDRA_CDN = 'https://unpkg.com/hydra-synth';
 const TONE_CDN = 'https://unpkg.com/tone@14.8.49/build/Tone.js';
@@ -141,6 +143,7 @@ export class GenericWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>Strudel Pattern</title>
     <script src="${STRUDEL_CDN}"></script>
     <style>
@@ -281,6 +284,7 @@ export class GenericWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>Hydra Visual Synthesizer</title>
     <script src="${HYDRA_CDN}"></script>
     <style>
@@ -348,6 +352,7 @@ export class GenericWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>GLSL Shader</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
@@ -462,6 +467,7 @@ export class GenericWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>Remotion Composition</title>
     <style>
         body { 
@@ -551,6 +557,7 @@ export class GenericWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>ASCII Art</title>
     <style>
         body { 
@@ -603,6 +610,7 @@ export class GenericWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>Tone.js Audio Synthesizer</title>
     <script src="${TONE_CDN}"></script>
     <style>
