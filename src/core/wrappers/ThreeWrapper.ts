@@ -3,6 +3,8 @@
  * Wraps Three.js scene code in a complete HTML document with ES module support
  */
 
+import { SECURITY_HEADERS } from './SecurityHeaders.js';
+
 const THREE_CDN = 'https://unpkg.com/three@0.160.0/build/three.module.js';
 const THREE_EXAMPLES_CDN = 'https://unpkg.com/three@0.160.0/examples/jsm/';
 
@@ -43,6 +45,7 @@ export class ThreeWrapper {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${SECURITY_HEADERS.trim()}
     <title>${title}</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
