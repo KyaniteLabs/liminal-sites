@@ -473,6 +473,131 @@
             </div>
         </section>
 
+        <!-- Dogfood Status -->
+        <section class="section">
+            <h2 class="section-title">🐕 Dogfood Status</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>📅 Last Run</h3>
+                    <div class="metric">
+                        <span class="metric-label">Date</span>
+                        <span class="metric-value">Apr 3, 2026</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value text-yellow">Partial</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>📊 Success Rate</h3>
+                    <div class="metric">
+                        <span class="metric-label">Rate</span>
+                        <span class="metric-value text-yellow">66.7%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Tests</span>
+                        <span class="metric-value">12 / 18 passed</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 66.7%; background: var(--accent-yellow);"></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>❌ Failures Captured</h3>
+                    <div class="metric">
+                        <span class="metric-label">Total</span>
+                        <span class="metric-value text-yellow">3,238</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Location</span>
+                        <span class="metric-value text-secondary">~/.liminal/failures/</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>🔌 Active Providers</h3>
+                    <div class="metric">
+                        <span class="metric-label">Local</span>
+                        <span class="metric-value text-green">LM Studio, Ollama</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Cloud</span>
+                        <span class="metric-value text-green">MiniMax</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="mt-1">Domain Breakdown</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Status</th>
+                        <th>Rate</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>p5.js</strong></td>
+                        <td><span class="badge badge-warning">⚠️ Partial</span></td>
+                        <td>66.7%</td>
+                        <td>2 success, 1 failed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GLSL</strong></td>
+                        <td><span class="badge badge-warning">⚠️ Partial</span></td>
+                        <td>66.7%</td>
+                        <td>2 success, 1 failed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Three.js</strong></td>
+                        <td><span class="badge badge-warning">⚠️ Partial</span></td>
+                        <td>66.7%</td>
+                        <td>2 success, 1 failed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tone.js</strong></td>
+                        <td><span class="badge badge-warning">⚠️ Partial</span></td>
+                        <td>66.7%</td>
+                        <td>2 success, 1 failed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hydra</strong></td>
+                        <td><span class="badge badge-error">🔴 Failing</span></td>
+                        <td>0%</td>
+                        <td>0 success, 3 failed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HTML/Web</strong></td>
+                        <td><span class="badge badge-success">✅ Passing</span></td>
+                        <td>100%</td>
+                        <td>3 success, 0 failed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Strudel</strong></td>
+                        <td><span class="badge badge-info">⚪ N/A</span></td>
+                        <td>—</td>
+                        <td>Not in latest run</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Remotion</strong></td>
+                        <td><span class="badge badge-info">⚪ N/A</span></td>
+                        <td>—</td>
+                        <td>Not in latest run</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ASCII Art</strong></td>
+                        <td><span class="badge badge-info">⚪ N/A</span></td>
+                        <td>—</td>
+                        <td>Not in latest run</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
         <!-- What's Missing -->
         <section class="section">
             <h2 class="section-title">📊 System Status</h2>
