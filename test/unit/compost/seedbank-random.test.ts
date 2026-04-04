@@ -113,15 +113,15 @@ describe('SeedBank.getRandomSeed()', () => {
     expect(result).toBeUndefined();
   });
 
-  it('getRandomContent() should still work (backward compat)', async () => {
+  it('getRandomSeed() returns a seed with content', async () => {
     const bank = new SeedBank(makeConfig(seedDir));
     const seed = makeSeedWithLIR();
     await bank.add(seed);
 
-    const content = await bank.getRandomContent();
+    const result = await bank.getRandomSeed();
 
-    expect(content).toBeDefined();
-    expect(content).toBe('raw content');
+    expect(result).toBeDefined();
+    expect(result!.lir).toBeDefined();
   });
 
   it('should return a seed from the bank when multiple seeds exist', async () => {

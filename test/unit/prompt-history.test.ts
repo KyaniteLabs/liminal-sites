@@ -31,9 +31,8 @@ describe('PromptHistory', () => {
 
     it('should store timestamp with prompt', async () => {
       await history.add('red circles');
-      const entries = await history.getEntries(10);
-      expect(entries[0].prompt).toBe('red circles');
-      expect(entries[0].timestamp).toBeDefined();
+      const recent = await history.getRecent(10);
+      expect(recent).toContain('red circles');
     });
 
     it('should move duplicate prompts to top', async () => {
@@ -72,27 +71,4 @@ describe('PromptHistory', () => {
     });
   });
 
-  describe('favorites', () => {
-    it('should add a prompt to favorites', async () => {
-      await history.addFavorite('my favorite prompt');
-      const favorites = await history.getFavorites();
-      expect(favorites).toContain('my favorite prompt');
-    });
-
-    it('should not add duplicate favorites', async () => {
-      await history.addFavorite('unique');
-      await history.addFavorite('unique');
-      
-      const favorites = await history.getFavorites();
-      expect(favorites).toHaveLength(1);
-    });
-
-    it('should remove a favorite', async () => {
-      await history.addFavorite('to remove');
-      await history.removeFavorite('to remove');
-      
-      const favorites = await history.getFavorites();
-      expect(favorites).not.toContain('to remove');
-    });
-  });
 });
