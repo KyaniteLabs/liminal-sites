@@ -136,6 +136,8 @@ export interface LoopResult {
   duration: number;
   finalScore: number;
   project?: string;
+  thinking?: string;
+  model?: string;
 }
 
 export interface IterationContext {

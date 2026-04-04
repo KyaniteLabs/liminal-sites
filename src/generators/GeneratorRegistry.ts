@@ -22,10 +22,24 @@ import type {
   ModelChoice,
 } from '../routing/RoutingData.js';
 
+/**
+ * Result returned by a generator, including optional thinking trace for meta-harness analysis.
+ */
+export interface GeneratorResult {
+  code: string;
+  thinking?: string;
+  recoveredFromThinking?: boolean;
+  model?: string;
+}
+
 export interface GeneratorEntry {
   name: string;
   canHandle: (prompt: string) => number; // 0 = can't handle, higher = more confident
-  generate: (prompt: string, params?: Record<string, unknown>) => string | Promise<string>;
+  generate: (prompt: string, params?: Record<string, unknown>) => 
+    | GeneratorResult 
+    | Promise<GeneratorResult> 
+    | string 
+    | Promise<string>;
 }
 
 /**

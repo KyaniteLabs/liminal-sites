@@ -182,6 +182,8 @@ export class RalphLoop {
     let currentCode = '';
     let previousCode = '';
     let finalScore = 0;
+    let lastThinking: string | undefined;
+    let lastModel: string | undefined;
 
     // Convergence tracking: score history for detecting plateau
     const scoreHistory: number[] = [];
@@ -244,13 +246,14 @@ export class RalphLoop {
 
         // Best-of-N: Generate multiple candidates and select the best
         const numCandidates = adjustedNumCandidates;
-        const candidates: Array<{ code: string; score: number; issues: string[]; index: number }> = [];
+        const candidates: Array<{ code: string; score: number; issues: string[]; index: number; thinking?: string; model?: string }> = [];
 
         for (let i = 0; i < numCandidates; i++) {
           try {
             // Generate code (bypass cache to ensure fresh generation each iteration)
             // Ralph Loop requires fresh LLM calls each iteration - caching would defeat the iterative improvement pattern
-            const { code } = await generator.generate(usedPrompt, loadedPrompt, true);
+            const generationResult = await generator.generate(usedPrompt, loadedPrompt, true);
+            const { code, thinking, model } = generationResult;
 
             // Validate generated code before accepting it
             const validation = CodeValidator.validate(code);
@@ -287,6 +290,8 @@ export class RalphLoop {
               score: quickScore, // Will be replaced with full score
               issues: [],
               index: i,
+              thinking,
+              model,
             });
           } catch (candidateError) {
             Logger.warn('RalphLoop', `Candidate ${i} generation failed: ${formatError('RalphLoop', candidateError)}`);
@@ -360,6 +365,8 @@ export class RalphLoop {
           }
 
           currentCode = bestCandidate.code;
+          lastThinking = bestCandidate.thinking;
+          lastModel = bestCandidate.model;
         }
 
         // Check code completeness (structural - braces, parens balanced)
@@ -818,12 +825,13 @@ export class RalphLoop {
     if (process.env.NODE_ENV !== 'test') {
       await metaHarness.onGenerationComplete({
         success: completed,
-        model: normalizedOptions.useSwarm ? 'swarm' : 'local',
+        model: lastModel || (normalizedOptions.useSwarm ? 'swarm' : 'local'),
         domain: normalizedOptions.collabDomain || 'p5',
         prompt: prompt,
         code: currentCode,
         error: completed ? undefined : reason,
         duration: duration,
+        thinking: lastThinking,
       });
     }
 
@@ -867,6 +875,8 @@ export class RalphLoop {
       duration,
       finalScore,
       project: normalizedOptions.project,
+      thinking: lastThinking,
+      model: lastModel,
     };
   }
 
