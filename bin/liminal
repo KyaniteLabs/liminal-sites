@@ -103,6 +103,8 @@ for (let i = 0; i < args.length; i++) {
     flags.aestheticConfig = args[++i];
   } else if (arg === '--intuition') {
     flags.intuition = true;
+  } else if (arg === '--consolidate') {
+    flags.consolidate = true;
   } else if (arg === '--verbose' || arg === '-v') {
     flags.verbose = true;
   } else if (arg === '--script-only') {
@@ -130,6 +132,7 @@ if (flags.help) {
   console.log('  compost <subcommand>        Compost Mill: add, digest, soup, seeds, status');
   console.log('  composite                   Compose video layers from a JSON spec');
   console.log('  chat                        Start conversational creative coding mode');
+  console.log('  consolidate                 Run memory consolidation (L3→L2 compression)');
   console.log('');
   console.log('OPTIONS:');
   console.log('  --prompt, -p <text>         Prompt for generation');
@@ -155,6 +158,8 @@ if (flags.help) {
   console.log('  --voice-file <path>         Audio file for voice-to-visual analysis');
   console.log('  --aesthetic <preset>        Aesthetic guardrail preset (lenient|moderate|strict)');
   console.log('  --aesthetic-config <json>   Aesthetic guardrail configuration');
+  console.log('  --intuition                 Enable intuition scoring dimension');
+  console.log('  --consolidate               Run memory consolidation (L3→L2 compression)');
   console.log('  --help, -h                  Show this help message');
   console.log('  --version                   Show version');
   console.log('');
@@ -654,7 +659,59 @@ else if (cmd === 'narrative') {
       console.error('Usage: liminal narrative list-themes | video <n>');
       process.exit(1);
     }
-  } else if (cmd === 'tui') {  // Launch the Natural Language TUI (Meta-Harness + NaturalInterface)
+  } else if (cmd === 'consolidate' || flags.consolidate) {
+  // Memory consolidation — compress raw episodes into semantic patterns
+  const { MemoryConsolidator, ThompsonSampler, DomainPrototype, IntuitionCache } = await import('../dist/intuition/index.js');
+  const { HarnessMemory } = await import('../dist/harness/HarnessMemory.js');
+
+  console.log('');
+  console.log('🧠 Liminal Memory Consolidation');
+  console.log('');
+
+  const memory = new HarnessMemory();
+  const modelSampler = new ThompsonSampler({ minPulls: 1, successThreshold: 0.7 });
+  const strategySampler = new ThompsonSampler({ minPulls: 1, successThreshold: 0.7 });
+  const prototype = new DomainPrototype();
+  const consolidator = new MemoryConsolidator(
+    { modelSampler, strategySampler, prototype },
+    { successThreshold: 0.7, minEpisodesForPattern: 2, maxPatterns: 200 },
+  );
+
+  // Convert HarnessMemory episodes to ConsolidationEpisodes
+  const rawEpisodes = memory.getRecentEpisodes(500);
+  const episodes = rawEpisodes
+    .filter(e => e.type === 'generation' && e.score !== undefined)
+    .map(e => ({
+      domain: e.domain ?? 'p5',
+      output: e.code ?? '',
+      qualityScore: e.score,
+      model: e.tags?.find(t => t.startsWith('model:'))?.replace('model:', ''),
+      strategy: e.tags?.find(t => t.startsWith('strategy:'))?.replace('strategy:', ''),
+      timestamp: e.timestamp,
+    }));
+
+  console.log(`  Raw episodes: ${episodes.length}`);
+
+  const result = consolidator.consolidate(episodes);
+
+  console.log(`  Patterns created: ${result.patternsCreated}`);
+  console.log(`  Patterns pruned: ${result.patternsPruned}`);
+  console.log(`  Prototype updates: ${result.prototypeUpdates}`);
+  console.log(`  Duration: ${result.durationMs}ms`);
+  console.log('');
+
+  if (Object.keys(result.byDomain).length > 0) {
+    console.log('  Domain breakdown:');
+    for (const [domain, stats] of Object.entries(result.byDomain)) {
+      console.log(`    ${domain}: ${stats.episodes} episodes, ${stats.patterns} patterns, avg quality ${stats.avgQuality.toFixed(3)}`);
+    }
+  }
+
+  console.log('');
+  console.log('✅ Consolidation complete');
+  console.log('');
+  process.exit(0);
+} else if (cmd === 'tui') {  // Launch the Natural Language TUI (Meta-Harness + NaturalInterface)
   import('../dist/tui/HarnessTUI.js').then(async ({ startHarnessTUI }) => {
     await startHarnessTUI();
   }).catch(err => {
