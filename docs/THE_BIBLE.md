@@ -823,24 +823,11 @@ const embedding = await generator.embed('creative coding prompt');
 
 ### 24. Emergent Behavior System
 
-**Location:** `src/emergent/`
+**Location:** Removed — functionality consolidated into `src/core/CreativeEvaluator.ts` and `src/swarm/`
 
-**Purpose:** Detects and analyzes emergent behaviors from LLM outputs.
+**Purpose:** Emergent behavior detection was previously in a standalone module. Now integrated into the scoring and evaluation pipeline.
 
-**Key Components:**
-- `EmergentDetector.ts` - Detects unexpected patterns
-- `ModelBehaviorPatterns.ts` - Catalogs known patterns
-- `SuggestionEngine.ts` - Generates suggestions based on patterns
-
-**Usage:**
-```typescript
-import { EmergentDetector } from './src/emergent/EmergentDetector.js';
-
-const detector = new EmergentDetector();
-const patterns = await detector.analyze(output);
-```
-
-**Status:** Active - Monitors for novel code generation patterns.
+**Status:** Consolidated — see CreativeEvaluator and swarm personas for emergent pattern detection.
 
 ---
 
