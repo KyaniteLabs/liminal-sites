@@ -57,7 +57,8 @@ export type ScoreDimension =
   | 'constraint'
   | 'vocabulary'
   | 'codeStructure'
-  | 'length';
+  | 'length'
+  | 'intuition';
 
 /** Score input context — everything a strategy might need. */
 export interface ScoringInput {
