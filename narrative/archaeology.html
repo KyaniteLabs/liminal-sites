@@ -318,7 +318,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <h2><span class="era-dot" style="background:var(--era8)"></span>The Emotional Arc</h2>
   <p class="chapter-sub">Frustration crystallized into infrastructure — the 12-hour cycle from pain to enforcement</p>
   <div class="chart-grid">
-    <div class="chart-box" data-era-range="3-9" style="grid-column:1/-1" id="chart-frustration-line"><div class="chart-title">Frustration Intensity by Era</div></div>
+    <div class="chart-box" data-era-range="1-13" style="grid-column:1/-1" id="chart-frustration-line"><div class="chart-title">Frustration Intensity by Era</div></div>
     <div class="chart-box" data-era-range="3-9" style="grid-column:1/-1" id="chart-frustration-sankey"><div class="chart-title">Frustration → Automation Pipeline (click flows)</div></div>
   </div>
   <div class="quotes-section" id="quotes-container"></div>
@@ -7303,19 +7303,19 @@ window.LIMINAL_DATA = {
 window.ERA_BRUSH = { activeEra: null, startDate: null, endDate: null };
 window.CHARTS = {};
 window.ERAS = [
-  { id:1, name:'The Seed', dates:'Feb 28 – Mar 1', commits:43, color:'var(--era1)', hex:'#b197fc' },
-  { id:2, name:'The Explosion', dates:'Mar 19', commits:23, color:'var(--era2)', hex:'#ff6b6b' },
-  { id:3, name:'The Great Consolidation', dates:'Mar 20', commits:28, color:'var(--era3)', hex:'#ffa94d' },
-  { id:4, name:'Quality Crusade', dates:'Mar 21–22', commits:30, color:'var(--era4)', hex:'#ffd43b' },
-  { id:5, name:'The Conversational Turn', dates:'Mar 22–23', commits:39, color:'var(--era5)', hex:'#51cf66' },
-  { id:6, name:'The Quiet', dates:'Mar 24–27', commits:13, color:'var(--era6)', hex:'#495057', note:'13 commits to 5 other repos' },
-  { id:7, name:'Multimedia Expansion', dates:'Mar 28–29', commits:48, color:'var(--era7)', hex:'#cc5de8' },
-  { id:8, name:'The Dogfood Crucible', dates:'Mar 30–31', commits:39, color:'var(--era8)', hex:'#ff8787' },
-  { id:9, name:'THE BIBLE', dates:'Apr 1', commits:53, color:'var(--era9)', hex:'#74c0fc' },
-  { id:10, name:'The Cleanup', dates:'Apr 2–3', commits:99, color:'var(--era10)', hex:'#20b2a3' },
-  { id:11, name:'The Architecture', dates:'Apr 3–4 AM', commits:253, color:'var(--era11)', hex:'#4dabf7' },
-  { id:12, name:'The Swarm', dates:'Apr 4', commits:62, color:'var(--era12)', hex:'#f06595' },
-  { id:13, name:'The Pruning', dates:'Apr 4 PM', commits:15, color:'var(--era13)', hex:'#a9e34b' }
+  { id:1, name:'The Seed', dates:'Feb 28 – Mar 1', startDate:'2026-02-28', endDate:'2026-03-01', commits:43, color:'var(--era1)', hex:'#b197fc' },
+  { id:2, name:'The Explosion', dates:'Mar 19', startDate:'2026-03-19', endDate:'2026-03-19', commits:23, color:'var(--era2)', hex:'#ff6b6b' },
+  { id:3, name:'The Great Consolidation', dates:'Mar 20', startDate:'2026-03-20', endDate:'2026-03-20', commits:28, color:'var(--era3)', hex:'#ffa94d' },
+  { id:4, name:'Quality Crusade', dates:'Mar 21–22', startDate:'2026-03-21', endDate:'2026-03-22', commits:30, color:'var(--era4)', hex:'#ffd43b' },
+  { id:5, name:'The Conversational Turn', dates:'Mar 22–23', startDate:'2026-03-22', endDate:'2026-03-23', commits:39, color:'var(--era5)', hex:'#51cf66' },
+  { id:6, name:'The Quiet', dates:'Mar 24–27', startDate:'2026-03-24', endDate:'2026-03-27', commits:13, color:'var(--era6)', hex:'#495057', note:'13 commits to 5 other repos' },
+  { id:7, name:'Multimedia Expansion', dates:'Mar 28–29', startDate:'2026-03-28', endDate:'2026-03-29', commits:48, color:'var(--era7)', hex:'#cc5de8' },
+  { id:8, name:'The Dogfood Crucible', dates:'Mar 30–31', startDate:'2026-03-30', endDate:'2026-03-31', commits:39, color:'var(--era8)', hex:'#ff8787' },
+  { id:9, name:'THE BIBLE', dates:'Apr 1', startDate:'2026-04-01', endDate:'2026-04-01', commits:53, color:'var(--era9)', hex:'#74c0fc' },
+  { id:10, name:'The Cleanup', dates:'Apr 2–3', startDate:'2026-04-02', endDate:'2026-04-03', commits:99, color:'var(--era10)', hex:'#20b2a3' },
+  { id:11, name:'The Architecture', dates:'Apr 3–4 AM', startDate:'2026-04-03', endDate:'2026-04-04', commits:253, color:'var(--era11)', hex:'#4dabf7' },
+  { id:12, name:'The Swarm', dates:'Apr 4', startDate:'2026-04-04', endDate:'2026-04-04', commits:62, color:'var(--era12)', hex:'#f06595' },
+  { id:13, name:'The Pruning', dates:'Apr 4 PM', startDate:'2026-04-04', endDate:'2026-04-04', commits:15, color:'var(--era13)', hex:'#a9e34b' }
 ];
 
 window.COLORS = {
@@ -8021,9 +8021,11 @@ document.addEventListener('DOMContentLoaded', () => {
     g.append('path').datum(data).attr('d', area).attr('fill', 'url(#grad-frust)');
     const line = d3.line().x(d => x(d.era)).y(d => y(d.value)).curve(d3.curveMonotoneX);
     g.append('path').datum(data).attr('d', line).attr('fill', 'none').attr('stroke', COLORS.kai).attr('stroke-width', 2.5);
-    // Dots colored by era
-    data.forEach((d, i) => {
-      const eraInfo = ERAS[i];
+    // Dots colored by era (extract era number from label text)
+    data.forEach((d) => {
+      const eraMatch = d.label.match(/\(era(\d+)\)/);
+      const eraNum = eraMatch ? parseInt(eraMatch[1]) : null;
+      const eraInfo = eraNum ? ERAS.find(e => e.id === eraNum) : null;
       g.append('circle').attr('cx', x(d.era)).attr('cy', y(d.value)).attr('r', 5).attr('fill', eraInfo ? eraInfo.color : COLORS.kai).attr('stroke', '#0d1117').attr('stroke-width', 1.5)
         .on('mouseover', function(e) { showTooltip(e, `<div class="tt-title">${d.era}</div><div class="tt-detail">Intensity: ${d.value}/5</div><div class="tt-quote">${d.label}</div>`); })
         .on('mouseout', hideTooltip);
