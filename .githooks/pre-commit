@@ -43,3 +43,43 @@ if [ -n "$CHANGED_SRC" ]; then
 fi
 
 echo "✅ All pre-commit checks passed"
+
+# --- Stray file detection ---
+# Warn about known stray file patterns. Warn-only (does not block commit).
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+STRAY_FOUND=false
+
+if [ -n "$STAGED_FILES" ]; then
+    # Pattern 1: Shell redirect artifacts (e.g., "1timeout:", "2timeout:")
+    strays_redirect=$(echo "$STAGED_FILES" | grep -E '^[0-9]+[a-zA-Z]+:' || true)
+    if [ -n "$strays_redirect" ]; then
+        echo "⚠️  WARNING: Shell redirect artifacts staged for commit:"
+        echo "$strays_redirect" | while read -r f; do echo "    - $f"; done
+        STRAY_FOUND=true
+    fi
+
+    # Pattern 2: PNG files in root directory
+    strays_png=$(echo "$STAGED_FILES" | grep -E '^[^/]+\.png$' || true)
+    if [ -n "$strays_png" ]; then
+        echo "⚠️  WARNING: PNG files in root directory staged for commit:"
+        echo "$strays_png" | while read -r f; do echo "    - $f"; done
+        STRAY_FOUND=true
+    fi
+
+    # Pattern 3: Files larger than 1MB in root directory
+    for f in $STAGED_FILES; do
+        if [ "$(dirname "$f")" = "." ]; then
+            size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
+            if [ "$size" -gt 1048576 ]; then
+                echo "⚠️  WARNING: Large file staged in root: $f ($(( size / 1048576 ))MB)"
+                STRAY_FOUND=true
+            fi
+        fi
+    done
+
+    if [ "$STRAY_FOUND" = true ]; then
+        echo ""
+        echo "  These look like stray artifacts. Unstage with: git reset HEAD <file>"
+    fi
+fi

@@ -1,0 +1,59 @@
+#!/bin/bash
+# post-checkout hook: Warn about duplicate checkouts + merged branches
+# Enforces CLAUDE.md Rule #3: "Start fresh branches after merges"
+
+previous_head="$1"
+new_head="$2"
+checkout_type="$3"
+
+# Only run on branch checkouts (type=1), not file checkouts (type=0)
+if [ "$checkout_type" != "1" ]; then
+    exit 0
+fi
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Skip detached HEAD
+if [ -z "$branch" ]; then
+    exit 0
+fi
+
+# --- Check 1: Duplicate checkout warning ---
+wt=$(git worktree list --porcelain 2>/dev/null | grep -B1 "branch refs/heads/$branch" | head -1 | cut -d' ' -f2)
+current=$(pwd)
+
+if [ -n "$wt" ] && [ "$wt" != "$current" ]; then
+    echo ""
+    echo "  WARNING: Branch '$branch' is already checked out in:"
+    echo "    $wt"
+    echo ""
+    echo "  Consider using: cd $wt"
+    echo ""
+fi
+
+# --- Check 2: Merged branch warning ---
+# Skip for main/master
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+    exit 0
+fi
+
+default_branch="main"
+if ! git rev-parse --verify "$default_branch" >/dev/null 2>&1; then
+    default_branch="master"
+fi
+
+# git branch --merged handles both regular and squash merges
+if git branch --merged "$default_branch" 2>/dev/null | grep -q "^[* ]*${branch}$"; then
+    echo ""
+    echo "  ============================================"
+    echo "  WARNING: Branch '$branch' is MERGED into $default_branch."
+    echo "  ============================================"
+    echo ""
+    echo "  Continuing work on a merged branch creates divergence."
+    echo "  Start a fresh branch instead:"
+    echo ""
+    echo "    git checkout $default_branch && git pull && git checkout -b <new-name>"
+    echo ""
+fi
+
+exit 0

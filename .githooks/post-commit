@@ -1,0 +1,25 @@
+#!/bin/bash
+# post-commit hook: Auto-push after every commit
+# Enforces CLAUDE.md Rule #1: "Always push after committing"
+# Warns on failure but never blocks.
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Skip detached HEAD (rebases, etc.)
+[ -z "$branch" ] && exit 0
+
+# Push with upstream tracking
+if git rev-parse --abbrev-ref "@{upstream}" >/dev/null 2>&1; then
+    git push --quiet 2>/dev/null
+else
+    git push --quiet -u origin HEAD 2>/dev/null
+fi
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "  WARNING: git push failed. Commit is local only."
+    echo "  Run: git push -u origin $branch"
+    echo ""
+fi
+
+exit 0

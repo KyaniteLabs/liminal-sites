@@ -1,0 +1,68 @@
+#!/bin/bash
+# post-merge hook: Clean up merged branches and worktrees
+# Enforces CLAUDE.md Rule #2: "Clean up your worktree when done"
+
+# Only run for merges into main/master
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ "$current_branch" != "main" ] && [ "$current_branch" != "master" ]; then
+    exit 0
+fi
+
+echo ""
+echo "  post-merge: Cleaning up merged branches..."
+
+# Find branches that are fully merged into the current branch
+merged_branches=$(git branch --merged "$current_branch" 2>/dev/null | \
+    grep -v '^\*' | \
+    grep -v 'main' | \
+    grep -v 'master' | \
+    sed 's/^[+ ]*//' | \
+    grep -v '^$')
+
+if [ -z "$merged_branches" ]; then
+    echo "  No merged branches to clean up."
+    exit 0
+fi
+
+deleted_local=0
+deleted_remote=0
+removed_worktrees=0
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+
+for branch in $merged_branches; do
+    # Delete local branch
+    if git branch -d "$branch" 2>/dev/null; then
+        echo "  Deleted local branch: $branch"
+        ((deleted_local++))
+    fi
+
+    # Delete remote branch if it exists
+    if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
+        if git push origin --delete "$branch" 2>/dev/null; then
+            echo "  Deleted remote branch: origin/$branch"
+            ((deleted_remote++))
+        fi
+    fi
+
+    # Remove worktree if one exists for this branch
+    if [ -d "$repo_root/.worktrees/$branch" ]; then
+        git worktree remove "$repo_root/.worktrees/$branch" --force 2>/dev/null
+        echo "  Removed worktree: .worktrees/$branch"
+        ((removed_worktrees++))
+    fi
+
+    # Claude Code managed worktrees use "worktree-" prefix on branch name
+    if [ -d "$repo_root/.claude/worktrees/$branch" ]; then
+        git worktree remove "$repo_root/.claude/worktrees/$branch" --force 2>/dev/null
+        echo "  Removed worktree: .claude/worktrees/$branch"
+        ((removed_worktrees++))
+    fi
+done
+
+# Prune stale worktree metadata
+git worktree prune 2>/dev/null
+
+echo "  Cleanup: $deleted_local local, $deleted_remote remote, $removed_worktrees worktrees"
+echo ""
+
+exit 0
