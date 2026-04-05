@@ -1,15 +1,36 @@
 # Forensic Audit Report: Liminal Archaeology Deliverables
 
-**Date:** April 2, 2026
+**Date:** April 2, 2026 (Updated: April 4, 2026)
 **Auditor:** Archaeology audit synthesis agent (glm-5.1)
-**Scope:** All 6 audit dimensions across `narrative/data/` files, cross-referenced with `archaeology.html`, `reverse-engineering-plan.md`, and source git history.
+**Scope:** All 6 audit dimensions across `narrative/data/` files, cross-referenced with `archaeology.html`, `reverse-engineering-plan.md`, and source git history. Updated for Eras 11-13 (319 new commits).
 **Methodology:** Each claim verified against primary source data (git log, source code, original JSON/JSONL files). No data files were modified.
+
+---
+
+## UPDATE: April 4, 2026 — Post-Era 11-13 Audit
+
+### Revised Overall Rating: A-
+
+The original B+ rating is upgraded to A- based on resolution of the critical issue and several moderate ones:
+
+| Original Issue | Severity | New Status |
+|----------------|----------|------------|
+| CRITICAL-1: Dogfood 7.4% conflates datasets | CRITICAL | RESOLVED — 12-model campaign (324 runs, 64.5%) provides clean, comparable data |
+| 0.68 Dead Zone (MODERATE) | MODERATE | RESOLVED — `scoreReliable()` wired into `RalphLoop.ts:448` (was dead code from commit 576819b until wiring fix). Coverage gate now active: <6 dimensions triggers LLM fallback. Misleading `score()` JSDoc corrected. |
+| ESLint errors (MODERATE) | MODERATE | RESOLVED — 11→0 errors |
+| console.log in production (MINOR) | MINOR | RESOLVED — migrated to Logger |
+| @ts-expect-error suppressions (MINOR) | MINOR | RESOLVED — 10 replaced with proper types |
+
+### New Data Quality Notes for Eras 11-13
+- **Era 11 (253 commits)**: Massive volume introduces potential for committer attribution drift. Co-authorship signatures still say "Claude Opus 4.6" but model is GLM. The model-agnostic architecture means CapabilityRegistry data needs regular updates as new models release.
+- **Era 12 (62 commits)**: Swarm system is new and relatively untested in production. Thompson Sampling implementation needs validation against actual model performance data.
+- **Era 13 (15 commits)**: Cleanup is verifiable — dead module removals traceable to specific superseding modules.
 
 ---
 
 ## 1. Executive Summary
 
-### Overall Data Quality Rating: B+
+### Original Rating: B+ (April 2)
 
 The Liminal Archaeology deliverable is structurally sound with generally accurate data. Of the 6 audit dimensions, 3 are clean or nearly clean (commits, models, YouTube), 2 have moderate issues that affect specific claims (sessions, dogfood), and 1 is a conceptual grading that is inherently subjective (architectures). No fabricated data was found anywhere. Zero nonexistent models. Zero invented sessions. The core narrative -- that one developer built a sophisticated creative coding framework in 33 days using AI assistance -- is well-supported by the evidence.
 

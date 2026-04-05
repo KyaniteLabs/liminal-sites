@@ -2,7 +2,36 @@
 ## What You Built Intuitively, What It's Actually Called, and What Changes Now That You Know
 
 **For:** Simon Gonzalez De Cruz
-**Method:** Three-vector archaeological mining — (1) formal term mapping from philosophy/docs, (2) intent-to-implementation delta from 250+ plans and 58 sessions, (3) source code archaeology across 27 core modules
+**Updated:** April 4, 2026 (with Era 11-13 corrections and new mappings)
+**Method:** Three-vector archaeological mining — (1) formal term mapping from philosophy/docs, (2) intent-to-implementation delta from 250+ plans and 58 sessions, (3) source code archaeology across 27 core modules. Updated with 6 parallel analysis agent findings from 319 new commits.
+
+---
+
+## UPDATE: April 4, 2026 — Era 11-13 Corrections
+
+### CORRECTED MAPPINGS
+
+| Original Mapping | Correction | Reason |
+|-----------------|------------|--------|
+| CompostMill = VAE | **CompostMill = Structured Feature Extraction Pipeline** | Lacks encoder-decoder-latent architecture entirely. Not a VAE. |
+| ModelRouter = epsilon-greedy MAB | **ModelRouter now uses Thompson Sampling** (Era 12) | `ThompsonSampler.ts` implements textbook Bernoulli bandit with Beta priors. |
+
+### NEW MAPPINGS (Era 11-13)
+
+| Your Name | Formal Name | What Knowing It Unlocks |
+|-----------|------------|------------------------|
+| Agora Protocol | Parliamentary Debate Protocol with Rounds | Formal speaker rotation, confidence-weighted voting, structured argumentation |
+| SymbolicCreativeLanguage | Keyword Frequency Table with EMA Tracking | Not a language — it's symbol tables with exponential moving average |
+| scoreReliable() | Coverage-Gated Ensemble Scoring | Minimum coverage threshold (6 dimensions) with LLM fallback — practical engineering |
+| CompositionEngine | Layer Compositing Pipeline (Industry Standard) | Standard NLE/timeline pattern. No novelty in individual components |
+| ProviderFactory | Abstract Factory + Strategy Pattern (GoF) | Textbook design pattern. Properly implemented. |
+| ThinkingNormalizer | Chain-of-Thought Observability Layer | Relatively new concern in LLM tooling. Multi-provider normalization has some novelty |
+| Prompt Compression (31%) | Template Factorization | Standard software engineering technique applied to LLM prompts |
+| RoutineChannel | Message Queue / Pub-Sub Channel | Standard IPC pattern for inter-agent communication |
+
+### NOVELTY ASSESSMENT (Updated)
+
+Weighted average novelty: **3.5-4/10**. The project's novelty is in **integration**, not individual components. Thompson Sampling + evolutionary vocabulary + multi-agent deliberation + chain-of-thought observability combined into a single creative coding tool has no direct precedent, but each component individually is standard.
 **Date:** April 2, 2026
 
 ---

@@ -233,6 +233,9 @@ vi.mock('../../src/core/ScoringEngine.js', () => {
           dimensions: { technical: 0.8, creative: 0.7, novelty: 0.6 },
         };
       }
+      async scoreReliable() {
+        return this.score();
+      }
     },
   };
 });
@@ -409,6 +412,9 @@ vi.mock('../../src/core/ScoringEngine.js', () => {
           issues: [],
           dimensions: { technical: 0.8, creative: 0.7, novelty: 0.6 },
         };
+      }
+      async scoreReliable() {
+        return this.score();
       }
     },
   };

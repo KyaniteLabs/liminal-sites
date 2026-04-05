@@ -1,9 +1,44 @@
 # Liminal Remediation Plan + Architecture Corrections
 
 **For:** Simon Gonzalez De Cruz
-**Date:** April 3, 2026
-**Based on:** 391 commits on main, forensic audit (B+), 8-module ML learning plan, reverse-engineering analysis, frustration telemetry, ADHD diagnosis context
+**Date:** April 3, 2026 (Updated: April 4, 2026)
+**Based on:** 675 commits on main, forensic audit (B+), 8-module ML learning plan, reverse-engineering analysis, frustration telemetry, ADHD diagnosis context
 **Purpose:** Two deliverables — (1) exact agent instructions to fix everything, (2) correct ML architecture for every component
+
+---
+
+## UPDATE: April 4, 2026 — Remediation Progress
+
+319 new commits (Eras 11-13) have addressed several items:
+
+### COMPLETED Fixes
+| Fix | Tier | How Resolved | Commit |
+|-----|------|-------------|--------|
+| 0.68 Dead Zone | Tier 0 | RESOLVED: `scoreReliable()` wired into `RalphLoop.ts:448`. Coverage gate active (<6 dimensions triggers LLM fallback). Misleading JSDoc on `score()` corrected. (Was dead code from 576819b until wiring fix.) | 576819b + wiring |
+| ESLint Errors | Tier 2 | All 11 errors resolved → 0 errors | 4495e5e + others |
+| console.log in production | Tier 2 | Migrated to Logger throughout production code | aebf056 |
+| @ts-expect-error suppressions | Tier 2 | 10 suppressions replaced with proper Window types | 889abdf |
+| Dead modules (PromptEnhancer) | Tier 2 | Removed orphaned module + broken tests | a7c9271 |
+| Superseded modules | Tier 2 | 2 verified-dead modules removed | 65fba0f |
+| Orphaned archives | Tier 2 | Broken import files deleted | 42decb8 |
+| Model coupling | Tier 1 | Full model-agnostic architecture: 6 provider adapters, ProviderFactory, CapabilityRegistry | Multiple (Era 11) |
+| No scoring differentiation | Tier 0 | LLM-based AestheticStrategy in ScoringEngine + scoreReliable() wired into RalphLoop | 4bff60e, 576819b + wiring |
+
+### PARTIALLY ADDRESSED
+| Fix | Tier | Status |
+|-----|------|--------|
+| Write-only archives | Tier 1 | Composition system's LayerSequencer may retrieve from archives — needs verification |
+| RalphLoop stops at iter=1 | Tier 0 | Not directly addressed, but scoring fix enables meaningful iteration |
+| Dogfood testing | Tier 0 | 12-model campaign (324 runs, 64.5%) provides real performance data |
+
+### STILL PENDING
+| Fix | Tier | Priority |
+|-----|------|----------|
+| CI/CD restoration | Tier 3 | Low — removed Mar 19, not restored |
+| Tournament selection for archives | Tier 3 | Medium — uniform random still used |
+| Live music coding (PRD 4.3) | Tier 4 | Deferred |
+| Landing page vision | Tier 4 | Deferred |
+| SelfReflectionEngine integration | Tier 3 | Not started |
 
 ---
 

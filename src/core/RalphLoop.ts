@@ -445,13 +445,12 @@ export class RalphLoop {
           }
 
           const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
-          evaluation = await scoringEngine.score(
+          evaluation = await scoringEngine.scoreReliable(
             {
               output: currentCode,
               criteria: normalizedOptions.evaluationCriteria,
               lirContext,
             },
-            normalizedOptions.evaluationStrategy ?? 'detailed',
           );
         }
 
