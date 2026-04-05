@@ -29,7 +29,7 @@ import type { DreamJournalEntry } from './DreamEngine.js';
 import { SleepScheduler } from './SleepScheduler.js';
 import type { SleepDepth } from './SleepScheduler.js';
 import { CreativeWorldModel } from './CreativeWorldModel.js';
-import type { BehaviorVector, WorldModelState } from './CreativeWorldModel.js';
+import type { WorldModelState } from './CreativeWorldModel.js';
 import { ForgettingCurve } from './ForgettingCurve.js';
 import type { DecayableItem, DecaySummary } from './ForgettingCurve.js';
 import { MemoryBudget } from './MemoryBudget.js';

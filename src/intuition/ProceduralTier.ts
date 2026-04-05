@@ -108,8 +108,8 @@ export class ProceduralTier {
   private routines = new Map<string, ProceduralRoutine>();
   private readonly config: Required<ProceduralTierConfig>;
   private readonly modelSampler: ThompsonSampler<string>;
-  private readonly strategySampler: ThompsonSampler<string>;
-  private readonly prototype: DomainPrototype;
+  private readonly _strategySampler: ThompsonSampler<string>;
+  private readonly _prototype: DomainPrototype;
   private readonly worldModel?: CreativeWorldModel;
 
   constructor(
@@ -123,9 +123,12 @@ export class ProceduralTier {
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.modelSampler = deps.modelSampler;
-    this.strategySampler = deps.strategySampler;
-    this.prototype = deps.prototype;
+    this._strategySampler = deps.strategySampler;
+    this._prototype = deps.prototype;
     this.worldModel = deps.worldModel;
+    // DI deps stored for future wiring (strategySampler, prototype)
+    void this._strategySampler;
+    void this._prototype;
   }
 
   // ---------------------------------------------------------------------------

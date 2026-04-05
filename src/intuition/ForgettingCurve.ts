@@ -21,7 +21,6 @@
  * @module intuition/ForgettingCurve
  */
 
-import { Logger } from '../utils/Logger.js';
 
 // ---------------------------------------------------------------------------
 // Types

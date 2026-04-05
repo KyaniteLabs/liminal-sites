@@ -19,7 +19,7 @@ export { DomainPrototype } from './DomainPrototype.js';
 export type { DomainCentroid, PrototypeStore } from './DomainPrototype.js';
 
 export { IntuitionStrategy } from './IntuitionStrategy.js';
-export type { IntuitionConfig, IntuitionSignal, IntuitionAssessment } from './IntuitionStrategy.js';
+export type { IntuitionConfig } from './IntuitionStrategy.js';
 
 export { IntuitionCache } from './IntuitionCache.js';
 export type { CacheEntry, IntuitionCacheConfig, CacheStats, SerializedCache } from './IntuitionCache.js';
@@ -46,4 +46,7 @@ export { ProceduralTier } from './ProceduralTier.js';
 export type { RoutineConfidence, ProceduralRoutine, ProceduralTierConfig, PromotionResult, ProceduralTierState } from './ProceduralTier.js';
 
 export { IntuitionEngine } from './IntuitionEngine.js';
-export type { IntuitionSignal, IntuitionAssessment, IntuitionEngineConfig, IntuitionHealthReport, IntuitionEngineState } from './IntuitionEngine.js';
+export type { IntuitionEngineConfig, IntuitionHealthReport, IntuitionEngineState } from './IntuitionEngine.js';
+// IntuitionSignal and IntuitionAssessment are defined identically in both
+// IntuitionEngine.ts and IntuitionStrategy.ts — re-export from Engine only
+export type { IntuitionSignal, IntuitionAssessment } from './IntuitionEngine.js';
