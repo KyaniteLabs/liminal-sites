@@ -40,7 +40,10 @@
     "typecheck": "tsc --noEmit",
     "docs": "typedoc --out docs src/",
     "tui": "npx tsx src/tui/HarnessTUI.tsx",
-    "dogfood:report": "npx tsx scripts/generate-dogfood-report.ts"
+    "dogfood:report": "npx tsx scripts/generate-dogfood-report.ts",
+    "prepare": "git config core.hooksPath .githooks",
+    "git:hygiene": "bash scripts/utils/git-hygiene.sh",
+    "git:hygiene:dry": "bash scripts/utils/git-hygiene.sh --dry-run"
   },
   "keywords": [
     "generative-art",
