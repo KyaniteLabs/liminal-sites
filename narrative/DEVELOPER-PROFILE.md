@@ -1,9 +1,34 @@
 # Developer Profile: Simon Gonzalez De Cruz
 
-**A merged portrait from behavioral telemetry (303 commits, 1,148 messages, 7,059 cross-repo commits) and psychological founder analysis.**
+**A merged portrait from behavioral telemetry (675 commits, 1,148 messages, 7,440 cross-repo commits) and psychological founder analysis.**
 
-**Date:** April 1, 2026
+**Date:** April 1, 2026 (Updated: April 4, 2026)
 **Sources:** Liminal narrative archaeology, founder-playbook profile, GitHub telemetry across 50 repos
+
+---
+
+## UPDATE: April 4, 2026 — Marathon Session Profile
+
+### New Behavioral Data (Eras 11-13)
+- **319 commits in 3 days** — the most intense burst in project history
+- **195 commits on April 3 alone** — peak daily record
+- **50 commits at midnight, 39 at 1 AM** — peak hourly record
+- **Only two ~3-hour breaks** in a 48-hour window
+- **54% co-authorship rate** in new eras (AI is now the default co-author)
+- **fix:feat ratio 0.46:1** — still feature-heavy, but self-correction improving
+
+### Updated Profile Characteristics
+
+| Trait | Previous (Eras 1-10) | Updated (Eras 1-13) |
+|-------|---------------------|---------------------|
+| Velocity pattern | Nocturnal bursts (9PM-1AM) | **Bimodal extreme**: quiet periods + marathon bursts (195/day) |
+| AI co-authorship | 58.7% (most sessions) | **40% of commits** AI-co-authored (AI is default co-author) |
+| Frustration→automation | ~12hr avg latency | **Compressed to same-session** during marathon |
+| Building style | Wire-first, iterative | **Infrastructure-first, consumers-later** |
+| Quality awareness | Moderate (B+ audit) | **Improving** (ESLint 0, Logger migration, dead module cleanup) |
+
+### New Pattern: The Marathon Threshold
+The Apr 3-4 burst represents a threshold crossing: **AI-amplified velocity that no solo developer could sustain unassisted**. The 48-hour marathon produced the model-agnostic architecture, composition system, swarm intelligence, and the critical 0.68 scoring fix — all in a single sustained session with AI amplification.
 
 ---
 

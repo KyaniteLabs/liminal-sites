@@ -45,3 +45,21 @@
     Merge order: foamy → archaeology → kimi (structural reorg must go last)
 
 16) **PENDING** — User validation of YouTube engagement heuristics. The engagement model needs spot-checking against actual experience. Which videos were actively watched vs autoplayed? See youtube-engagement-heuristics.json for initial estimates.
+
+## Era 11-13 items (Apr 3-4, 2026 update)
+
+17) **IN PROGRESS** — Archaeology system update for 319 new commits. Database updated to 675 commits, 3 new eras classified (11-13), 6 analysis agents launched. Deliverables being updated.
+
+18) **RESOLVED** — The 0.68 Dead Zone is FIXED. `scoreReliable()` wired into `RalphLoop.ts:448` (was dead code from commit 576819b until wiring fix). Coverage gate active: <6 dimensions triggers LLM fallback. Misleading `score()` JSDoc corrected. Note: `CompostSoup.ts:88` uses `FragmentScorer` (separate pipeline, not affected by 0.68 issue).
+
+19) **COMPLETED** — Model-agnostic architecture built. 6 provider adapters (OpenAI, Anthropic, Ollama, Google, OpenRouter, LM Studio), ProviderFactory, CapabilityRegistry, ThinkingNormalizer, role-based config (Generator/Evaluator/Harness). Zero hardcoded model names in src/. Era 11.
+
+20) **COMPLETED** — Composition system built. 17 commits: LayerManager, CompositionEngine, LayerSequencer, KeyframeAnimation, LayerMask, blend modes, 6 generator adapters, ProjectSerializer v2.0. Era 11.
+
+21) **COMPLETED** — Dogfood campaign completed. 12 models tested, 324 runs, 64.5% overall success. MiniMax 81.5%, Ollama cloud 61.7%. Campaign dashboard HTML with 6 charts. Era 11.
+
+22) **COMPLETED** — Swarm intelligence emerged. Agora protocol for inter-agent communication, Thompson Sampling model router, SymbolicCreativeLanguage wired into swarm loop, creative notation schema with certification tests, vocabulary optimization via soup loop, prompt compression (31% reduction). Era 12.
+
+23) **COMPLETED** — Code quality improvements. ESLint errors 11→0, console.log→Logger in production code, 10 @ts-expect-error suppressions replaced with proper Window types, dead modules removed (PromptEnhancer, 2 superseded modules), orphaned archives deleted. Era 13.
+
+24) **PENDING** — Verify write-only archives issue (MAP-Elites/NoveltyArchive). Original #1 recommended fix (~80 lines). May have been partially addressed by composition system's LayerSequencer retrieving from archives.

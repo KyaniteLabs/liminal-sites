@@ -48,17 +48,19 @@ vi.mock('../../src/core/GenerationOrchestrator.js', () => ({
 
 vi.mock('../../src/core/ScoringEngine.js', () => ({
   ScoringEngine: vi.fn(function() {
+    const scoreFn = vi.fn(async ({ output }: { output: string }) => {
+      callTracker.scoreCalls++;
+      callTracker.scoreInputs.push(output);
+      const idx = currentScoreCall++;
+      const result = scoreSequence[idx] || { score: 0.7 };
+      if (result.error) {
+        throw new Error('Scoring failed');
+      }
+      return { score: result.score, issues: [] };
+    });
     return {
-      score: vi.fn(async ({ output }: { output: string }) => {
-        callTracker.scoreCalls++;
-        callTracker.scoreInputs.push(output);
-        const idx = currentScoreCall++;
-        const result = scoreSequence[idx] || { score: 0.7 };
-        if (result.error) {
-          throw new Error('Scoring failed');
-        }
-        return { score: result.score, issues: [] };
-      }),
+      score: scoreFn,
+      scoreReliable: scoreFn,
     };
   }),
 }));
