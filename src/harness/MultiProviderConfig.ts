@@ -23,18 +23,34 @@ import path from 'node:path';
 import os from 'node:os';
 
 /** Read defaultProvider from ~/.liminal/config.json (sync, cached) */
-let _cachedDefault: string | null | undefined = undefined;
-function getDefaultProviderFromConfig(): string | null {
-  if (_cachedDefault !== undefined) return _cachedDefault as string | null;
+let _cachedDefault: string | null = null;
+type ProviderFileConfig = Record<string, { apiKey?: string; baseUrl?: string; model?: string }>;
+let _cachedConfig: ProviderFileConfig | null = null;
+let _configLoaded = false;
+
+function loadConfigFile(): ProviderFileConfig | null {
+  if (_configLoaded) return _cachedConfig;
   try {
     const configPath = path.join(os.homedir(), '.liminal', 'config.json');
     const raw = fs.readFileSync(configPath, 'utf-8');
     const parsed = JSON.parse(raw);
+    _cachedConfig = parsed.providers || null;
     _cachedDefault = parsed.defaultProvider || null;
   } catch {
-    _cachedDefault = null;
+    _cachedConfig = null;
   }
-  return _cachedDefault as string | null;
+  _configLoaded = true;
+  return _cachedConfig;
+}
+
+function getDefaultProviderFromConfig(): string | null {
+  if (!_configLoaded) loadConfigFile();
+  return _cachedDefault;
+}
+
+function getApiKeyFromConfig(provider: string): string | undefined {
+  const providers = loadConfigFile();
+  return providers?.[provider]?.apiKey;
 }
 
 export type ProviderType = 'minimax' | 'lmstudio' | 'ollama' | 'openrouter' | 'glm' | 'moonshot' | 'kimi' | 'custom';
@@ -137,7 +153,7 @@ export const PROVIDER_TEMPLATES: Record<ProviderType, Omit<ProviderConfig, 'apiK
 export function getProviderConfig(provider: ProviderType): ProviderConfig | null {
   const template = PROVIDER_TEMPLATES[provider];
   
-  // Get API key from environment based on provider
+  // Get API key: env var first, then config file
   let apiKey: string | undefined;
   switch (provider) {
     case 'minimax':
@@ -161,6 +177,10 @@ export function getProviderConfig(provider: ProviderType): ProviderConfig | null
     case 'custom':
       apiKey = process.env.LIMINAL_LLM_API_KEY || process.env.OPENAI_API_KEY;
       break;
+  }
+  // Fallback: read apiKey from ~/.liminal/config.json providers.<name>.apiKey
+  if (!apiKey) {
+    apiKey = getApiKeyFromConfig(provider);
   }
   
   // Allow environment overrides for baseUrl and model
