@@ -14,6 +14,7 @@ import type { HarnessAgent, AgentTask } from '../harness/index.js';
 import type { LLMModeAgent, LLMTask } from '../harness/agent/LLMModeAgent.js';
 import { formatError } from '../utils/errors.js';
 import { Logger } from '../utils/Logger.js';
+import { tuiDebug } from './TUIDebugLogger.js';
 
 export interface ConversationMessage {
   role: 'user' | 'assistant' | 'system' | 'tool';
@@ -124,15 +125,18 @@ export class NaturalInterface {
 
     // 1. Check for exact slash commands (only these get preset responses)
     if (trimmed.startsWith('/')) {
+      tuiDebug.route(trimmed, 'slash', 'starts with /');
       return this.handleSlashCommand(trimmed.slice(1));
     }
 
     // 2. Check for agent patterns (code changes)
     if (this.isAgentRequest(trimmed)) {
+      tuiDebug.route(trimmed, 'agent', 'matched AGENT_PATTERNS');
       return this.handleAgentRequest(trimmed);
     }
 
     // 3. Default: chat mode — everything goes through the LLM
+    tuiDebug.route(trimmed, 'chat', 'default routing');
     return this.handleChat(trimmed, onStream);
   }
 
@@ -184,6 +188,9 @@ export class NaturalInterface {
       case 'provider':
         return this.handleProvider(args);
 
+      case 'debug':
+        return this.handleDebug(args);
+
       case 'test':
       case 'diagnostic':
         return this.handleDiagnostic();
@@ -191,7 +198,7 @@ export class NaturalInterface {
       default:
         return {
           type: 'ambiguous',
-          response: `Unknown command: ${command}. Try "help" for available commands.`,
+          response: `Unknown command: ${command}. Try /help for available commands.`,
           shouldContinue: true,
         };
     }
@@ -281,6 +288,10 @@ USER: ${input}
 
 Respond naturally as your personality. If the user asks you to modify code (fix, add, change, etc.) OR says words like "do", "make", "create", "implement" \u2014 immediately invoke the agent without asking for confirmation. Only ask "Should I...?" if the request is ambiguous or destructive (delete, overwrite).`;
 
+      // Log the LLM request
+      const startTime = Date.now();
+      tuiDebug.llmRequest(systemPrompt, userPrompt, { maxTokens: 1000, temperature: 0.7 });
+
       // Use streaming if callback provided
       if (onStream) {
         let fullResponse = '';
@@ -292,6 +303,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
         for await (const event of this.llmClient.streamWithThinking(systemPrompt, userPrompt)) {
           if (event.type === 'thinking') {
             thinkingContent += event.content;
+            tuiDebug.streamEvent('thinking', event.content.length);
             // Show brief thinking indicator
             if (thinkingContent.length % 50 === 0) {
               this.onStatus(`\uD83E\uDD14 Thinking... (${thinkingContent.length} chars)`);
@@ -303,6 +315,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
             });
           } else {
             fullResponse += event.content;
+            tuiDebug.streamEvent('content', event.content.length);
             onStream(event.content, { type: 'content' });
           }
         }
@@ -310,6 +323,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
         // Clean up any remaining think tags in the response
         fullResponse = this.cleanThinkTags(fullResponse);
 
+        tuiDebug.llmResponse(Date.now() - startTime, fullResponse.length, fullResponse);
         this.addMessage('assistant', fullResponse, { thinking: thinkingContent });
         return { type: 'chat', response: fullResponse, shouldContinue: true };
       }
@@ -323,16 +337,19 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
       });
 
       if (!result.success) {
+        tuiDebug.llmError(result.error || 'LLM failed');
         throw new Error(result.error || 'LLM failed');
       }
 
       const response = this.cleanThinkTags(result.text.trim());
+      tuiDebug.llmResponse(Date.now() - startTime, response.length, response);
       this.addMessage('assistant', response);
 
       return { type: 'chat', response, shouldContinue: true };
 
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
+      tuiDebug.llmError(msg);
       return {
         type: 'chat',
         response: `I'm having trouble thinking right now: ${msg}`,
@@ -427,6 +444,7 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
       '  \u2022 run <id> - Execute a task',
       '  \u2022 provider [list|<name>|<url> <model>] - Switch LLM provider',
       '  \u2022 preview <file> - Preview a file',
+      '  \u2022 debug  - Toggle debug logging (writes to ~/.liminal/logs/)',
       '  \u2022 test   - Run diagnostic tests',
       '  \u2022 clear  - Clear screen',
       '  \u2022 exit   - Quit',
@@ -490,6 +508,72 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     return {
       type: 'command',
       response: `Unknown provider "${args[0]}". Run /provider list to see options.`,
+      shouldContinue: true,
+    };
+  }
+
+  private handleDebug(args: string[]): NaturalInputResult {
+    const sub = args[0];
+
+    if (sub === 'on' || sub === 'enable' || sub === 'true') {
+      tuiDebug.enable();
+      return {
+        type: 'command',
+        response: [
+          'Debug logging ENABLED',
+          `Log file: ${tuiDebug.getLogPath()}`,
+          '',
+          'Watch it from another terminal:',
+          `  tail -f ${tuiDebug.getLogPath()}`,
+          '',
+          'Toggle off with: /debug off',
+        ].join('\n'),
+        shouldContinue: true,
+      };
+    }
+
+    if (sub === 'off' || sub === 'disable' || sub === 'false') {
+      tuiDebug.disable();
+      return { type: 'command', response: 'Debug logging DISABLED', shouldContinue: true };
+    }
+
+    if (sub === 'status') {
+      const config = this.llmClient.getConfig();
+      return {
+        type: 'command',
+        response: [
+          `Debug: ${tuiDebug.isEnabled() ? 'ENABLED' : 'DISABLED'}`,
+          `Log: ${tuiDebug.getLogPath()}`,
+          `Model: ${config.model}`,
+          `Base URL: ${config.baseUrl}`,
+          `Session: ${this.session.id}`,
+          `Messages: ${this.session.messages.length}`,
+        ].join('\n'),
+        shouldContinue: true,
+      };
+    }
+
+    // /debug with no args = toggle
+    if (!sub) {
+      if (tuiDebug.isEnabled()) {
+        tuiDebug.disable();
+        return { type: 'command', response: 'Debug logging DISABLED', shouldContinue: true };
+      }
+      tuiDebug.enable();
+      return {
+        type: 'command',
+        response: [
+          'Debug logging ENABLED',
+          `Log file: ${tuiDebug.getLogPath()}`,
+          `  tail -f ${tuiDebug.getLogPath()}`,
+        ].join('\n'),
+        shouldContinue: true,
+      };
+    }
+
+    return {
+      type: 'command',
+      response: `Unknown debug option: ${sub}. Use /debug (toggle), /debug on, /debug off, /debug status`,
       shouldContinue: true,
     };
   }
