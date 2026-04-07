@@ -51,7 +51,7 @@ interface ActivityState {
   lastActivity: number;
 }
 
-const StatusBar = ({ status, message, activity }: { status: any; message: string; activity: ActivityState }) => {
+const StatusBar = ({ status, message, activity, modelName }: { status: any; message: string; activity: ActivityState; modelName?: string }) => {
   const phaseEmoji = {
     idle: '⏸️',
     thinking: '🤔',
@@ -71,7 +71,7 @@ const StatusBar = ({ status, message, activity }: { status: any; message: string
   return (
     <Box borderStyle="single" borderColor={activity.phase === 'idle' ? C.muted : C.primary} paddingX={1}>
       <Text color={activity.phase === 'idle' ? C.muted : C.primary}>
-        {status?.initialized ? '🟢' : '🔴'} {status?.activeProvider || 'offline'} | 
+        {status?.initialized ? '🟢' : '🔴'} {status?.activeProvider || 'offline'}{modelName ? `/${modelName}` : ''} |
         {phaseEmoji} {message} {progress} {tool} {thinking}
       </Text>
     </Box>
@@ -205,6 +205,7 @@ function App() {
   const [showDebug, setShowDebug] = useState(false);
   const [, setNaturalInterface] = useState<NaturalInterface | null>(null);
   const [shouldExit, setShouldExit] = useState(false);
+  const [modelName, setModelName] = useState('');
   
   // Use ref for latest state in callbacks
   const interfaceRef = useRef<NaturalInterface | null>(null);
@@ -240,6 +241,7 @@ function App() {
         Logger.info('TUI', 'DEV MODE: Using harness LLM for chat');
         
         if (harnessLLMClient) {
+          setModelName(harnessLLMClient.getConfig().model);
           const harnessAgent = createHarnessAgent(harnessLLMClient);
           const llmAgent = createLLMModeAgent(harnessLLMClient);
           
@@ -488,7 +490,7 @@ function App() {
         onCopy={() => { void handleCopy(); }}
         onToggleDebug={handleToggleDebug}
       />
-      <StatusBar status={status} message={statusMsg} activity={activity} />
+      <StatusBar status={status} message={statusMsg} activity={activity} modelName={modelName} />
     </Box>
   );
 }
