@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-07T18:48:52.909Z",
+  "callId": "local-ollama-p5-kimi-k2.5-cloud-1775587641359",
+  "testId": "local-ollama-p5-kimi-k2.5-cloud",
+  "duration": 91550,
+  "success": false,
+  "code": "// LLM generation failed: fetch failed",
+  "codeLength": 38,
+  "error": "fetch failed"
+}

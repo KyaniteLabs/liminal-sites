@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-07T18:50:41.359Z",
+  "callId": "minimax-p5-minimax-m25-1775587841359",
+  "testId": "minimax-p5-minimax-m25",
+  "model": "MiniMax-M2.5",
+  "baseUrl": "https://api.minimaxi.chat/v1",
+  "systemPromptLength": 0,
+  "userPromptLength": 118,
+  "systemPrompt": "",
+  "userPrompt": "Generate p5 code for:\n\nCreate a calming blue particle system with flowing movement\n\nRULES: code only, no explanations.",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

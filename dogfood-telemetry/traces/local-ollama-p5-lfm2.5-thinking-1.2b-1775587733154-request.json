@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:48:53.154Z",
+  "callId": "local-ollama-p5-lfm2.5-thinking-1.2b-1775587733154",
+  "testId": "local-ollama-p5-lfm2.5-thinking-1.2b",
+  "model": "lfm2.5-thinking:1.2b",
+  "baseUrl": "http://localhost:11434/v1",
+  "systemPrompt": "",
+  "userPrompt": "Generate p5 code for:\n\nCreate a calming blue particle system with flowing movement\n\nRULES: code only, no explanations.",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-07T18:50:52.542Z",
+  "callId": "lmstudio-p5-lmstudio-qwen3.5-2b-1775587848396",
+  "testId": "lmstudio-p5-lmstudio-qwen3.5-2b",
+  "duration": 4146,
+  "success": true,
+  "codeLength": 1117,
+  "hasCode": true,
+  "explanationLength": 1135,
+  "recoveredFromThinking": false,
+  "isComplete": true,
+  "code": "import p5 as pg;\n\n// Configuration for the calm blue particle system\nconst numParticles = 100;\nconst radius = 4;\nlet particles = [];\n\nfunction setup() {\n  // Create canvas in center of screen, fill with white background\n  createCanvas(600, 600);\n  background(255);\n}\n\nfunction draw() {\n  // Clear the canvas every frame\n  noStroke();\n  \n  // Loop through particles and update their positions based on velocity\n  for (let i = 0; i < numParticles; i++) {\n    let p = particles[i];\n    \n    // Move particle from current position to new random position\n    p.pos.x += p.vel.x;\n    p.pos.y += p.vel.y;\n    \n    // Bounce off the edges of the canvas\n    if (p.pos.x < 0 || p.pos.x > width) {\n      p.vel.x *= -1;\n    } else if (p.pos.y < 0 || p.pos.y > height) {\n      p.vel.y *= -1;\n    }\n    \n    // Draw the particle in calm blue colors\n    fill(135, 206, 235); // Calming blue\n    strokeWeight(1.5);\n    noStroke();\n    ellipse(p.pos.x, p.pos.y, radius);\n  }\n\n  // Optional: Add some randomness to velocity for a more organic feel\n  particles[i].vel.x += random(-0.2, 0.2);\n  particles[i].vel.y += random(-0.2, 0.2);\n}",
+  "explanation": "```javascript\nimport p5 as pg;\n\n// Configuration for the calm blue particle system\nconst numParticles = 100;\nconst radius = 4;\nlet particles = [];\n\nfunction setup() {\n  // Create canvas in center of screen, fill with white background\n  createCanvas(600, 600);\n  background(255);\n}\n\nfunction draw() {\n  // Clear the canvas every frame\n  noStroke();\n  \n  // Loop through particles and update their positions based on velocity\n  for (let i = 0; i < numParticles; i++) {\n    let p = particles[i];\n    \n    // Move particle from current position to new random position\n    p.pos.x += p.vel.x;\n    p.pos.y += p.vel.y;\n    \n    // Bounce off the edges of the canvas\n    if (p.pos.x < 0 || p.pos.x > width) {\n      p.vel.x *= -1;\n    } else if (p.pos.y < 0 || p.pos.y > height) {\n      p.vel.y *= -1;\n    }\n    \n    // Draw the particle in calm blue colors\n    fill(135, 206, 235); // Calming blue\n    strokeWeight(1.5);\n    noStroke();\n    ellipse(p.pos.x, p.pos.y, radius);\n  }\n\n  // Optional: Add some randomness to velocity for a more organic feel\n  particles[i].vel.x += random(-0.2, 0.2);\n  particles[i].vel.y += random(-0.2, 0.2);\n}\n```"
+}

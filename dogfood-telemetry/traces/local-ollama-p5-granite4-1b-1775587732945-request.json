@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:48:52.945Z",
+  "callId": "local-ollama-p5-granite4-1b-1775587732945",
+  "testId": "local-ollama-p5-granite4-1b",
+  "model": "granite4:1b",
+  "baseUrl": "http://localhost:11434/v1",
+  "systemPrompt": "",
+  "userPrompt": "Generate p5 code for:\n\nCreate a calming blue particle system with flowing movement\n\nRULES: code only, no explanations.",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

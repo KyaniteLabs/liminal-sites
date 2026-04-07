@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-07T18:48:53.166Z",
+  "callId": "local-ollama-p5-gemini-3-flash-preview-latest-1775587733161",
+  "testId": "local-ollama-p5-gemini-3-flash-preview-latest",
+  "duration": 5,
+  "success": false,
+  "code": "// LLM generation failed: fetch failed",
+  "codeLength": 38,
+  "error": "fetch failed"
+}

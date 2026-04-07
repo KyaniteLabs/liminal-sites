@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:48:53.167Z",
+  "callId": "local-ollama-p5-deepseek-v3.2-cloud-1775587733167",
+  "testId": "local-ollama-p5-deepseek-v3.2-cloud",
+  "model": "deepseek-v3.2:cloud",
+  "baseUrl": "http://localhost:11434/v1",
+  "systemPrompt": "",
+  "userPrompt": "Generate p5 code for:\n\nCreate a calming blue particle system with flowing movement\n\nRULES: code only, no explanations.",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

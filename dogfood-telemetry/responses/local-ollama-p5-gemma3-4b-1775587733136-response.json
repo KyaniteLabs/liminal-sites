@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-07T18:48:53.148Z",
+  "callId": "local-ollama-p5-gemma3-4b-1775587733136",
+  "testId": "local-ollama-p5-gemma3-4b",
+  "duration": 12,
+  "success": false,
+  "code": "// LLM generation failed: fetch failed",
+  "codeLength": 38,
+  "error": "fetch failed"
+}

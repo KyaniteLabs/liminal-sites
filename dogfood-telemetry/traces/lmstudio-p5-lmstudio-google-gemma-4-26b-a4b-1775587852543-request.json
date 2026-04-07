@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-04-07T18:50:52.543Z",
+  "callId": "lmstudio-p5-lmstudio-google-gemma-4-26b-a4b-1775587852543",
+  "testId": "lmstudio-p5-lmstudio-google-gemma-4-26b-a4b",
+  "model": "google/gemma-4-26b-a4b",
+  "baseUrl": "http://localhost:1234/v1",
+  "systemPromptLength": 78,
+  "userPromptLength": 193,
+  "systemPrompt": "You generate code.\nRULES:\n- Output ONLY code\n- No explanations\n- Valid p5 code",
+  "userPrompt": "EXAMPLE:\nfunction setup() {\n  createCanvas(400, 400);\n}\nfunction draw() {\n  background(220);\n  circle(200, 200, 50);\n}\n\nNOW GENERATE:\nCreate a calming blue particle system with flowing movement",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

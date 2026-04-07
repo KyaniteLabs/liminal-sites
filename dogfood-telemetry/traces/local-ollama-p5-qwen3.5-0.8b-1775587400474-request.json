@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:43:20.474Z",
+  "callId": "local-ollama-p5-qwen3.5-0.8b-1775587400474",
+  "testId": "local-ollama-p5-qwen3.5-0.8b",
+  "model": "qwen3.5:0.8b",
+  "baseUrl": "http://localhost:11434/v1",
+  "systemPrompt": "You generate code.\nRULES:\n- Output ONLY code\n- No explanations\n- Valid p5 code",
+  "userPrompt": "EXAMPLE:\nfunction setup() {\n  createCanvas(400, 400);\n}\nfunction draw() {\n  background(220);\n  circle(200, 200, 50);\n}\n\nNOW GENERATE:\nCreate a calming blue particle system with flowing movement",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

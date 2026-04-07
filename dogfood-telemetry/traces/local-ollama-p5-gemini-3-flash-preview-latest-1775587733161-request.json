@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:48:53.161Z",
+  "callId": "local-ollama-p5-gemini-3-flash-preview-latest-1775587733161",
+  "testId": "local-ollama-p5-gemini-3-flash-preview-latest",
+  "model": "gemini-3-flash-preview:latest",
+  "baseUrl": "http://localhost:11434/v1",
+  "systemPrompt": "",
+  "userPrompt": "Generate p5 code for:\n\nCreate a calming blue particle system with flowing movement\n\nRULES: code only, no explanations.",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

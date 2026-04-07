@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-07T18:49:39.017Z",
+  "callId": "cloud-minimax-glsl-minimax-m25-1775587775155",
+  "testId": "cloud-minimax-glsl-minimax-m25",
+  "thinking": "The user wants a shader with animated colors creating an abstract plasma effect.\n\nI need to output only shader code, no explanations. I'll provide GLSL code for a plasma shader, likely a fragment shader that can be used in various contexts (like Shadertoy, Processing, etc.).\n\nI'll write a fragment shader that creates a plasma effect using sine waves and time-based animation.",
+  "reasoning": "The user wants a shader with animated colors creating an abstract plasma effect.\n\nI need to output only shader code, no explanations. I'll provide GLSL code for a plasma shader, likely a fragment shader that can be used in various contexts (like Shadertoy, Processing, etc.).\n\nI'll write a fragment shader that creates a plasma effect using sine waves and time-based animation.",
+  "recoveredFromThinking": false,
+  "prompt": "Generate shader code for:\n\nCreate an abstract plasma shader with animated colors\n\nRULES: code only, no explanations.",
+  "generatedCode": "#version 330 core\n\nout vec4 fragColor;\nin vec2 fragCoord;\nuniform float iTime;\nuniform vec2 iResolution;\n\nvoid main() {\n    vec2 uv = fragCoord / iResolution.xy;\n    float t = iTime * 0.5;\n    \n    vec2 p = uv * 8.0;\n    \n    float v1 = sin(p.x + t);\n    float v2 = sin(p.y + t);\n    float v3 = sin(p.x + p.y + t);\n    float v4 = sin(sqrt(p.x*p.x + p.y*p.y) + t);\n    \n    float v = v1 + v2 + v3 + v4;\n    \n    vec3 col;\n    col.r = sin(v * 3.14159);\n    col.g = sin(v * 3.14159 + 2.094);\n    col.b = sin(v * 3.14159 + 4.188);\n    \n    col = col * 0.5 + 0.5;\n    col = pow(col, vec3(0.9));\n    \n    fragColor = vec4(col, 1.0);\n}"
+}
