@@ -5,6 +5,7 @@ export { LLMError, LLMTimeoutError, LLMRateLimitError, LLMAuthError } from './er
 
 import { SERVICE_DEFAULTS } from '../constants.js';
 import { PromptLibrary } from '../prompts/index.js';
+import { CapabilityRegistry } from './CapabilityRegistry.js';
 import { RetryManager } from './RetryManager.js';
 import { TIMEOUT_OLLAMA_MS, TRUNCATE_SHORT, TRUNCATE_LONG, TOKEN_LIMIT_XL } from '../constants/limits.js';
 import { CacheManager } from './CacheManager.js';
@@ -17,7 +18,6 @@ import { Provider } from '../types/providers.js';
 
 // ── Provider system imports ──
 import { createProvider } from './ProviderFactory.js';
-import { CapabilityRegistry } from './CapabilityRegistry.js';
 import { BaseProvider } from './providers/BaseProvider.js';
 import type { ProviderRequest, ProviderResponse } from './ProviderTypes.js';
 import type { ModelRole, ResolvedRoleConfig, RoleConfigFile } from '../config/RoleConfig.js';
