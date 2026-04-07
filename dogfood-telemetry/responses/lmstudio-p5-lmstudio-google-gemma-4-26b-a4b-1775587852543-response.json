@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-07T18:50:56.155Z",
+  "callId": "lmstudio-p5-lmstudio-google-gemma-4-26b-a4b-1775587852543",
+  "testId": "lmstudio-p5-lmstudio-google-gemma-4-26b-a4b",
+  "duration": 3612,
+  "success": true,
+  "codeLength": 1021,
+  "hasCode": true,
+  "explanationLength": 1021,
+  "recoveredFromThinking": false,
+  "isComplete": true,
+  "code": "function setup() {\n  createCanvas(windowWidth, windowHeight);\n  noStroke();\n}\n\nfunction draw() {\n  background(189, 223, 247); // Calming blue gradient\n  fill(0, 153, 255);         // Cyan for particles\n  stroke(160, 200, 255);     // Brighter outline\n  lineCount(1);              // Single line for smoothness\n\n  for (let i = 0; i < numberOfParticles; i++) {\n    let particleX = random(width);\n    let particleY = height - random(height * 0.3);\n    \n    // Flowing movement: calculate direction based on position and velocity\n    let speed = map(random(5, 12), particleX, width, 0, 10);\n    let angle = map(particleY, height, 0, PI * 2);\n    \n    vector v = create(particleX, particleY, speed, sin(angle));\n    particles[i].position(v.x, v.y);\n    particles[i].velocity(v);\n    particles[i].alpha(1 - (i / numberOfParticles) * 0.5); // Fade out effect\n    \n    ellipse(particles[i].x, particles[i].y, 3 + map(i, 0, numberOfParticles - 1), 8);\n  }\n}\n\nfunction windowResized() {\n  resizeCanvas(windowWidth, windowHeight);\n}",
+  "explanation": "function setup() {\n  createCanvas(windowWidth, windowHeight);\n  noStroke();\n}\n\nfunction draw() {\n  background(189, 223, 247); // Calming blue gradient\n  fill(0, 153, 255);         // Cyan for particles\n  stroke(160, 200, 255);     // Brighter outline\n  lineCount(1);              // Single line for smoothness\n\n  for (let i = 0; i < numberOfParticles; i++) {\n    let particleX = random(width);\n    let particleY = height - random(height * 0.3);\n    \n    // Flowing movement: calculate direction based on position and velocity\n    let speed = map(random(5, 12), particleX, width, 0, 10);\n    let angle = map(particleY, height, 0, PI * 2);\n    \n    vector v = create(particleX, particleY, speed, sin(angle));\n    particles[i].position(v.x, v.y);\n    particles[i].velocity(v);\n    particles[i].alpha(1 - (i / numberOfParticles) * 0.5); // Fade out effect\n    \n    ellipse(particles[i].x, particles[i].y, 3 + map(i, 0, numberOfParticles - 1), 8);\n  }\n}\n\nfunction windowResized() {\n  resizeCanvas(windowWidth, windowHeight);\n}"
+}

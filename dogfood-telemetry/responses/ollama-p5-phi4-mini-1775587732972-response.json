@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-07T18:48:53.002Z",
+  "callId": "ollama-p5-phi4-mini-1775587732972",
+  "testId": "ollama-p5-phi4-mini",
+  "duration": 30,
+  "success": false,
+  "code": "// LLM generation failed: fetch failed",
+  "codeLength": 38,
+  "error": "fetch failed"
+}

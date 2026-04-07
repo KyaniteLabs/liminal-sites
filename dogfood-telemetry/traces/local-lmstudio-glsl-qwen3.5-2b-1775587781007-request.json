@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:49:41.007Z",
+  "callId": "local-lmstudio-glsl-qwen3.5-2b-1775587781007",
+  "testId": "local-lmstudio-glsl-qwen3.5-2b",
+  "model": "qwen3.5-2b",
+  "baseUrl": "http://localhost:1234/v1",
+  "systemPrompt": "You generate code.\nRULES:\n- Output ONLY code\n- No explanations\n- Valid shader code",
+  "userPrompt": "EXAMPLE:\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / u_resolution.xy;\n  gl_FragColor = vec4(uv, 0.5, 1.0);\n}\n\nNOW GENERATE:\nCreate an abstract plasma shader with animated colors",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-07T18:49:35.155Z",
+  "callId": "cloud-minimax-glsl-minimax-m25-1775587775155",
+  "testId": "cloud-minimax-glsl-minimax-m25",
+  "model": "MiniMax-M2.5",
+  "baseUrl": "https://api.minimaxi.chat/v1",
+  "systemPrompt": "",
+  "userPrompt": "Generate shader code for:\n\nCreate an abstract plasma shader with animated colors\n\nRULES: code only, no explanations.",
+  "temperature": 0.7,
+  "maxTokens": 4096
+}

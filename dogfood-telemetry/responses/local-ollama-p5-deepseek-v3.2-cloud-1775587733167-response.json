@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-07T18:48:53.237Z",
+  "callId": "local-ollama-p5-deepseek-v3.2-cloud-1775587733167",
+  "testId": "local-ollama-p5-deepseek-v3.2-cloud",
+  "duration": 70,
+  "success": false,
+  "code": "// LLM generation failed: fetch failed",
+  "codeLength": 38,
+  "error": "fetch failed"
+}
