@@ -14,7 +14,6 @@ import type { HarnessAgent, AgentTask } from '../harness/index.js';
 import type { LLMModeAgent, LLMTask } from '../harness/agent/LLMModeAgent.js';
 import { formatError } from '../utils/errors.js';
 import { Logger } from '../utils/Logger.js';
-import { tuiDebug } from './TUIDebugLogger.js';
 
 export interface ConversationMessage {
   role: 'user' | 'assistant' | 'system' | 'tool';
@@ -43,18 +42,9 @@ interface NaturalInputResult {
 }
 
 /**
- * Agent patterns - indicate user wants code changes
+ * Everything is agent mode. No separate chat.
+ * Conversational input just hits tool: "complete" on step 1.
  */
-const AGENT_PATTERNS = [
-  /^(?:can\s+you|could\s+you|please)?\s*(?:fix|repair|correct)\b/i,
-  /^(?:can\s+you|could\s+you|please)?\s*(?:add|implement|create|build)\s+(?:a|an|the|\w+)/i,
-  /^(?:can\s+you|could\s+you|please)?\s*(?:change|modify|update|refactor|rewrite)\b/i,
-  /^(?:can\s+you|could\s+you|please)?\s*(?:remove|delete|clean\s+up)\b/i,
-  /^(?:can\s+you|could\s+you|please)?\s*(?:improve|optimize|enhance|polish)\b/i,
-  /\b(bug|issue|error|broken|failing)\b.*\b(fix|repair|solve)\b/i,
-  /\bis\s+(?:there\s+a\s+)?(?:way\s+to|method\s+to)\s+(?:fix|add|change)/i,
-  /\b(the|a|an)\s+\w+\s+(?:should|needs?|must)\s+(?:be\s+)?\w+/i,
-];
 
 /**
  * Natural Interface - Main entry point
@@ -116,35 +106,20 @@ export class NaturalInterface {
    */
   async processInput(
     input: string,
-    onStream?: (chunk: string, meta?: { type: 'thinking' | 'content'; length?: number }) => void
+    _onStream?: (chunk: string, meta?: { type: 'thinking' | 'content'; length?: number }) => void
   ): Promise<NaturalInputResult> {
     const trimmed = input.trim();
 
     // Add user message to history
     this.addMessage('user', trimmed);
 
-    // 1. Check for exact slash commands (only these get preset responses)
+    // 1. Check for exact slash commands
     if (trimmed.startsWith('/')) {
-      tuiDebug.route(trimmed, 'slash', 'starts with /');
       return this.handleSlashCommand(trimmed.slice(1));
     }
 
-    // 2. Check for agent patterns (code changes)
-    if (this.isAgentRequest(trimmed)) {
-      tuiDebug.route(trimmed, 'agent', 'matched AGENT_PATTERNS');
-      return this.handleAgentRequest(trimmed);
-    }
-
-    // 3. Default: chat mode — everything goes through the LLM
-    tuiDebug.route(trimmed, 'chat', 'default routing');
-    return this.handleChat(trimmed, onStream);
-  }
-
-  /**
-   * Check if input is an agent request (code changes)
-   */
-  private isAgentRequest(input: string): boolean {
-    return AGENT_PATTERNS.some(pattern => pattern.test(input));
+    // 2. Everything else goes through the agent (with tools)
+    return this.handleAgentRequest(trimmed);
   }
 
   /**
@@ -188,37 +163,14 @@ export class NaturalInterface {
       case 'provider':
         return this.handleProvider(args);
 
-      case 'debug':
-        return this.handleDebug(args);
-
       case 'test':
       case 'diagnostic':
         return this.handleDiagnostic();
 
-      case 'debug': {
-        const action = args[0]?.toLowerCase();
-        if (action === 'on') {
-          const { tuiDebugger } = await import('./TuiDebugger.js');
-          tuiDebugger.enable();
-          const path = tuiDebugger.logFilePath ?? '~/.liminal/debug/';
-          return { type: 'command', response: `Debug mode ON. Log: ${path}\nUse Ctrl+D to show panel. tail -f ${path}`, shouldContinue: true };
-        }
-        if (action === 'off') {
-          const { tuiDebugger } = await import('./TuiDebugger.js');
-          tuiDebugger.disable();
-          return { type: 'command', response: 'Debug mode OFF.', shouldContinue: true };
-        }
-        return {
-          type: 'command',
-          response: 'Usage: /debug on|off\nEnables verbose file logging to ~/.liminal/debug/\nUse Ctrl+D to toggle the debug panel in TUI.',
-          shouldContinue: true,
-        };
-      }
-
       default:
         return {
           type: 'ambiguous',
-          response: `Unknown command: ${command}. Try /help for available commands.`,
+          response: `Unknown command: ${command}. Try "help" for available commands.`,
           shouldContinue: true,
         };
     }
@@ -227,10 +179,7 @@ export class NaturalInterface {
   /**
    * Handle agent request (LLM-driven code changes)
    */
-  private async handleAgentRequest(
-    input: string,
-    _onStream?: (chunk: string, meta?: { type: 'thinking' | 'content'; length?: number }) => void
-  ): Promise<NaturalInputResult> {
+  private async handleAgentRequest(input: string): Promise<NaturalInputResult> {
     this.onStatus('Thinking...');
     this.onLog(`Agent task: ${input.slice(0, 60)}...`);
 
@@ -285,104 +234,6 @@ export class NaturalInterface {
         shouldContinue: true,
       };
     }
-  }
-
-  /**
-   * Handle chat with streaming for real-time response
-   */
-  private async handleChat(
-    input: string,
-    onStream?: (chunk: string, meta?: { type: 'thinking' | 'content'; length?: number }) => void
-  ): Promise<NaturalInputResult> {
-    this.onStatus('Thinking...');
-
-    try {
-      // Build conversation context
-      const recentHistory = this.session.messages
-        .slice(-10)
-        .map(m => `${m.role}: ${m.content}`)
-        .join('\n\n');
-
-      const systemPrompt = this.session.soul;
-      const userPrompt = `CONVERSATION HISTORY:
-${recentHistory}
-
-USER: ${input}
-
-Respond naturally as your personality. If the user asks you to modify code (fix, add, change, etc.) OR says words like "do", "make", "create", "implement" \u2014 immediately invoke the agent without asking for confirmation. Only ask "Should I...?" if the request is ambiguous or destructive (delete, overwrite).`;
-
-      // Log the LLM request
-      const startTime = Date.now();
-      tuiDebug.llmRequest(systemPrompt, userPrompt, { maxTokens: 1000, temperature: 0.7 });
-
-      // Use streaming if callback provided
-      if (onStream) {
-        let fullResponse = '';
-        let thinkingContent = '';
-        const THINKING_PREFIX = '\x1B[2m\u22B2 ';
-        const THINKING_SUFFIX = '\x1B[0m';
-
-        for await (const event of this.llmClient.streamWithThinking(systemPrompt, userPrompt)) {
-          if (event.type === 'thinking') {
-            thinkingContent += event.content;
-            tuiDebug.streamEvent('thinking', event.content.length);
-            if (thinkingContent.length % 50 === 0) {
-              this.onStatus(`\uD83E\uDD14 Thinking... (${thinkingContent.length} chars)`);
-            }
-            onStream(`${THINKING_PREFIX}${event.content}${THINKING_SUFFIX}`, {
-              type: 'thinking',
-              length: thinkingContent.length,
-            });
-          } else {
-            fullResponse += event.content;
-            tuiDebug.streamEvent('content', event.content.length);
-            onStream(event.content, { type: 'content' });
-          }
-        }
-
-        fullResponse = this.cleanThinkTags(fullResponse);
-
-        tuiDebug.llmResponse(Date.now() - startTime, fullResponse.length, fullResponse);
-        this.addMessage('assistant', fullResponse, { thinking: thinkingContent });
-        return { type: 'chat', response: fullResponse, shouldContinue: true };
-      }
-
-      // Fallback to non-streaming
-      const result = await this.llmClient.complete({
-        prompt: userPrompt,
-        systemPrompt,
-        maxTokens: 1000,
-        temperature: 0.7,
-      });
-
-      if (!result.success) {
-        tuiDebug.llmError(result.error || 'LLM failed');
-        throw new Error(result.error || 'LLM failed');
-      }
-
-      const response = this.cleanThinkTags(result.text.trim());
-      tuiDebug.llmResponse(Date.now() - startTime, response.length, response);
-      this.addMessage('assistant', response);
-
-      return { type: 'chat', response, shouldContinue: true };
-
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      tuiDebug.llmError(msg);
-      return {
-        type: 'chat',
-        response: `I'm having trouble thinking right now: ${msg}`,
-        shouldContinue: true,
-      };
-    }
-  }
-
-  private cleanThinkTags(text: string): string {
-    return text
-      .replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, '')
-      .replace(/<think\b[^>]*>/gi, '')
-      .replace(/<\/think>/gi, '')
-      .trim();
   }
 
   // Command handlers
@@ -463,7 +314,6 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
       '  \u2022 run <id> - Execute a task',
       '  \u2022 provider [list|<name>|<url> <model>] - Switch LLM provider',
       '  \u2022 preview <file> - Preview a file',
-      '  \u2022 debug  - Toggle debug logging (writes to ~/.liminal/logs/)',
       '  \u2022 test   - Run diagnostic tests',
       '  \u2022 clear  - Clear screen',
       '  \u2022 exit   - Quit',
@@ -531,74 +381,8 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
     };
   }
 
-  private handleDebug(args: string[]): NaturalInputResult {
-    const sub = args[0];
-
-    if (sub === 'on' || sub === 'enable' || sub === 'true') {
-      tuiDebug.enable();
-      return {
-        type: 'command',
-        response: [
-          'Debug logging ENABLED',
-          `Log file: ${tuiDebug.getLogPath()}`,
-          '',
-          'Watch it from another terminal:',
-          `  tail -f ${tuiDebug.getLogPath()}`,
-          '',
-          'Toggle off with: /debug off',
-        ].join('\n'),
-        shouldContinue: true,
-      };
-    }
-
-    if (sub === 'off' || sub === 'disable' || sub === 'false') {
-      tuiDebug.disable();
-      return { type: 'command', response: 'Debug logging DISABLED', shouldContinue: true };
-    }
-
-    if (sub === 'status') {
-      const config = this.llmClient.getConfig();
-      return {
-        type: 'command',
-        response: [
-          `Debug: ${tuiDebug.isEnabled() ? 'ENABLED' : 'DISABLED'}`,
-          `Log: ${tuiDebug.getLogPath()}`,
-          `Model: ${config.model}`,
-          `Base URL: ${config.baseUrl}`,
-          `Session: ${this.session.id}`,
-          `Messages: ${this.session.messages.length}`,
-        ].join('\n'),
-        shouldContinue: true,
-      };
-    }
-
-    // /debug with no args = toggle
-    if (!sub) {
-      if (tuiDebug.isEnabled()) {
-        tuiDebug.disable();
-        return { type: 'command', response: 'Debug logging DISABLED', shouldContinue: true };
-      }
-      tuiDebug.enable();
-      return {
-        type: 'command',
-        response: [
-          'Debug logging ENABLED',
-          `Log file: ${tuiDebug.getLogPath()}`,
-          `  tail -f ${tuiDebug.getLogPath()}`,
-        ].join('\n'),
-        shouldContinue: true,
-      };
-    }
-
-    return {
-      type: 'command',
-      response: `Unknown debug option: ${sub}. Use /debug (toggle), /debug on, /debug off, /debug status`,
-      shouldContinue: true,
-    };
-  }
-
   private async handleDiagnostic(): Promise<NaturalInputResult> {
-    this.onStatus('Testing LLM connectivity...');
+    this.onStatus('Running diagnostics...');
 
     const tests: string[] = [];
 
@@ -608,41 +392,31 @@ Respond naturally as your personality. If the user asks you to modify code (fix,
         prompt: 'Say "PASS" and nothing else.',
         maxTokens: 10,
       });
-      const llmOk = result.success && result.text.includes('PASS');
-      tests.push(`1. LLM Connection: ${llmOk ? 'PASS' : 'FAIL'}`);
-      this.onLog(`\u2713 LLM connectivity: ${llmOk ? 'OK' : 'FAIL'}`);
+      tests.push(`1. LLM Connection: ${result.success && result.text.includes('PASS') ? 'PASS' : 'FAIL'}`);
     } catch (e) {
       tests.push(`1. LLM Connection: FAIL (${e instanceof Error ? e.message : String(e)})`);
-      this.onLog(`\u2717 LLM connectivity: ${e instanceof Error ? e.message : String(e)}`);
     }
 
     // Test 2: JSON Parsing
     try {
       const json = '{"test": true, "number": 42}';
       const parsed = JSON.parse(json);
-      const jsonOk = parsed.test === true && parsed.number === 42;
-      tests.push(`2. JSON Parsing: ${jsonOk ? 'PASS' : 'FAIL'}`);
-      this.onLog(`\u2713 JSON parsing: ${jsonOk ? 'OK' : 'FAIL'}`);
+      tests.push(`2. JSON Parsing: ${parsed.test === true && parsed.number === 42 ? 'PASS' : 'FAIL'}`);
     } catch {
       tests.push('2. JSON Parsing: FAIL');
-      this.onLog('\u2717 JSON parsing: FAIL');
     }
 
     // Test 3: Harness Status
     const { metaHarness } = await import('../harness/index.js');
     const status = metaHarness.getStatus();
     tests.push(`3. Harness Online: ${status.initialized ? 'PASS' : 'FAIL'}`);
-    this.onLog(`\u2713 Harness: ${status.initialized ? 'OK' : 'OFFLINE'}`);
 
     // Test 4: Context Retention
-    this.onStatus('LLM connected. Testing context retention...');
     const contextTest = await this.llmClient.complete({
       prompt: 'Remember this word: "banana". Confirm you remember it.',
       maxTokens: 20,
     });
-    const contextOk = contextTest.success && contextTest.text.toLowerCase().includes('banana');
-    tests.push(`4. Context Retention: ${contextOk ? 'PASS' : 'FAIL'}`);
-    this.onLog(`\u2713 Context retention: ${contextOk ? 'OK' : 'FAIL'}`);
+    tests.push(`4. Context Retention: ${contextTest.success && contextTest.text.toLowerCase().includes('banana') ? 'PASS' : 'FAIL'}`);
 
     const response = [
       '\uD83D\uDCCA HARNESS DIAGNOSTIC RESULTS',
