@@ -11,6 +11,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { formatError } from '../../utils/errors.js';
+import { PathTraversalError } from '../errors.js';
 
 export interface ValidationResult {
   valid: boolean;
@@ -44,10 +45,70 @@ export class ValidationGuard {
 
   /**
    * Validate file path is within allowed directories
+   * SECURITY: Checks traversal BEFORE resolve, uses realpath for canonicalization
    */
-  validatePath(filePath: string, options?: PathValidationOptions): ValidationResult {
+  async validatePath(filePath: string, options?: PathValidationOptions): Promise<ValidationResult> {
     const errors: string[] = [];
     const warnings: string[] = [];
+
+    // SECURITY: Check traversal BEFORE resolve to prevent bypasses
+    if (filePath.includes('..')) {
+      throw new PathTraversalError(`Path '${filePath}' contains '..' which is not allowed`);
+    }
+    
+    if (filePath.includes('~')) {
+      throw new PathTraversalError(`Path '${filePath}' contains '~' which is not allowed`);
+    }
+
+    // Check for absolute paths
+    if (path.isAbsolute(filePath) && !options?.allowAbsolute) {
+      warnings.push(`Path '${filePath}' is absolute - prefer relative paths`);
+    }
+
+    const resolved = path.resolve(filePath);
+    
+    // SECURITY: Use realpath to resolve any symlinks and get canonical path
+    const realPath = await fs.realpath(resolved).catch(() => resolved);
+    
+    const prefixes = options?.allowedPrefixes || this.allowedPrefixes;
+
+    // Check if path is within allowed prefixes
+    const isAllowed = prefixes.some(prefix => realPath.startsWith(prefix));
+    
+    if (!isAllowed) {
+      throw new PathTraversalError(`Path '${filePath}' is outside allowed directories (${prefixes.join(', ')})`);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  /**
+   * Synchronous path validation (for backward compatibility)
+   * SECURITY: Checks traversal BEFORE any path operations
+   */
+  validatePathSync(filePath: string, options?: PathValidationOptions): ValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // SECURITY: Check traversal BEFORE resolve to prevent bypasses
+    if (filePath.includes('..')) {
+      errors.push(`Path '${filePath}' contains '..' which is not allowed`);
+      return { valid: false, errors, warnings };
+    }
+    
+    if (filePath.includes('~')) {
+      errors.push(`Path '${filePath}' contains '~' which is not allowed`);
+      return { valid: false, errors, warnings };
+    }
+
+    // Check for absolute paths
+    if (path.isAbsolute(filePath) && !options?.allowAbsolute) {
+      warnings.push(`Path '${filePath}' is absolute - prefer relative paths`);
+    }
 
     const resolved = path.resolve(filePath);
     const prefixes = options?.allowedPrefixes || this.allowedPrefixes;
@@ -57,16 +118,6 @@ export class ValidationGuard {
     
     if (!isAllowed) {
       errors.push(`Path '${filePath}' is outside allowed directories (${prefixes.join(', ')})`);
-    }
-
-    // Check for path traversal attempts
-    if (filePath.includes('..')) {
-      errors.push(`Path '${filePath}' contains '..' which is not allowed`);
-    }
-
-    // Check for absolute paths
-    if (path.isAbsolute(filePath) && !options?.allowAbsolute) {
-      warnings.push(`Path '${filePath}' is absolute - prefer relative paths`);
     }
 
     return {
