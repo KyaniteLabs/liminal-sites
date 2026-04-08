@@ -79,13 +79,17 @@ export async function validateUrl(
     throw new SSRFError(`Access to ${hostname} is blocked (cloud metadata endpoint)`);
   }
   
+  // Check if hostname is localhost first (needed for resolved IP check)
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+
   // SECURITY: Resolve hostname to IP and validate (prevents DNS rebinding)
   let resolvedIP: string | undefined;
   try {
     const lookupResult = await lookup(hostname);
     resolvedIP = lookupResult.address;
-    
-    if (isPrivateIP(resolvedIP) && !allowPrivateIPs) {
+
+    // Check if resolved IP is private, but allow localhost IPs when allowLocalhost is true
+    if (isPrivateIP(resolvedIP) && !allowPrivateIPs && !(isLocalhost && allowLocalhost)) {
       logSSRFAttempt(urlString, { 
         details: { blockedHost: hostname, resolvedIP, reason: 'private_ip' } 
       });
@@ -95,9 +99,6 @@ export async function validateUrl(
     // If lookup fails, continue with hostname checks (may be a non-DNS hostname)
     if (err instanceof SSRFError) throw err;
   }
-  
-  // Check if hostname is localhost
-  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
   
   // Block localhost if explicitly disabled
   if (isLocalhost && !allowLocalhost) {

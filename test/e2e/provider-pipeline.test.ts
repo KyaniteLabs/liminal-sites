@@ -1,3 +1,6 @@
+// Allow localhost for tests
+process.env.LIMINAL_ALLOW_LOCALHOST_LLM = "true";
+
 /**
  * Provider Pipeline Smoke Tests
  *

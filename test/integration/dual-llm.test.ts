@@ -1,3 +1,6 @@
+// Allow localhost for tests
+process.env.LIMINAL_ALLOW_LOCALHOST_LLM = "true";
+
 import { describe, it, expect, beforeEach, afterEach, test } from 'vitest';
 /**
  * Dual LLM integration tests: critical path getEffectiveConfig + LLMClient
