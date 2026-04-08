@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1775416188044,
-  "projectRoot": "/Users/simongonzalezdecruz/workspaces/liminal",
+  "lastScanned": 1775598162145,
+  "projectRoot": "/Users/simongonzalezdecruz/workspaces/liminal/.claude/worktrees/prompt-audit-phase2",
   "techStack": {
     "languages": [
       {
@@ -113,7 +113,7 @@
       "path": "artifacts",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1775416188005,
+      "lastAccessed": 1775598162114,
       "keyFiles": [
         "campaign-dashboard.html",
         "dogfood-campaign-dashboard.html"
@@ -123,16 +123,28 @@
       "path": "bin",
       "purpose": "Executable scripts",
       "fileCount": 1,
-      "lastAccessed": 1775416188006,
+      "lastAccessed": 1775598162115,
       "keyFiles": [
         "liminal"
+      ]
+    },
+    "bubbletea": {
+      "path": "bubbletea",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1775598162121,
+      "keyFiles": [
+        "README.md",
+        "go.mod",
+        "go.sum",
+        "main.go"
       ]
     },
     "compost": {
       "path": "compost",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1775416188010,
+      "lastAccessed": 1775598162121,
       "keyFiles": [
         "soup-state.json"
       ]
@@ -141,29 +153,16 @@
       "path": "config",
       "purpose": "Configuration files",
       "fileCount": 1,
-      "lastAccessed": 1775416188012,
+      "lastAccessed": 1775598162122,
       "keyFiles": [
         "liminal.json"
-      ]
-    },
-    "coverage": {
-      "path": "coverage",
-      "purpose": null,
-      "fileCount": 10,
-      "lastAccessed": 1775416188012,
-      "keyFiles": [
-        "base.css",
-        "block-navigation.js",
-        "clover.xml",
-        "coverage-final.json",
-        "favicon.png"
       ]
     },
     "dist": {
       "path": "dist",
       "purpose": "Distribution/build output",
       "fileCount": 12,
-      "lastAccessed": 1775416188013,
+      "lastAccessed": 1775598162122,
       "keyFiles": [
         "constants.d.ts",
         "constants.d.ts.map",
@@ -176,7 +175,7 @@
       "path": "docker",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1775416188013,
+      "lastAccessed": 1775598162122,
       "keyFiles": [
         "seccomp-chrome.json"
       ]
@@ -184,21 +183,21 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 44,
-      "lastAccessed": 1775416188014,
+      "fileCount": 53,
+      "lastAccessed": 1775598162122,
       "keyFiles": [
         "AGENT_GENERATOR_ARCHITECTURE.md",
         "ARCHITECTURE_AND_PHILOSOPHY.md",
         "ARCHITECTURE_QUICKREF.md",
         "AUDIT_QUICK.sh",
-        "CREATIVE_DOMAIN_TYPES.md"
+        "COMPREHENSIVE_AUDIT_REPORT.md"
       ]
     },
     "dogfood-campaign": {
       "path": "dogfood-campaign",
       "purpose": null,
       "fileCount": 5,
-      "lastAccessed": 1775416188014,
+      "lastAccessed": 1775598162123,
       "keyFiles": [
         "REPORT.md",
         "results-lmstudio.json",
@@ -211,17 +210,7 @@
       "path": "dogfood-campaign-2026-04-04T07-21-29",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1775416188015,
-      "keyFiles": [
-        "report.json",
-        "results.jsonl"
-      ]
-    },
-    "dogfood-campaign-2026-04-04T07-57-51": {
-      "path": "dogfood-campaign-2026-04-04T07-57-51",
-      "purpose": null,
-      "fileCount": 2,
-      "lastAccessed": 1775416188018,
+      "lastAccessed": 1775598162123,
       "keyFiles": [
         "report.json",
         "results.jsonl"
@@ -231,7 +220,7 @@
       "path": "dogfood-campaign-local-2026-04-04T07-59-30",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1775416188021,
+      "lastAccessed": 1775598162123,
       "keyFiles": [
         "results.jsonl"
       ]
@@ -240,122 +229,37 @@
       "path": "dogfood-campaign-ollama-2026-04-04T07-47-00",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1775416188022,
+      "lastAccessed": 1775598162124,
       "keyFiles": [
         "report.json",
         "results.jsonl"
       ]
     },
-    "dogfood-output": {
-      "path": "dogfood-output",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188022,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
-      ]
-    },
-    "dogfood-output-gemma": {
-      "path": "dogfood-output-gemma",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188022,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
-      ]
-    },
-    "dogfood-output-gemma2": {
-      "path": "dogfood-output-gemma2",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188023,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
-      ]
-    },
-    "dogfood-output-gemma4": {
-      "path": "dogfood-output-gemma4",
-      "purpose": null,
-      "fileCount": 2,
-      "lastAccessed": 1775416188023,
-      "keyFiles": [
-        "cli-project-final.js",
-        "reasoning.txt"
-      ]
-    },
-    "dogfood-output-lfm": {
-      "path": "dogfood-output-lfm",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188023,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
-      ]
-    },
-    "dogfood-output-qwen": {
-      "path": "dogfood-output-qwen",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188023,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
-      ]
-    },
-    "dogfood-output-qwen2": {
-      "path": "dogfood-output-qwen2",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188024,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
-      ]
-    },
-    "dogfood-temp": {
-      "path": "dogfood-temp",
-      "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1775416188024,
-      "keyFiles": [
-        "minimax-m27-diagnostics.md"
-      ]
-    },
     "examples": {
       "path": "examples",
       "purpose": "Example code",
-      "fileCount": 8,
-      "lastAccessed": 1775416188024,
+      "fileCount": 5,
+      "lastAccessed": 1775598162124,
       "keyFiles": [
         "composition-basic.ts",
         "composition-programmatic.ts",
         "dynamic-domain-registration.ts",
         "generated-fireworks.js",
-        "generation-run.log"
+        "parallel-results.json"
       ]
     },
     "gallery": {
       "path": "gallery",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1775416188026,
+      "lastAccessed": 1775598162124,
       "keyFiles": []
     },
     "gui": {
       "path": "gui",
       "purpose": null,
       "fileCount": 8,
-      "lastAccessed": 1775416188027,
+      "lastAccessed": 1775598162125,
       "keyFiles": [
         "index.html",
         "package-lock.json",
@@ -368,7 +272,7 @@
       "path": "harness-tasks",
       "purpose": null,
       "fileCount": 14,
-      "lastAccessed": 1775416188027,
+      "lastAccessed": 1775598162125,
       "keyFiles": [
         "CONVERT_P5_TO_PLUGIN.md",
         "CONVERT_P5_TO_PLUGIN_EVAL.md",
@@ -377,43 +281,30 @@
         "M11.json"
       ]
     },
-    "landing-archive": {
-      "path": "landing-archive",
+    "landing-live": {
+      "path": "landing-live",
       "purpose": null,
-      "fileCount": 4,
-      "lastAccessed": 1775416188027,
+      "fileCount": 2,
+      "lastAccessed": 1775598162125,
       "keyFiles": [
-        "landing-dual-mode.html",
-        "landing-honest.html",
-        "landing-v2.html",
-        "landing.html"
+        "gallery-data.js",
+        "index.html"
       ]
     },
-    "landing-assets": {
-      "path": "landing-assets",
+    "memory": {
+      "path": "memory",
       "purpose": null,
-      "fileCount": 70,
-      "lastAccessed": 1775416188027,
+      "fileCount": 1,
+      "lastAccessed": 1775598162126,
       "keyFiles": [
-        "TRUE-DOGFOOD-SECTION.html",
-        "dogfood-hydra-geometric.html",
-        "dogfood-hydra-geometric.js",
-        "dogfood-hydra-glitch.html",
-        "dogfood-hydra-kaleidoscope.html"
+        "git-monitor-log.md"
       ]
-    },
-    "narrative": {
-      "path": "narrative",
-      "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1775416188028,
-      "keyFiles": []
     },
     "output": {
       "path": "output",
       "purpose": null,
-      "fileCount": 27,
-      "lastAccessed": 1775416188028,
+      "fileCount": 20,
+      "lastAccessed": 1775598162126,
       "keyFiles": [
         "2026-03-01--test-prompt-export.js",
         "default-archive.txt",
@@ -426,14 +317,14 @@
       "path": "plugins",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1775416188028,
+      "lastAccessed": 1775598162126,
       "keyFiles": []
     },
     "scripts": {
       "path": "scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 9,
-      "lastAccessed": 1775416188028,
+      "lastAccessed": 1775598162126,
       "keyFiles": [
         "campaign-cloud.ts",
         "campaign-combined-report.ts",
@@ -446,7 +337,7 @@
       "path": "src",
       "purpose": "Source code",
       "fileCount": 3,
-      "lastAccessed": 1775416188028,
+      "lastAccessed": 1775598162126,
       "keyFiles": [
         "constants.ts",
         "generateVisuals.ts",
@@ -456,69 +347,51 @@
     "stream": {
       "path": "stream",
       "purpose": null,
-      "fileCount": 504,
-      "lastAccessed": 1775416188029,
+      "fileCount": 10,
+      "lastAccessed": 1775598162127,
       "keyFiles": [
-        "evolution_20260403173900..json",
-        "evolution_20260403173915..json",
-        "evolution_20260403174304..json",
-        "evolution_20260403174317..json",
-        "evolution_20260403220021..json"
+        "evolution_20260407193252..json",
+        "evolution_20260407193253..json",
+        "evolution_20260407193254..json",
+        "evolution_20260407193258..json",
+        "evolution_20260407193518..json"
       ]
     },
     "test": {
       "path": "test",
       "purpose": "Test files",
       "fileCount": 2,
-      "lastAccessed": 1775416188029,
+      "lastAccessed": 1775598162131,
       "keyFiles": [
         "console-usage.test.ts",
         "setup.ts"
-      ]
-    },
-    "test-output": {
-      "path": "test-output",
-      "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1775416188030,
-      "keyFiles": [
-        "cli-project-archive.zip",
-        "cli-project-final.html",
-        "cli-project-final.js"
       ]
     },
     "test-results": {
       "path": "test-results",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1775416188030,
+      "lastAccessed": 1775598162133,
       "keyFiles": []
     },
     "test-stream": {
       "path": "test-stream",
       "purpose": null,
-      "fileCount": 827,
-      "lastAccessed": 1775416188034,
+      "fileCount": 6,
+      "lastAccessed": 1775598162134,
       "keyFiles": [
-        "evolution_20260322065635..json",
-        "evolution_20260322065903..json",
-        "evolution_20260322070121..json",
-        "evolution_20260322070244..json",
-        "evolution_20260322070406..json"
+        "evolution_20260407193234..json",
+        "evolution_20260407193242..json",
+        "evolution_20260407193530..json",
+        "evolution_20260407193531..json",
+        "evolution_20260407195205..json"
       ]
-    },
-    "tmp-e2e": {
-      "path": "tmp-e2e",
-      "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1775416188036,
-      "keyFiles": []
     },
     "compost/seeds": {
       "path": "compost/seeds",
       "purpose": "Database seeds",
       "fileCount": 1,
-      "lastAccessed": 1775416188036,
+      "lastAccessed": 1775598162139,
       "keyFiles": [
         "seeds.json"
       ]
@@ -527,67 +400,34 @@
       "path": "dist/config",
       "purpose": "Configuration files",
       "fileCount": 24,
-      "lastAccessed": 1775416188037,
+      "lastAccessed": 1775598162139,
       "keyFiles": [
         "ConfigLoader.d.ts",
         "ConfigLoader.d.ts.map",
         "ConfigLoader.js"
       ]
     },
-    "gui/dist": {
-      "path": "gui/dist",
-      "purpose": "Distribution/build output",
-      "fileCount": 1,
-      "lastAccessed": 1775416188040,
-      "keyFiles": [
-        "index.html"
-      ]
-    },
-    "gui/node_modules": {
-      "path": "gui/node_modules",
-      "purpose": "Dependencies",
-      "fileCount": 2,
-      "lastAccessed": 1775416188040,
-      "keyFiles": []
-    },
     "gui/src": {
       "path": "gui/src",
       "purpose": "Source code",
       "fileCount": 3,
-      "lastAccessed": 1775416188040,
+      "lastAccessed": 1775598162144,
       "keyFiles": [
         "App.tsx",
         "index.css",
         "main.jsx"
       ]
     },
-    "narrative/data": {
-      "path": "narrative/data",
-      "purpose": "Data files",
-      "fileCount": 2,
-      "lastAccessed": 1775416188041,
-      "keyFiles": [
-        "archaeology.db",
-        "archaeology.db.bak"
-      ]
-    },
     "src/config": {
       "path": "src/config",
       "purpose": "Configuration files",
       "fileCount": 6,
-      "lastAccessed": 1775416188042,
+      "lastAccessed": 1775598162145,
       "keyFiles": [
         "ConfigLoader.ts",
         "PromptHistory.ts",
         "RoleConfig.ts"
       ]
-    },
-    "test-results/models": {
-      "path": "test-results/models",
-      "purpose": "Data models",
-      "fileCount": 0,
-      "lastAccessed": 1775416188043,
-      "keyFiles": []
     }
   },
   "hotPaths": [
@@ -599,9 +439,15 @@
     },
     {
       "path": "src/llm/LLMClient.ts",
-      "accessCount": 46,
-      "lastAccessed": 1775578369221,
+      "accessCount": 55,
+      "lastAccessed": 1775604026153,
       "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 55,
+      "lastAccessed": 1775604404247,
+      "type": "directory"
     },
     {
       "path": "src/tui/HarnessTUI.tsx",
@@ -610,9 +456,9 @@
       "type": "file"
     },
     {
-      "path": "",
-      "accessCount": 25,
-      "lastAccessed": 1775435677580,
+      "path": "src",
+      "accessCount": 29,
+      "lastAccessed": 1775604425644,
       "type": "directory"
     },
     {
@@ -620,12 +466,6 @@
       "accessCount": 20,
       "lastAccessed": 1775433506405,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 18,
-      "lastAccessed": 1775435335849,
-      "type": "directory"
     },
     {
       "path": "src/config/ConfigLoader.ts",
@@ -646,40 +486,40 @@
       "type": "directory"
     },
     {
+      "path": "src/llm",
+      "accessCount": 8,
+      "lastAccessed": 1775603422687,
+      "type": "directory"
+    },
+    {
       "path": "src/compost/EventStore.ts",
       "accessCount": 7,
       "lastAccessed": 1775430538118,
       "type": "file"
     },
     {
-      "path": "src/llm",
-      "accessCount": 7,
-      "lastAccessed": 1775435238172,
+      "path": "src/index.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775598510405,
       "type": "directory"
-    },
-    {
-      "path": "src/llm/ProviderFactory.ts",
-      "accessCount": 7,
-      "lastAccessed": 1775580956736,
-      "type": "file"
     },
     {
       "path": "src/generators/GeneratorRegistry.ts",
-      "accessCount": 5,
-      "lastAccessed": 1775429287160,
+      "accessCount": 6,
+      "lastAccessed": 1775603349104,
       "type": "file"
-    },
-    {
-      "path": "src/index.ts",
-      "accessCount": 5,
-      "lastAccessed": 1775429515609,
-      "type": "directory"
     },
     {
       "path": "src/llm/CapabilityRegistry.ts",
       "accessCount": 5,
       "lastAccessed": 1775435248859,
       "type": "file"
+    },
+    {
+      "path": "test",
+      "accessCount": 5,
+      "lastAccessed": 1775604406816,
+      "type": "directory"
     },
     {
       "path": "src/constants.ts",
@@ -695,20 +535,26 @@
     },
     {
       "path": "src/plugins/types.ts",
-      "accessCount": 3,
-      "lastAccessed": 1775429574666,
+      "accessCount": 4,
+      "lastAccessed": 1775603393216,
       "type": "file"
     },
     {
       "path": "src/plugins/HookSystem.ts",
+      "accessCount": 4,
+      "lastAccessed": 1775603394533,
+      "type": "file"
+    },
+    {
+      "path": "src/llm/ProviderFactory.ts",
       "accessCount": 3,
-      "lastAccessed": 1775429574679,
+      "lastAccessed": 1775427294648,
       "type": "file"
     },
     {
       "path": "src/plugins/PluginLoader.ts",
-      "accessCount": 2,
-      "lastAccessed": 1775429434224,
+      "accessCount": 3,
+      "lastAccessed": 1775603393550,
       "type": "file"
     },
     {
@@ -730,12 +576,6 @@
       "type": "file"
     },
     {
-      "path": "test",
-      "accessCount": 2,
-      "lastAccessed": 1775429515625,
-      "type": "directory"
-    },
-    {
       "path": "src/utils/env.ts",
       "accessCount": 2,
       "lastAccessed": 1775432552450,
@@ -745,6 +585,18 @@
       "path": "src/config",
       "accessCount": 2,
       "lastAccessed": 1775433435524,
+      "type": "directory"
+    },
+    {
+      "path": "plugins/strudel/plugin.json",
+      "accessCount": 2,
+      "lastAccessed": 1775598517702,
+      "type": "file"
+    },
+    {
+      "path": "src/harness",
+      "accessCount": 2,
+      "lastAccessed": 1775603424357,
       "type": "directory"
     },
     {
@@ -788,12 +640,6 @@
       "accessCount": 1,
       "lastAccessed": 1775427388685,
       "type": "file"
-    },
-    {
-      "path": "src/harness",
-      "accessCount": 1,
-      "lastAccessed": 1775428502524,
-      "type": "directory"
     },
     {
       "path": "CLAUDE.md",
@@ -883,12 +729,6 @@
       "path": "plugins/ascii/plugin.json",
       "accessCount": 1,
       "lastAccessed": 1775429240069,
-      "type": "file"
-    },
-    {
-      "path": "plugins/strudel/plugin.json",
-      "accessCount": 1,
-      "lastAccessed": 1775429240086,
       "type": "file"
     }
   ],
