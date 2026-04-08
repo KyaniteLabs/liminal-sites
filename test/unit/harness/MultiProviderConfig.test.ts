@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import {
   detectProviderFromUrl,
@@ -430,11 +430,11 @@ describe('getHarnessProviderConfig', () => {
 // ===========================================================================
 
 describe('PROVIDER_TEMPLATES', () => {
-  it('contains all seven provider types', () => {
+  it('contains all eight provider types (incl. kimi)', () => {
     const keys = Object.keys(PROVIDER_TEMPLATES) as ProviderType[];
-    expect(keys).toHaveLength(7);
+    expect(keys).toHaveLength(8);
     expect(keys).toEqual(
-      expect.arrayContaining(['minimax', 'lmstudio', 'ollama', 'openrouter', 'glm', 'moonshot', 'custom']),
+      expect.arrayContaining(['minimax', 'lmstudio', 'ollama', 'openrouter', 'glm', 'moonshot', 'kimi', 'custom']),
     );
   });
 
