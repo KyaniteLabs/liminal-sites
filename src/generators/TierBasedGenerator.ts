@@ -176,6 +176,16 @@ export abstract class TierBasedGenerator {
         throw new GenerationError(`${this.constructor.name}: LLM returned empty code`, this.domain);
       }
     }
+    
+    // Post-generation validation: check for minimum viable code
+    const strippedCode = response.code.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    if (strippedCode.length < 10) {
+      throw new GenerationError(
+        `${this.constructor.name}: Generated code is too short (${strippedCode.length} chars)`,
+        this.domain,
+        { codeLength: strippedCode.length }
+      );
+    }
 
     // 5. Domain-specific validation
     const validated = this.validateOutput(response.code);
