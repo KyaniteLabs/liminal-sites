@@ -1,3 +1,7 @@
+// Allow localhost for tests
+process.env.LIMINAL_ALLOW_LOCALHOST_LLM = "true";
+process.env.LIMINAL_ALLOW_LOCALHOST = "true";
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ── vi.hoisted for all mock variables used in vi.mock factories ──
