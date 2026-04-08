@@ -39,6 +39,7 @@ import { eventBus, EventTypes } from './EventBus.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { Logger } from '../utils/Logger.js';
 import { metaHarness } from '../harness/MetaHarnessIntegration.js';
+import { LiminalError } from '../errors/base.js';
 
 // Extracted modules
 import {
@@ -309,10 +310,12 @@ export class RalphLoop {
 
         // Select the best candidate or fail if none valid
         if (candidates.length === 0) {
-          Logger.warn('RalphLoop', `All ${numCandidates} candidates failed validation`);
-          currentCode = '// All candidates failed validation';
-          // Force a low score to trigger quality gate break
-          finalScore = 0;
+          Logger.error('RalphLoop', `All ${numCandidates} candidates failed validation`);
+          throw new LiminalError(
+            `All ${numCandidates} generation candidates failed`,
+            'ERR_ALL_CANDIDATES_FAILED',
+            { attempts: numCandidates }
+          );
         } else {
           // For single candidate (default), just use it
           // For multiple candidates, we need to fully evaluate each to find the best
