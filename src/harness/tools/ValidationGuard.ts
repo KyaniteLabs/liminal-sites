@@ -243,8 +243,44 @@ export class ValidationGuard {
    * Quick path validation (for frequent checks)
    */
   isPathAllowed(filePath: string): boolean {
+    // SECURITY: Check for prototype pollution attempts
+    if (filePath === '__proto__' || filePath === 'constructor') {
+      return false;
+    }
     const resolved = path.resolve(filePath);
     return this.allowedPrefixes.some(prefix => resolved.startsWith(prefix));
+  }
+
+  /**
+   * Validate object keys to prevent prototype pollution
+   * SECURITY: Blocks __proto__, constructor, and prototype keys
+   */
+  validateObjectKeys(obj: Record<string, unknown>, path = ''): ValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    for (const key of Object.keys(obj)) {
+      const fullPath = path ? `${path}.${key}` : key;
+      
+      // SECURITY: Block prototype pollution keys
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        errors.push(`Security: Prototype pollution attempt detected at '${fullPath}'`);
+        continue;
+      }
+
+      const value = obj[key];
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const nested = this.validateObjectKeys(value as Record<string, unknown>, fullPath);
+        errors.push(...nested.errors);
+        warnings.push(...nested.warnings);
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
   }
 }
 
