@@ -14,6 +14,7 @@ import { ModelRouter } from '../dist/compost/ModelRouter.js';
 import { chatCommand } from '../dist/chat/commands/chat.js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Initialize Meta-Harness
 metaHarness.initialize();
@@ -130,7 +131,8 @@ if (flags.help) {
   console.log('COMMANDS:');
   console.log('  generate, gen, g <prompt>   Create p5.js art from prompt');
   console.log('  tui                         Launch natural language TUI (Meta-Harness)');
-  console.log('  bridge [port]               Start TUI bridge server for Bubble Tea client (default: 3000)');
+  console.log('  bridge [port]               Start TUI bridge server (default: 3000)');
+  console.log('  bubbletea [port]            Launch Bubble Tea TUI with bridge (one command)');
   console.log('  serve, s [port]             Start preview server (default: 3456)');
   console.log('  list, ls                    Show saved sketches');
   console.log('  compost <subcommand>        Compost Mill: add, digest, soup, seeds, status');
@@ -733,13 +735,12 @@ else if (cmd === 'narrative') {
   });
 }
 else if (cmd === 'bridge') {
-  // Start the TUI Bridge HTTP server for Bubble Tea and other external clients
+  // Standalone bridge server (no TUI launched)
   const port = parseInt(cmdArgs[0]) || 3000;
   import('../dist/tui-bridge/TuiBridgeServer.js').then(async ({ TuiBridgeServer }) => {
     const { TuiBridgeService } = await import('../dist/tui-bridge/TuiBridgeService.js');
     const bridge = new TuiBridgeService();
 
-    // Create LLM client for streaming responses
     const llm = new LLMClient({ role: 'generator' });
     await LLMClient.loadRoles();
     const llmModel = process.env.LIMINAL_LLM_MODEL || 'auto';
@@ -751,18 +752,9 @@ else if (cmd === 'bridge') {
     console.log('Liminal TUI Bridge');
     console.log(`  Listening: ${server.address}`);
     console.log(`  LLM: ${llmProvider} / ${llmModel}`);
-    console.log('  Endpoints:');
-    console.log('    POST /api/tui/session             — create session');
-    console.log('    GET  /api/tui/session/:id/status   — session status');
-    console.log('    GET  /api/tui/session/:id/events   — SSE event stream');
-    console.log('    POST /api/tui/session/:id/input    — submit input');
-    console.log('    POST /api/tui/session/:id/actions/:actionId/confirm');
-    console.log('    POST /api/tui/session/:id/actions/:actionId/cancel');
-    console.log('    GET  /health                       — health check');
     console.log('');
     console.log('  Connect Bubble Tea: LIMINAL_BRIDGE_URL=http://localhost:' + port + ' ./dist/bubbletea');
     console.log('');
-    // Graceful shutdown
     const shutdown = async () => {
       console.log('\nShutting down bridge...');
       await server.stop();
@@ -773,6 +765,47 @@ else if (cmd === 'bridge') {
   }).catch(err => {
     console.error('Bridge error:', err.message);
     console.error('Make sure to run `pnpm build` first.');
+    process.exit(1);
+  });
+}
+else if (cmd === 'bubbletea') {
+  // All-in-one: start bridge server, then launch Go Bubble Tea TUI
+  const { spawn } = await import('child_process');
+  const port = parseInt(cmdArgs[0]) || 3000;
+
+  const { TuiBridgeServer } = await import('../dist/tui-bridge/TuiBridgeServer.js');
+  const { TuiBridgeService } = await import('../dist/tui-bridge/TuiBridgeService.js');
+  const bridge = new TuiBridgeService();
+
+  const llm = new LLMClient({ role: 'generator' });
+  await LLMClient.loadRoles();
+
+  const server = new TuiBridgeServer(bridge, { port, llm });
+  await server.start();
+
+  // Find the Bubble Tea binary
+  const binPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'bubbletea');
+  if (!fs.existsSync(binPath)) {
+    console.error('Bubble Tea binary not found at ' + binPath);
+    console.error('Build it first: cd bubbletea && go build -o ../dist/bubbletea .');
+    await server.stop();
+    process.exit(1);
+  }
+
+  // Launch the Go TUI — it connects back to our bridge server
+  const tui = spawn(binPath, [], {
+    env: { ...process.env, LIMINAL_BRIDGE_URL: `http://localhost:${port}` },
+    stdio: 'inherit',
+  });
+
+  tui.on('exit', async (code) => {
+    await server.stop();
+    process.exit(code ?? 0);
+  });
+
+  tui.on('error', async (err) => {
+    console.error('Failed to launch Bubble Tea:', err.message);
+    await server.stop();
     process.exit(1);
   });
 }
