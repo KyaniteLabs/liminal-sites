@@ -649,9 +649,87 @@
   },
   "hotPaths": [
     {
+      "path": "test/unit/llm/provider-adapters.test.ts",
+      "accessCount": 10,
+      "lastAccessed": 1775692586065,
+      "type": "file"
+    },
+    {
+      "path": "test/unit/harness/RateLimiter.test.ts",
+      "accessCount": 6,
+      "lastAccessed": 1775696148319,
+      "type": "file"
+    },
+    {
+      "path": "src/core/ContextAccumulation.ts",
+      "accessCount": 5,
+      "lastAccessed": 1775695837193,
+      "type": "directory"
+    },
+    {
+      "path": "test/unit/context-accumulation.test.js",
+      "accessCount": 5,
+      "lastAccessed": 1775695844125,
+      "type": "file"
+    },
+    {
+      "path": "test/unit/tui/AudioPlayer.test.ts",
+      "accessCount": 5,
+      "lastAccessed": 1775696498585,
+      "type": "file"
+    },
+    {
+      "path": "test/integration/gui-security-regression.test.js",
+      "accessCount": 4,
+      "lastAccessed": 1775699589659,
+      "type": "file"
+    },
+    {
       "path": "test/unit/llm/ModelConfig.test.ts",
+      "accessCount": 3,
+      "lastAccessed": 1775692260443,
+      "type": "file"
+    },
+    {
+      "path": "test",
       "accessCount": 2,
-      "lastAccessed": 1775684660141,
+      "lastAccessed": 1775692356137,
+      "type": "directory"
+    },
+    {
+      "path": "src/harness/tools/RateLimiter.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775696057688,
+      "type": "file"
+    },
+    {
+      "path": "src/tui/preview/AudioPlayer.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775696483585,
+      "type": "file"
+    },
+    {
+      "path": "test/unit/core/ContextAccumulation.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775696690409,
+      "type": "file"
+    },
+    {
+      "path": "test/security/url-validator.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775696977528,
+      "type": "file"
+    },
+    {
+      "path": "src/compost/FragmentScorer.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775698627234,
+      "type": "directory"
+    },
+    {
+      "path": "test/compost/FragmentScorer.test.ts",
+      "accessCount": 2,
+      "lastAccessed": 1775698668161,
       "type": "file"
     },
     {
@@ -667,10 +745,58 @@
       "type": "directory"
     },
     {
-      "path": "test",
+      "path": "test/helpers/mockLLM.ts",
       "accessCount": 1,
-      "lastAccessed": 1775684607721,
+      "lastAccessed": 1775692139348,
+      "type": "file"
+    },
+    {
+      "path": "src/llm/providers/MiniMaxProvider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775692286858,
+      "type": "file"
+    },
+    {
+      "path": "src/llm/providers/BaseProvider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775692297960,
+      "type": "file"
+    },
+    {
+      "path": "test/unit/llm",
+      "accessCount": 1,
+      "lastAccessed": 1775692307287,
       "type": "directory"
+    },
+    {
+      "path": "test/unit/llm/OllamaProvider.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775692328326,
+      "type": "file"
+    },
+    {
+      "path": "src/llm/providers/OllamaProvider.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775692338494,
+      "type": "file"
+    },
+    {
+      "path": "test/llm/minimax-provider.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775692371302,
+      "type": "file"
+    },
+    {
+      "path": "test/core/RalphLoop.best-of-n.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775694477224,
+      "type": "directory"
+    },
+    {
+      "path": "src/security/UrlValidator.ts",
+      "accessCount": 1,
+      "lastAccessed": 1775696950218,
+      "type": "file"
     }
   ],
   "userDirectives": []
