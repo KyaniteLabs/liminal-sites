@@ -48,11 +48,10 @@ export interface SwarmRoundEvent {
   timestamp: number;
 }
 
-/** A single file change reported by the agent */
 export interface TuiFileChange {
   path: string;
-  status: 'modified' | 'created' | 'deleted';
-  isLatest: boolean;
+  status: string;
+  isLatest?: boolean;
 }
 
 export type TuiBridgeEvent =
@@ -75,17 +74,12 @@ export type TuiBridgeEvent =
   // Generation telemetry: emitted during RalphLoop generation
   | { type: 'generation.iteration'; sessionId: string; iteration: number; score: number; code: string }
   | { type: 'generation.complete'; sessionId: string; iterations: number; finalScore: number; duration: number; model: string; reason: string }
-  | ({ type: 'swarm.round'; sessionId: string } & SwarmRoundEvent)
-  // Operator surface events: live tool execution timeline
-  | { type: 'tool.started'; sessionId: string; toolName: string; thought: string; argsSummary: string; stepNum: number }
-  | { type: 'tool.completed'; sessionId: string; toolName: string; resultSummary: string; success: boolean; stepNum: number }
-  // Operator surface events: task/phase tracking
-  | { type: 'phase.changed'; sessionId: string; phase: string; stepCurrent: number; stepTotal: number; activeFile?: string; objective?: string }
-  // Operator surface events: file mutations
+  | { type: 'phase.changed'; sessionId: string; phase: string; stepCurrent?: number; stepTotal?: number; activeFile?: string; objective?: string }
+  | { type: 'tool.started'; sessionId: string; toolName: string; thought?: string; argsSummary?: string; stepNum?: number }
+  | { type: 'tool.completed'; sessionId: string; toolName: string; resultSummary?: string; success?: boolean; stepNum?: number }
   | { type: 'files.changed'; sessionId: string; files: TuiFileChange[] }
-  // Operator surface events: verification jobs (build/test/typecheck)
   | { type: 'verification.started'; sessionId: string; command: string; jobId: string }
-  | { type: 'verification.completed'; sessionId: string; command: string; success: boolean; outputTail: string; jobId: string; duration?: number }
-  // Operator surface events: artifact discovery
+  | { type: 'verification.completed'; sessionId: string; command: string; success: boolean; outputTail?: string; jobId: string; duration?: number }
   | { type: 'artifact.found'; sessionId: string; artifactLabel: string; artifactPath: string }
+  | ({ type: 'swarm.round'; sessionId: string } & SwarmRoundEvent)
   | { type: 'error'; sessionId: string; message: string };
