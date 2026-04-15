@@ -36,7 +36,7 @@
     "gui:all": "concurrently -k -n b,v \"node gui/start.js\" \"npm run gui:dev\"",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint src/",
+    "lint": "eslint src/ --cache --cache-location .eslintcache",
     "test:quality": "node scripts/testing/test-quality-check.mjs",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc --out docs src/",
