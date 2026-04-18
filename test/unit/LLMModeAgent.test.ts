@@ -5,6 +5,7 @@ const {
   mockComplete,
   mockLLM,
   mockReadFile,
+  mockWriteFile,
   mockApplyEdit,
   mockSearch,
   mockRunBuild,
@@ -32,6 +33,7 @@ const {
     mockComplete: complete,
     mockLLM: llm,
     mockReadFile: { execute: vi.fn(async () => ({ success: true, data: { content: 'const x = 1;' } })) },
+    mockWriteFile: { execute: vi.fn(async () => ({ success: true, data: { bytesWritten: 42 } })) },
     mockApplyEdit: { execute: vi.fn(async () => ({ success: true, data: { backupPath: '/tmp/bak-123' } })) },
     mockSearch: { execute: vi.fn(async () => ({ success: true, data: { resultCount: 1, results: [] } })) },
     mockRunBuild: { execute: vi.fn(async () => ({ success: true })) },
@@ -66,7 +68,7 @@ vi.mock('../../src/harness/tools/RateLimiter.js', () => ({
 }));
 vi.mock('../../src/harness/tools/index.js', () => ({
   readFileTool: mockReadFile,
-  writeFileTool: { execute: vi.fn(async () => ({ success: true })) },
+  writeFileTool: mockWriteFile,
   applyEditTool: mockApplyEdit,
   runBuildTool: mockRunBuild,
   runTestsTool: mockRunTests,
@@ -160,6 +162,7 @@ describe('LLMModeAgent', () => {
     mockLLM.getConfig.mockReset();
     mockLLM.getConfig.mockReturnValue({ model: 'test-model' });
     mockReadFile.execute.mockResolvedValue({ success: true, data: { content: 'const x = 1;' } });
+    mockWriteFile.execute.mockResolvedValue({ success: true, data: { bytesWritten: 42 } });
     mockApplyEdit.execute.mockResolvedValue({ success: true, data: { backupPath: '/tmp/bak-123' } });
     mockRunBuild.execute.mockResolvedValue({ success: true });
     mockRunTests.execute.mockResolvedValue({ success: true });
@@ -604,6 +607,49 @@ describe('LLMModeAgent', () => {
       message.role === 'tool' && message.content.includes('Verification gate: run runTests (runtime-core) before completing this task.'),
     )).toBe(true);
     expect(mockRunTests.execute).toHaveBeenCalledWith({ pattern: 'runtime-core' });
+    expect(session.status).toBe(Status.SUCCESS);
+  });
+
+  it('blocks complete when a required artifact has not been written', async () => {
+    queuePlans(
+      '{"tool":"complete","params":{},"thought":"I will create the artifact now","expectedResult":"done"}',
+    );
+
+    const agent = new LLMModeAgent(mockLLM as any);
+    const session = await agent.executeTask({
+      id: 'tui-self-artifact-gate',
+      title: 'Artifact gate',
+      description: 'Create .omx/proof/operator-trust-proof-20260418.md. Do not report success unless .omx/proof/operator-trust-proof-20260418.md was created or overwritten.',
+      approved: true,
+      maxSteps: 1,
+    });
+
+    const gateMessage = session.messages.find((message) =>
+      message.role === 'tool' && message.content.includes('Artifact gate: create or overwrite .omx/proof/operator-trust-proof-20260418.md with writeFile'),
+    );
+    expect(gateMessage).toBeDefined();
+    expect(mockWriteFile.execute).not.toHaveBeenCalled();
+    expect(session.status).toBe(Status.FAILED);
+  });
+
+  it('allows complete after the required artifact is written', async () => {
+    queuePlans(
+      '{"tool":"writeFile","params":{"path":".omx/proof/operator-trust-proof-20260418.md","content":"proof"},"thought":"write proof artifact","expectedResult":"artifact exists"}',
+      '{"tool":"complete","params":{},"thought":"artifact was written","expectedResult":"done"}',
+    );
+
+    const agent = new LLMModeAgent(mockLLM as any);
+    const session = await agent.executeTask({
+      id: 'tui-self-artifact-complete',
+      title: 'Artifact complete',
+      description: 'Create .omx/proof/operator-trust-proof-20260418.md. Do not report success unless .omx/proof/operator-trust-proof-20260418.md was created or overwritten.',
+      approved: true,
+      maxSteps: 2,
+    });
+
+    expect(mockWriteFile.execute).toHaveBeenCalledWith(expect.objectContaining({
+      path: '.omx/proof/operator-trust-proof-20260418.md',
+    }));
     expect(session.status).toBe(Status.SUCCESS);
   });
 
@@ -1478,6 +1524,23 @@ describe('LLMModeAgent', () => {
     expect(mockSearchDocs.execute).toHaveBeenCalled();
     expect(mockRunLint.execute).toHaveBeenCalled();
     expect(mockRunFocusedTests.execute).toHaveBeenCalled();
+  });
+
+  it('explains shell-like unknown tools with allowed alternatives', async () => {
+    const agent = new LLMModeAgent(mockLLM as any);
+
+    const result = await (agent as any).executeTool({
+      tool: 'execute',
+      params: { command: 'git log -3 --oneline' },
+      thought: 'try a shell command',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Unknown tool: execute');
+    expect(result.error).toContain('There is no generic shell/execute tool');
+    expect(result.error).toContain('gitStatus');
+    expect(result.error).toContain('runBuild');
+    expect(result.error).toContain('Available tools');
   });
 
   // ── Edge cases ─────────────────────────────────────────────────────

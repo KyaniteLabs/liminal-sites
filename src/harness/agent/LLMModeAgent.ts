@@ -54,6 +54,37 @@ import {
   type RunState,
 } from '../RunStateStore.js';
 
+const AVAILABLE_TOOL_NAMES = [
+  'readFile',
+  'applyEdit',
+  'writeFile',
+  'runBuild',
+  'runTests',
+  'executeSkill',
+  'createBackup',
+  'restoreBackup',
+  'search',
+  'searchCode',
+  'searchDocs',
+  'listDir',
+  'typeCheck',
+  'npm',
+  'runLint',
+  'runFocusedTests',
+  'lsp',
+  'astValidate',
+  'importGuard',
+  'gitStatus',
+  'complete',
+] as const;
+
+function unknownToolMessage(tool: string): string {
+  const shellHint = ['execute', 'bash', 'shell', 'runCommand', 'terminal'].includes(tool)
+    ? ' There is no generic shell/execute tool; use gitStatus for repo state, readFile/listDir/search/searchCode for inspection, and runBuild/typeCheck/runTests/runFocusedTests/runLint/npm for verification.'
+    : '';
+  return `Unknown tool: ${tool}.${shellHint} Available tools: ${AVAILABLE_TOOL_NAMES.join(', ')}`;
+}
+
 export interface LLMTask {
   id: string;
   title: string;
@@ -396,9 +427,9 @@ When the task is complete and build passes, respond with tool "complete".`;
 
         // Check for completion
         if (toolCall.tool === 'complete') {
-          const verificationGateError = this.getVerificationGateError(session);
-          if (verificationGateError) {
-            const gateResult: ToolResult = { success: false, error: verificationGateError };
+          const completionGateError = this.getCompletionGateError(session);
+          if (completionGateError) {
+            const gateResult: ToolResult = { success: false, error: completionGateError };
             session.messages.push({
               role: 'tool',
               content: JSON.stringify(gateResult),
@@ -409,7 +440,7 @@ When the task is complete and build passes, respond with tool "complete".`;
               current: session.stepCount,
               total: maxSteps,
               stage: 'executed complete',
-              message: `complete failed: ${verificationGateError.slice(0, 100)}`,
+              message: `complete failed: ${completionGateError.slice(0, 100)}`,
             });
             continue;
           }
@@ -1253,7 +1284,7 @@ When the task is complete and build passes, respond with tool "complete".`;
             return gitStatusTool.execute(params);
 
           default:
-            return { success: false, error: `Unknown tool: ${tool}` };
+            return { success: false, error: unknownToolMessage(tool) };
         }
       }
     );
@@ -1353,6 +1384,26 @@ When the task is complete and build passes, respond with tool "complete".`;
     const target = this.getRequiredVerificationTarget(session.task);
     if (!target) return null;
     return `Verification gate: run ${target.tool}${target.pattern ? ` (${target.pattern})` : ''} before completing this task.`;
+  }
+
+  private getCompletionGateError(session: LLMSession): string | null {
+    return this.getArtifactGateError(session) || this.getVerificationGateError(session);
+  }
+
+  private getRequiredArtifactPath(session: LLMSession): string | null {
+    const description = session.task.description;
+    const explicitGate = /Do not report success unless\s+([^\s`]+\.md)\s+was created(?:\s+or\s+overwritten)?/i.exec(description);
+    if (explicitGate?.[1]) return explicitGate[1].trim();
+
+    const artifactLine = /(?:artifact|Artifact)\s+(?:at|path):?\s*`?([^\s`]+\.md)`?/i.exec(description);
+    return artifactLine?.[1]?.trim() || null;
+  }
+
+  private getArtifactGateError(session: LLMSession): string | null {
+    const artifactPath = this.getRequiredArtifactPath(session);
+    if (!artifactPath) return null;
+    if (session.mutatedFiles.has(artifactPath)) return null;
+    return `Artifact gate: create or overwrite ${artifactPath} with writeFile before completing this task.`;
   }
 
   /**
