@@ -291,11 +291,9 @@ class AestheticStrategy implements ScoringStrategy {
   async score(input: ScoringInput): Promise<ScoringResult> {
     // Ensure LLM is wired before scoring (handles errors internally)
     await this.wireLLM();
-    const report = this.critic.critique(
-      input.output,
-      input.criticConfig,
-      input.lirContext
-    );
+    const report = input.domain
+      ? this.critic.critique(input.output, input.criticConfig, input.lirContext, input.domain)
+      : this.critic.critique(input.output, input.criticConfig, input.lirContext);
 
     // Map aesthetic dimensions
     const dimensions: Partial<Record<ScoreDimension, number>> = {
@@ -524,9 +522,10 @@ export class ScoringEngine {
   async scoreAesthetic(
     input: string,
     criticConfig?: Partial<CriticConfig>,
-    lirContext?: LIREvaluationContext
+    lirContext?: LIREvaluationContext,
+    domain?: Domain,
   ): Promise<ScoringResult> {
-    return this.score({ output: input, criticConfig, lirContext }, 'aesthetic');
+    return this.score({ output: input, criticConfig, lirContext, domain }, 'aesthetic');
   }
 
   /** Set the default strategy. */
