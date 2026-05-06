@@ -184,6 +184,7 @@ export default function App() {
   const [runStatus, setRunStatus] = useState<string>('');
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [createRunError, setCreateRunError] = useState<string | null>(null);
+  const [failedPreviewSrc, setFailedPreviewSrc] = useState<string | null>(null);
   const [improveReport, setImproveReport] = useState<ImproveReport | null>(null);
   const [improveLoading, setImproveLoading] = useState<boolean>(false);
   const [improveError, setImproveError] = useState<string | null>(null);
@@ -774,6 +775,8 @@ export default function App() {
       : createExecutionMode === 'draft' ? 'Generate' : 'Polish';
   const bridgeSummary = bridge.summary;
   const bridgePreview = bridge.preview;
+  const bridgeImagePreview = bridgePreview?.type === 'image' && bridgePreview.src ? bridgePreview : null;
+  const bridgeImagePreviewFailed = Boolean(bridgeImagePreview && failedPreviewSrc === bridgeImagePreview.src);
   const bridgeCodePreview = bridge.codePreview;
   const stageBlocked = bridgeSummary.phase === 'preview missing' || bridgeSummary.phase === 'disconnected';
   const stageEmptyKicker = stageBlocked ? 'Preview' : bridgeSummary.active ? 'Working' : 'Preview';
@@ -903,16 +906,28 @@ export default function App() {
           allow={SENSOR_PERMISSION_POLICY}
           sandbox="allow-scripts"
         />
-      ) : bridgePreview?.type === 'image' && bridgePreview.src ? (
-        <figure className="liminal-stage-preview">
-          <img
-            src={bridgePreview.src}
-            alt="Generated preview"
-            onError={(event) => {
-              event.currentTarget.style.display = 'none';
-            }}
-          />
-          <figcaption>{bridgePreview.label}</figcaption>
+      ) : bridgeImagePreview ? (
+        <figure className={bridgeImagePreviewFailed ? 'liminal-stage-preview liminal-stage-preview--failed' : 'liminal-stage-preview'}>
+          {bridgeImagePreviewFailed ? (
+            <div className="liminal-stage-preview-error" role="alert">
+              <span>Preview</span>
+              <strong>Image preview failed to load</strong>
+              <small>{bridgeImagePreview.label}</small>
+              <button type="button" className="atelier-btn atelier-btn--secondary" onClick={() => setFailedPreviewSrc(null)}>
+                Retry preview
+              </button>
+            </div>
+          ) : (
+            <img
+              src={bridgeImagePreview.src}
+              alt="Generated preview"
+              onLoad={() => {
+                if (failedPreviewSrc === bridgeImagePreview.src) setFailedPreviewSrc(null);
+              }}
+              onError={() => setFailedPreviewSrc(bridgeImagePreview.src ?? null)}
+            />
+          )}
+          <figcaption>{bridgeImagePreview.label}</figcaption>
         </figure>
       ) : (bridgePreview?.type === 'html' || bridgePreview?.type === 'music') && bridgePreview.content ? (
         <figure className={`liminal-stage-embed liminal-stage-embed--${bridgePreview.type}`}>
@@ -1251,6 +1266,7 @@ export default function App() {
       prompt={createPrompt}
       onPromptChange={setCreatePrompt}
       onRun={handleWorkbenchRun}
+      onCancelRun={bridgeSummary.active ? () => void bridge.cancelCurrent() : undefined}
       runDisabled={activeMode.id === 'improve' ? improveLoading : bridge.submitting || runStatus === 'running' || !createPrompt.trim() || (runNeedsBridgeSession && !bridge.session)}
       stageBusy={bridgeSummary.active || runStatus === 'running'}
       artifactReady={activeMode.id === 'generate' && hasSyncTarget}

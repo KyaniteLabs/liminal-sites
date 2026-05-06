@@ -28,6 +28,12 @@ describe('GUI workbench accessibility contract', () => {
     expect(shell).toContain('Use the message box to revise, make a variation, or polish this direction.');
   });
 
+  it('keeps the active-run stop control beside the composer instead of hiding it in details', () => {
+    expect(shell).toContain('onCancelRun');
+    expect(shell).toContain('Stop active generation');
+    expect(shell).toContain('liminal-stop-button');
+    expect(app).toContain('onCancelRun={bridgeSummary.active ? () => void bridge.cancelCurrent() : undefined}');
+  });
 
   it('keeps secondary modes available without making the default surface a dashboard', () => {
     expect(shell).toContain('liminal-primary-mode');
@@ -66,6 +72,14 @@ describe('GUI workbench accessibility contract', () => {
     expect(app).toContain(`const SENSOR_PERMISSION_POLICY = "accelerometer 'none'; gyroscope 'none'; magnetometer 'none'";`);
     expect(app).toContain('allow={SENSOR_PERMISSION_POLICY}');
     expect(app).not.toContain('allow="accelerometer;');
+  });
+
+  it('shows a visible recovery state when an inline image preview fails to load', () => {
+    expect(app).toContain('failedPreviewSrc');
+    expect(app).toContain('liminal-stage-preview-error');
+    expect(app).toContain('role="alert"');
+    expect(app).toContain('Image preview failed to load');
+    expect(app).not.toContain("event.currentTarget.style.display = 'none'");
   });
 
   it('keeps reduced-motion and visible preview-status fallbacks in CSS', () => {

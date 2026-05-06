@@ -559,6 +559,117 @@ describe('LLMClient fallback diagnostics', () => {
     );
   });
 
+  it('passes generate AbortSignal into the retry manager so retry backoff can stop', async () => {
+    const client = new LLMClient({ provider: 'lmstudio', model: 'primary-model' } as any);
+    const internal = client as any;
+    const controller = new AbortController();
+    const provider = {
+      name: 'lmstudio',
+      getModel: vi.fn(() => 'primary-model'),
+      getConfig: vi.fn(() => ({ baseUrl: 'http://localhost:1234/v1', model: 'primary-model' })),
+      generate: vi.fn(async () => ({
+        isErr: () => false,
+        value: {
+          success: true,
+          content: 'function setup() { createCanvas(10, 10); }',
+        },
+      })),
+    };
+
+    vi.spyOn(RetryManager, 'executeWithRetry').mockImplementation(async (fn: () => Promise<unknown>, options?: any) => {
+      expect(options?.signal).toBe(controller.signal);
+      return fn();
+    });
+
+    internal.resolveModel = vi.fn(async () => 'primary-model');
+    internal.syncResolvedModel = vi.fn();
+    internal.detectProvider = vi.fn(() => 'lmstudio');
+    internal.generateWithBreaker = vi.fn(async (_provider: string, fn: () => Promise<unknown>) => fn());
+    internal.getProvider = vi.fn(async () => provider);
+    internal.getFallbackProviders = vi.fn(() => []);
+
+    const result = await client.generate('sys', 'user', controller.signal, true);
+
+    expect(result.success).toBe(true);
+    expect(provider.generate).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+  });
+
+  it('passes complete AbortSignal into the retry manager so retry backoff can stop', async () => {
+    const client = new LLMClient({ provider: 'lmstudio', model: 'primary-model' } as any);
+    const internal = client as any;
+    const controller = new AbortController();
+    let retryOptions: unknown;
+    const provider = {
+      name: 'lmstudio',
+      getModel: vi.fn(() => 'primary-model'),
+      getConfig: vi.fn(() => ({ baseUrl: 'http://localhost:1234/v1', model: 'primary-model' })),
+      generate: vi.fn(async () => ({
+        isErr: () => false,
+        value: {
+          success: true,
+          content: 'complete text',
+        },
+      })),
+    };
+
+    vi.spyOn(RetryManager, 'executeWithRetry').mockImplementation(async (fn: () => Promise<unknown>, options?: unknown) => {
+      retryOptions = options;
+      return fn();
+    });
+
+    internal.resolveModel = vi.fn(async () => 'primary-model');
+    internal.syncResolvedModel = vi.fn();
+    internal.detectProvider = vi.fn(() => 'lmstudio');
+    internal.getProvider = vi.fn(async () => provider);
+    internal.getFallbackProviders = vi.fn(() => []);
+
+    const result = await client.complete({
+      prompt: 'user',
+      systemPrompt: 'sys',
+      signal: controller.signal,
+    });
+
+    expect(result.success).toBe(true);
+    expect(retryOptions).toEqual(expect.objectContaining({ signal: controller.signal }));
+    expect(provider.generate).toHaveBeenCalledWith(expect.objectContaining({ signal: controller.signal }));
+  });
+
+  it('reports Anthropic-compatible provenance with the effective /v1/messages request path', async () => {
+    const client = new LLMClient({
+      baseUrl: 'https://api.z.ai/api/anthropic',
+      model: 'glm-5v',
+      apiKey: 'test-key',
+    } as any);
+    const internal = client as any;
+    const provider = {
+      name: 'anthropic',
+      getModel: vi.fn(() => 'glm-5v'),
+      getConfig: vi.fn(() => ({ baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5v' })),
+      generate: vi.fn(async () => ({
+        isErr: () => false,
+        value: {
+          success: true,
+          content: 'function setup() { createCanvas(10, 10); }',
+        },
+      })),
+    };
+
+    vi.spyOn(RetryManager, 'executeWithRetry').mockImplementation(async (fn: () => Promise<unknown>) => fn());
+
+    internal.resolveModel = vi.fn(async () => 'glm-5v');
+    internal.syncResolvedModel = vi.fn();
+    internal.detectProvider = vi.fn(() => 'anthropic');
+    internal.generateWithBreaker = vi.fn(async (_provider: string, fn: () => Promise<unknown>) => fn());
+    internal.getProvider = vi.fn(async () => provider);
+    internal.getFallbackProviders = vi.fn(() => []);
+
+    const result = await client.generate('sys', 'user', undefined, true);
+
+    expect(result.success).toBe(true);
+    expect(result.provenance?.endpoint).toBe('https://api.z.ai/api/anthropic/v1/messages');
+    expect(result.provenance?.endpointStyle).toBe('anthropic');
+  });
+
   it('includes exhausted fallback reasons in complete() failure payloads', async () => {
     const client = new LLMClient({ provider: 'lmstudio', model: 'primary-model' } as any);
     const internal = client as any;
@@ -586,6 +697,76 @@ describe('LLMClient fallback diagnostics', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Fallbacks exhausted (glm-4.5: GLM offline)');
+  });
+
+  it('throws instead of completing empty when fallback stream emits an error event', async () => {
+    const client = new LLMClient({ provider: 'lmstudio', model: 'primary-model' } as any);
+    const internal = client as any;
+
+    internal.resolveModel = vi.fn(async () => 'primary-model');
+    internal.syncResolvedModel = vi.fn();
+    internal.detectProvider = vi.fn(() => 'lmstudio');
+    internal.getProvider = vi.fn(async () => ({
+      name: 'lmstudio',
+      getModel: () => 'primary-model',
+      async *stream() {
+        yield { type: 'error' as const, error: 'network unavailable' };
+      },
+    }));
+    internal.getFallbackProviders = vi.fn(() => ([
+      {
+        name: 'glm',
+        getModel: () => 'glm-4.5',
+        async *stream() {
+          yield { type: 'error' as const, error: 'fallback network unavailable' };
+        },
+      },
+    ]));
+
+    const collectStream = async () => {
+      const chunks: string[] = [];
+      for await (const chunk of client.stream('sys', 'user')) {
+        chunks.push(chunk);
+      }
+      return chunks;
+    };
+
+    await expect(collectStream()).rejects.toThrow(/Fallbacks exhausted \(glm-4.5: fallback network unavailable\)/);
+  });
+
+  it('throws instead of completing empty when fallback thinking stream emits an error event', async () => {
+    const client = new LLMClient({ provider: 'lmstudio', model: 'primary-model' } as any);
+    const internal = client as any;
+
+    internal.resolveModel = vi.fn(async () => 'primary-model');
+    internal.syncResolvedModel = vi.fn();
+    internal.detectProvider = vi.fn(() => 'lmstudio');
+    internal.getProvider = vi.fn(async () => ({
+      name: 'lmstudio',
+      getModel: () => 'primary-model',
+      async *stream() {
+        yield { type: 'error' as const, error: 'network unavailable' };
+      },
+    }));
+    internal.getFallbackProviders = vi.fn(() => ([
+      {
+        name: 'glm',
+        getModel: () => 'glm-4.5',
+        async *stream() {
+          yield { type: 'error' as const, error: 'fallback network unavailable' };
+        },
+      },
+    ]));
+
+    const collectStream = async () => {
+      const chunks: string[] = [];
+      for await (const event of client.streamWithThinking('sys', 'user')) {
+        chunks.push(event.content);
+      }
+      return chunks;
+    };
+
+    await expect(collectStream()).rejects.toThrow(/Fallbacks exhausted \(glm-4.5: fallback network unavailable\)/);
   });
 });
 

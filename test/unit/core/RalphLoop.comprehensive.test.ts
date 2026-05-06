@@ -78,6 +78,27 @@ const mockRenderPipelineBlendScores = vi.hoisted(() =>
   vi.fn(({ baseScore, renderScore, renderWeight = 0.5 }) =>
     baseScore * (1 - renderWeight) + renderScore * renderWeight)
 );
+const mockHeadlessRenderWithEvidence = vi.hoisted(() =>
+  vi.fn(async () => ({
+    timingMs: 5,
+    infraUnavailable: false,
+    candidateFailure: false,
+    screenshot: {
+      mimeType: 'image/png',
+      dataBase64: 'fake-image',
+      width: 400,
+      height: 400,
+    },
+  }))
+);
+const mockScoreRenderedEvidence = vi.hoisted(() =>
+  vi.fn(async () => ({
+    score: 0.92,
+    confidence: 0.95,
+    failureClass: 'none' as const,
+    reasoning: 'rendered evaluator passed',
+  }))
+);
 
 // ─── Mock registrations ────────────────────────────────────────────────────
 
@@ -126,6 +147,7 @@ vi.mock('../../../src/utils/Logger.js', () => ({
 
 vi.mock('../../../src/core/ScoringEngine.js', () => ({
   ScoringEngine: class { score = mockScoringEngineScore; scoreReliable = mockScoringEngineScoreReliable; },
+  scoreRenderedEvidence: mockScoreRenderedEvidence,
 }));
 
 vi.mock('../../../src/core/GenerationOrchestrator.js', () => ({
@@ -163,6 +185,14 @@ vi.mock('../../../src/core/OrganismLoop.js', () => ({
 
 vi.mock('../../../src/core/CodeValidator.js', () => ({
   CodeValidator: { validate: mockCodeValidatorValidate },
+}));
+
+vi.mock('../../../src/render/HeadlessRenderer.js', () => ({
+  HeadlessRenderer: {
+    getInstance: vi.fn(() => ({
+      renderWithEvidence: mockHeadlessRenderWithEvidence,
+    })),
+  },
 }));
 
 const mockPromiseDetectorDetect = vi.hoisted(() => vi.fn(() => false));
@@ -304,7 +334,7 @@ vi.mock('../../../src/evolution/EvolutionEngine.js', () => ({
 // ─── Import after mocks ────────────────────────────────────────────────────
 
 import { RalphLoop } from '../../../src/core/RalphLoop.js';
-import { getRepairMode } from '../../../src/config/FeatureFlags.js';
+import { getEvalMode, getRepairMode } from '../../../src/config/FeatureFlags.js';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -334,6 +364,25 @@ function resetAllMocks(): void {
   mockRenderPipelineBlendScores.mockImplementation(({ baseScore, renderScore, renderWeight = 0.5 }) =>
     baseScore * (1 - renderWeight) + renderScore * renderWeight,
   );
+  mockHeadlessRenderWithEvidence.mockResolvedValue({
+    timingMs: 5,
+    infraUnavailable: false,
+    candidateFailure: false,
+    screenshot: {
+      mimeType: 'image/png',
+      dataBase64: 'fake-image',
+      width: 400,
+      height: 400,
+    },
+  });
+  mockScoreRenderedEvidence.mockResolvedValue({
+    score: 0.92,
+    confidence: 0.95,
+    failureClass: 'none',
+    reasoning: 'rendered evaluator passed',
+  });
+  vi.mocked(getEvalMode).mockReturnValue('legacy');
+  vi.mocked(getRepairMode).mockReturnValue('off');
   mockPromiseDetectorDetect.mockReturnValue(false);
   mockSafetyGuardrailsCheckAll.mockReturnValue(true);
 }
@@ -404,9 +453,20 @@ describe('RalphLoop — comprehensive', () => {
       ]);
       const progress = RalphLoop.getProgress();
       expect(progress).not.toBeNull();
-      expect(progress!.iteration).toBe(2);
+      expect(progress!.iteration).toBe(5);
       expect(progress!.maxIterations).toBe(10);
-      expect(progress!.progress).toBeCloseTo(0.2);
+      expect(progress!.progress).toBeCloseTo(0.5);
+    });
+
+    it('ignores fractional hint contexts when reporting progress', () => {
+      mockContextAccumulationGetHistory.mockReturnValue([
+        { iteration: 10, maxIterations: 10, evaluation: { score: 0.82 } },
+        { iteration: 10.5, maxIterations: undefined, evaluation: { score: 0 } },
+      ]);
+
+      const progress = RalphLoop.getProgress();
+
+      expect(progress).toEqual({ iteration: 10, maxIterations: 10, progress: 1 });
     });
   });
 
@@ -1095,6 +1155,44 @@ describe('RalphLoop — comprehensive', () => {
     });
   });
 
+  describe('run() — evaluator degradation', () => {
+    it('does not convert rendered-evaluator outage into high-confidence completion', async () => {
+      vi.mocked(getEvalMode).mockReturnValue('auto');
+      mockScoreRenderedEvidence.mockResolvedValue({
+        score: 0,
+        confidence: 0,
+        failureClass: 'scorer',
+        reasoning: 'Evaluator LLM unavailable',
+        repairAdvice: {
+          issue: 'Evaluator unavailable',
+          fix: 'Restore evaluator model availability before trusting quality.',
+          constraint: 'Do not mark the artifact release-ready from legacy fallback alone.',
+        },
+      });
+      mockScoringEngineScoreReliable.mockResolvedValue({ score: 0.99, issues: [] });
+
+      const result = await RalphLoop.run('create a sketch', {
+        maxIterations: 1,
+        _disableIterationExtension: true,
+      });
+
+      expect(result.completed).toBe(false);
+      expect(result.reason).toContain('evaluation evidence degraded');
+
+      const savedContext = mockContextAccumulationSave.mock.calls[0]?.[0];
+      expect(savedContext?.evaluation).toMatchObject({
+        score: 0.99,
+        confidence: 0,
+        failureClass: 'scorer',
+      });
+      expect(savedContext?.evaluatorReasoning).toContain('Evaluator LLM unavailable');
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        'RalphLoop',
+        expect.stringContaining('Evaluator LLM unavailable for rendered-evidence scoring'),
+      );
+    });
+  });
+
   // ─── Safety Guardrails Branch ────────────────────────────────────────
 
   describe('run() — safety guardrails', () => {
@@ -1332,9 +1430,9 @@ describe('RalphLoop — comprehensive', () => {
   // ─── isCodeComplete additional branches ─────────────────────────────
 
   describe('isCodeComplete() — additional branch coverage', () => {
-    it('returns false for code ending with whitespace-only line', () => {
+    it('returns true for balanced code with a trailing whitespace-only line', () => {
       const code = 'function setup() { createCanvas(400, 400); }\n  ';
-      expect(RalphLoop.isCodeComplete(code)).toBe(false);
+      expect(RalphLoop.isCodeComplete(code)).toBe(true);
     });
 
     it('returns false for code ending mid-class', () => {
