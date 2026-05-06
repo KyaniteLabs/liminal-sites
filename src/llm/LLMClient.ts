@@ -24,6 +24,7 @@ const LOCAL_MODEL_DETECT_TIMEOUT_MS = 2500;
 // ── Provider system imports ──
 import { createProvider } from './ProviderFactory.js';
 import { BaseProvider } from './providers/BaseProvider.js';
+import { anthropicMessagesEndpoint } from './providers/AnthropicProvider.js';
 import type { ProviderImageInput, ProviderRequest, ProviderResponse } from './ProviderTypes.js';
 import type { ModelRole, ResolvedRoleConfig, RoleConfigFile } from '../config/RoleConfig.js';
 import { loadRoleConfig, getFallbacks } from '../config/RoleConfig.js';
@@ -549,7 +550,7 @@ export class LLMClient {
   private providerEndpoint(providerName = this.detectProvider(), baseUrlValue = this.config.baseUrl, model = this.config.model): string {
     const baseUrl = baseUrlValue.replace(/\/+$/, '');
     if (providerName === Provider.OLLAMA && !baseUrl.endsWith('/v1')) return `${baseUrl}/api/generate`;
-    if (providerName === 'anthropic') return `${baseUrl}/messages`;
+    if (providerName === 'anthropic') return anthropicMessagesEndpoint(baseUrl);
     if (providerName === 'google') return `${baseUrl}/models/${model}:generateContent`;
     return `${baseUrl}/chat/completions`;
   }
@@ -788,7 +789,7 @@ export class LLMClient {
           provenance: this.requestProvenanceForProvider(provider),
         };
       });
-      }).catch(async (primaryError: unknown) => {
+      }, { signal }).catch(async (primaryError: unknown) => {
         // Only attempt fallbacks on network/auth errors
         if (!this.isFallbackableError(primaryError)) {
           throw primaryError;
@@ -1042,7 +1043,7 @@ export class LLMClient {
           fallbackUsed: false,
           provenance: this.requestProvenanceForProvider(provider),
         };
-      }).catch(async (primaryError: unknown) => {
+      }, { signal }).catch(async (primaryError: unknown) => {
         if (!this.isFallbackableError(primaryError)) {
           throw primaryError;
         }
@@ -1389,6 +1390,7 @@ export class LLMClient {
       Logger.info('LLMClient.fallback',
         `stream(): primary failed, trying ${fallbacks.length} fallback(s)`);
 
+      const fallbackFailures: string[] = [];
       for (const fallback of fallbacks) {
         try {
           Logger.info('LLMClient.fallback', `stream() trying fallback: ${fallback.getModel()}`);
@@ -1397,19 +1399,20 @@ export class LLMClient {
             if (event.type === 'content') {
               yield event.content;
             } else if (event.type === 'error') {
-              break; // Try next fallback
+              throw new LLMError(event.error, fallback.name, undefined, false);
             }
           }
           Logger.info('LLMClient.fallback', `stream() fallback succeeded: ${fallback.getModel()}`);
           return;
         } catch (err) {
+          fallbackFailures.push(this.formatFallbackFailure(fallback.getModel(), err));
           Logger.debug('LLMClient', 'Fallback provider failed in stream():', err);
           continue;
         }
       }
 
       // All fallbacks exhausted
-      throw primaryError;
+      throw this.withFallbackDiagnostics(primaryError, fallbackFailures);
     }
   }
 
@@ -1479,6 +1482,7 @@ export class LLMClient {
       Logger.info('LLMClient.fallback',
         `streamWithThinking(): primary failed, trying ${fallbacks.length} fallback(s)`);
 
+      const fallbackFailures: string[] = [];
       for (const fallback of fallbacks) {
         try {
           Logger.info('LLMClient.fallback', `streamWithThinking() trying fallback: ${fallback.getModel()}`);
@@ -1489,12 +1493,13 @@ export class LLMClient {
             } else if (event.type === 'content') {
               yield { type: 'content' as const, content: event.content };
             } else if (event.type === 'error') {
-              break; // Try next fallback
+              throw new LLMError(event.error, fallback.name, undefined, false);
             }
           }
           Logger.info('LLMClient.fallback', `streamWithThinking() fallback succeeded: ${fallback.getModel()}`);
           return;
         } catch (err) {
+          fallbackFailures.push(this.formatFallbackFailure(fallback.getModel(), err));
           Logger.debug('LLMClient', 'Fallback provider failed in streamWithThinking():', err);
           continue;
         }
@@ -1509,7 +1514,7 @@ export class LLMClient {
         duration: Date.now() - startTime,
         error: primaryError instanceof Error ? primaryError.message : 'Unknown error',
       });
-      throw primaryError;
+      throw this.withFallbackDiagnostics(primaryError, fallbackFailures);
     }
   }
 
@@ -1531,29 +1536,16 @@ export class LLMClient {
     // Prefer explicit thinking field (Ollama, Anthropic), fall back to extracted narrative
     const thinking = response.thinking?.text || extractedReasoning || undefined;
 
-    // If main content is empty but thinking/reasoning contains code, recover from it.
-    // This handles providers like MiniMax that may return code in reasoning_content
-    // or wrap the entire response in <think> tags.
-    let code = sanitized.code;
-    let recoveredFromThinking = false;
-    let isComplete = sanitized.isComplete;
-    if (!code && thinking) {
-      const recovered = sanitizeOutputWithReasoning(thinking);
-      if (recovered.sanitized.code) {
-        code = recovered.sanitized.code;
-        recoveredFromThinking = true;
-        isComplete = recovered.sanitized.isComplete;
-      }
-    }
+    const code = sanitized.code;
 
     return {
       code,
       explanation: response.content,
       reasoning: thinking,
       thinking,
-      recoveredFromThinking,
+      recoveredFromThinking: false,
       success: code.length > 0,
-      isComplete,
+      isComplete: sanitized.isComplete,
     };
   }
 }

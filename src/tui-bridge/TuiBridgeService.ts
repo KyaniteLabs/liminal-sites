@@ -6,7 +6,7 @@ import { TuiSessionStore } from './TuiSessionStore.js';
 import { ConversationManager } from '../chat/ConversationManager.js';
 import { RalphLoop } from '../core/RalphLoop.js';
 import type { LLMClient } from '../llm/LLMClient.js';
-import type { TuiBridgeEvent, TuiFailureProvenance, TuiInputRequest, TuiPendingAction, TuiRunKind, TuiRunLifecycle, TuiRunPhase, TuiSessionStatus } from './types.js';
+import type { TuiBridgeEvent, TuiFailureProvenance, TuiInputRequest, TuiPendingAction, TuiRunExecutor, TuiRunKind, TuiRunLifecycle, TuiRunPhase, TuiSessionStatus } from './types.js';
 import { Domain } from '../types/domains.js';
 import { eventBus, EventTypes, type BusEvent } from '../core/EventBus.js';
 import { createLLMModeAgent, type LLMSession } from '../harness/agent/index.js';
@@ -355,6 +355,7 @@ export class TuiBridgeService {
       kind: TuiRunKind;
       label: string;
       executionMode?: 'draft' | 'prove';
+      executor?: TuiRunExecutor;
       model?: string;
       provider?: string;
     },
@@ -368,6 +369,7 @@ export class TuiBridgeService {
       startedAt: now,
       updatedAt: now,
       executionMode: details.executionMode,
+      executor: details.executor,
       model: details.model,
       provider: details.provider,
     };
@@ -652,7 +654,7 @@ export class TuiBridgeService {
     }
 
     // Record user message in conversation history
-    conversation['recordMessage']('user', input.text);
+    conversation.appendMessage('user', input.text);
 
     // Step 2: Route via StudioAgent classification
     this.emit(sessionId, { type: 'response.started', sessionId });
@@ -667,7 +669,7 @@ export class TuiBridgeService {
       }));
     };
 
-    const emitSessionTurn = (delegatedTo: string, responseContent?: string, extras?: { artifactRefs?: string[]; taskRefs?: string[] }) => {
+    const emitSessionTurn = (delegatedTo: string, responseContent?: string, extras?: { executor?: TuiRunExecutor; artifactRefs?: string[]; taskRefs?: string[] }) => {
       const turnId = `turn-${Date.now()}`;
       const durationMs = Date.now() - routeStart;
       this.emit(sessionId, {
@@ -701,7 +703,7 @@ export class TuiBridgeService {
       this.emit(sessionId, { type: 'response.delta', sessionId, delta: input.text });
       this.emit(sessionId, { type: 'response.completed', sessionId, content: input.text });
       this.emit(sessionId, { type: 'response.committed', sessionId, content: input.text });
-      conversation['recordMessage']('assistant', input.text);
+      conversation.appendMessage('assistant', input.text);
       emitSessionTurn('echo', input.text);
       this.emit(sessionId, {
         type: 'status.updated',
@@ -798,7 +800,7 @@ export class TuiBridgeService {
         }
         logBridge('input.routed', { sessionId, route: 'studio.engineering', confidence: classification.confidence });
         this.streamEngineeringTask(sessionId, input.text, conversation, llm)
-          .then(() => emitSessionTurn('conveyor'))
+          .then(() => emitSessionTurn('engineering-agent', undefined, { executor: 'llm-mode-agent' }))
           .catch(handleError);
         break;
       }
@@ -887,7 +889,8 @@ export class TuiBridgeService {
           sessionId,
           turnId: `turn-${Date.now()}`,
           intent: route === 'creative' ? 'creative' : route === 'hybrid' ? 'hybrid' : 'engineering',
-          delegatedTo: route === 'creative' || route === 'hybrid' ? 'ralph-loop' : 'conveyor',
+          delegatedTo: route === 'creative' || route === 'hybrid' ? 'ralph-loop' : 'engineering-agent',
+          executor: route === 'creative' || route === 'hybrid' ? 'ralph-loop' : 'llm-mode-agent',
           durationMs: Date.now() - routeStart,
         });
       })
@@ -1024,7 +1027,7 @@ export class TuiBridgeService {
       conversation.startNewSession();
       this.conversations.set(sessionId, conversation);
     }
-    conversation['recordMessage']('user', input);
+    conversation.appendMessage('user', input);
 
     if (!llm) {
       this.emitCommandResponse(sessionId, result.prompt);
@@ -1627,17 +1630,7 @@ export class TuiBridgeService {
 
     try {
       // Build conversation context from history (same pattern as streamChatResponse)
-      const history = conversation['sessionHistory']?.find(
-        (s: { sessionId: string }) => s.sessionId === conversation['currentSession']?.id
-      );
-      const messages = history?.messages || [];
-      let conversationContext = '';
-      if (messages.length > 1) {
-        const contextMessages = messages.slice(0, -1);
-        conversationContext = contextMessages
-          .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
-          .join('\n\n') + '\n\n';
-      }
+      const conversationContext = conversation.getConversationContext({ excludeLatest: true });
       const fullPrompt = conversationContext
         ? `${conversationContext}user: ${userText}`
         : userText;
@@ -1659,7 +1652,7 @@ export class TuiBridgeService {
 
       this.emit(sessionId, { type: 'response.completed', sessionId, content: fullContent });
       this.emit(sessionId, { type: 'response.committed', sessionId, content: fullContent });
-      conversation['recordMessage']('assistant', fullContent);
+      conversation.appendMessage('assistant', fullContent);
 
       this.emit(sessionId, {
         type: 'response.metadata',
@@ -2073,7 +2066,7 @@ export class TuiBridgeService {
         await this.emitPreviewArtifacts(sessionId, result.code, activeDomain, routeTruth);
 
         // Record in conversation
-        conversation['recordMessage']('assistant', `Generated code (${result.iterations} iterations, score: ${result.finalScore.toFixed(2)}):\n\n${result.code}`);
+        conversation.appendMessage('assistant', `Generated code (${result.iterations} iterations, score: ${result.finalScore.toFixed(2)}):\n\n${result.code}`);
 
         // Create review candidate from generation result
         const candidate = this.reviewManager.addCandidate(
@@ -2273,7 +2266,7 @@ export class TuiBridgeService {
               logBridge('generation.draft.background_failed', { sessionId, generatorModel: generatorModelName, message });
             }
           });
-          let attemptResult = await this.awaitDraftAttempt(generationPromise, controller.signal, timeoutMinutes);
+          let attemptResult = await this.awaitDraftAttempt(generationPromise, controller, timeoutMinutes);
           if (!attemptResult) {
             this.emit(sessionId, { type: 'activity.updated', sessionId, message: 'Generation stopped by operator.' });
             return;
@@ -2317,7 +2310,7 @@ export class TuiBridgeService {
                 logBridge('generation.draft.domain_retry_failed', { sessionId, generatorModel: generatorModelName, message });
               }
             });
-            const retryResult = await this.awaitDraftAttempt(retryPromise, controller.signal, timeoutMinutes);
+            const retryResult = await this.awaitDraftAttempt(retryPromise, controller, timeoutMinutes);
             if (!retryResult) {
               this.emit(sessionId, { type: 'activity.updated', sessionId, message: 'Generation stopped by operator.' });
               return;
@@ -2396,7 +2389,7 @@ export class TuiBridgeService {
         this.emit(sessionId, { type: 'preview.content', sessionId, content: codeContent, previewType: 'code' });
       }
 
-      conversation['recordMessage']('assistant', `Generated artifact ready:\n\n${result.code}`);
+      conversation.appendMessage('assistant', `Generated artifact ready:\n\n${result.code}`);
       this.emit(sessionId, {
         type: 'generation.complete',
         sessionId,
@@ -2462,9 +2455,10 @@ export class TuiBridgeService {
 
   private async awaitDraftAttempt<T>(
     generationPromise: Promise<T>,
-    signal: AbortSignal,
+    controller: AbortController,
     timeoutMinutes: number,
   ): Promise<T | undefined> {
+    const { signal } = controller;
     if (signal.aborted) return undefined;
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -2474,7 +2468,9 @@ export class TuiBridgeService {
       signal.addEventListener('abort', onAbort, { once: true });
       removeAbortListener = () => signal.removeEventListener('abort', onAbort);
       timeoutId = setTimeout(() => {
-        reject(new Error(`Generation timed out after ${timeoutMinutes} minute${timeoutMinutes === 1 ? '' : 's'}`));
+        const timeoutError = new Error(`Generation timed out after ${timeoutMinutes} minute${timeoutMinutes === 1 ? '' : 's'}`);
+        reject(timeoutError);
+        controller.abort(timeoutError);
       }, timeoutMinutes * 60_000);
     });
 
@@ -2506,20 +2502,7 @@ export class TuiBridgeService {
 
     try {
       // Build conversation context from history
-      const history = conversation['sessionHistory']?.find(
-        (s: { sessionId: string }) => s.sessionId === conversation['currentSession']?.id
-      );
-      const messages = history?.messages || [];
-
-      // Build full prompt with conversation history
-      let conversationContext = '';
-      if (messages.length > 1) {
-        // Skip the most recent user message (that's userText)
-        const contextMessages = messages.slice(0, -1);
-        conversationContext = contextMessages
-          .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
-          .join('\n\n') + '\n\n';
-      }
+      const conversationContext = conversation.getConversationContext({ excludeLatest: true });
 
       const fullPrompt = conversationContext
         ? `${conversationContext}user: ${userText}`
@@ -2530,6 +2513,9 @@ export class TuiBridgeService {
       for await (const chunk of llm.stream(effectivePrompt, fullPrompt, controller.signal)) {
         fullContent += chunk;
         this.emit(sessionId, { type: 'response.delta', sessionId, delta: chunk });
+      }
+      if (!fullContent.trim()) {
+        throw new Error('Empty response from LLM stream');
       }
 
       const duration = Date.now() - startTime;
@@ -2546,7 +2532,7 @@ export class TuiBridgeService {
       });
 
       // Record assistant response in conversation
-      conversation['recordMessage']('assistant', fullContent);
+      conversation.appendMessage('assistant', fullContent);
 
       // Detect code in response and emit preview events for TUI
       const codeContent = this.extractCodeContent(fullContent);
@@ -2565,6 +2551,11 @@ export class TuiBridgeService {
         }),
       });
       logBridge('chat.completed', { sessionId, model: modelName, duration, chars: fullContent.length });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.emit(sessionId, this.errorEvent(sessionId, err, { model: modelName, endpoint: config.baseUrl }));
+      logBridge('chat.failed', { sessionId, model: modelName, error: message });
+      throw err;
     } finally {
       this.activeStreams.delete(sessionId);
     }
@@ -2594,6 +2585,7 @@ export class TuiBridgeService {
     this.beginRun(sessionId, {
       kind: 'engineering',
       label: `Engineering task queued: ${userText.slice(0, 60)}`,
+      executor: 'llm-mode-agent',
       model: modelName,
       provider,
     });
@@ -2646,7 +2638,7 @@ export class TuiBridgeService {
       }
       this.emit(sessionId, { type: 'response.completed', sessionId, content: fullContent });
       this.emit(sessionId, { type: 'response.committed', sessionId, content: fullContent });
-      conversation['recordMessage']('assistant', fullContent);
+      conversation.appendMessage('assistant', fullContent);
 
       const duration = new Date(session.endTime || new Date().toISOString()).getTime() - new Date(session.startTime).getTime();
       const lifecycle = describeStatusLifecycle(session.status, session.lastPlanError, {
@@ -2855,7 +2847,7 @@ export class TuiBridgeService {
     this.emit(sessionId, { type: 'response.delta', sessionId, delta: content });
     this.emit(sessionId, { type: 'response.completed', sessionId, content });
     this.emit(sessionId, { type: 'response.committed', sessionId, content });
-    conversation['recordMessage']('assistant', content);
+    conversation.appendMessage('assistant', content);
     this.emit(sessionId, {
       type: 'status.updated',
       sessionId,

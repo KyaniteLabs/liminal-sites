@@ -2,6 +2,10 @@
 
 Marketing rule: only `proven` features can be claimed as working product value without an experimental qualifier.
 
+Current launch-truth source: `docs/launch/feature-claim-ledger-2026-05-06.md`.
+
+Receipt rule from final QA: a passing proof command is not enough for a broad launch claim unless the receipt is fresh, commit-bound, provider-identified when live providers are involved, and wide enough for the claim being made. FQA-004 is verified for release gate receipt validation; release candidates still need fresh receipts generated on the release commit.
+
 Public-demo disposition: demo-mitigated. The UI and proof receipts may show experimental ML labels, but the recording must not narrate experimental features as proven product value.
 
 | Feature | Launch Label | Baseline | Enabled Behavior | Metric | Proof |
