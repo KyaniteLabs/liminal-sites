@@ -1,35 +1,31 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 /**
  * MiniMax-M2.7-highspeed Test Suite
- * Cloud model - same quality as M2.7 but faster (100 tps vs 60 tps)
+ * Entitlement-gated MiniMax fast-path proof. This suite must stay outside
+ * launch claims unless RUN_MINIMAX_HIGHSPEED_MODEL_TESTS passes with a token
+ * plan that can actually access MiniMax-M2.7-highspeed.
  */
 
-import { run } from '../../../src/index.js';
+import { createLiveProviderClient } from '../helpers/liveProviderTestEnv.js';
 
-const MODEL_CONFIG = {
-  baseUrl: 'https://api.minimaxi.com/v1',
-  model: 'MiniMax-M2.7-highspeed',
-};
+const TEST_TIMEOUT = 45000;
 
-const TEST_TIMEOUT = 45000; // Faster model
-
-describe.skipIf(!process.env.RUN_CLOUD_MODEL_TESTS)('MiniMax-M2.7-highspeed', () => {
-  beforeAll(() => {
-    process.env.LIMINAL_LLM_BASE_URL = MODEL_CONFIG.baseUrl;
-    process.env.LIMINAL_LLM_MODEL = MODEL_CONFIG.model;
-  });
-
+describe.skipIf(!process.env.RUN_MINIMAX_HIGHSPEED_MODEL_TESTS)('MiniMax-M2.7-highspeed', () => {
   it('generates p5.js quickly', async () => {
     const startTime = Date.now();
-    const result = await run('simple blue circle', {
-      maxIterations: 2,
-      output: './test-results/models/minimax-m2-7-highspeed/p5-circle',
-      project: 'test-p5',
-    });
+    const live = createLiveProviderClient('minimax', 'MiniMax-M2.7-highspeed');
+    expect(live, 'MINIMAX_API_KEY with highspeed entitlement is required for MiniMax highspeed proof').not.toBeNull();
+    const response = await live!.client.generate(
+      'You are a p5.js coder. Output raw JavaScript only.',
+      'Create a p5.js sketch with setup(), draw(), createCanvas(), and a blue circle.',
+    );
     const duration = Date.now() - startTime;
 
-    expect(result.code).toContain('createCanvas');
-    expect(result.code).not.toContain('<think');
-    expect(duration).toBeLessThan(30000); // Should be fast
+    expect(response.success).toBe(true);
+    expect(response.code).toContain('createCanvas');
+    expect(response.code).not.toContain('<think');
+    // The speed assertion is meaningful only after the entitlement check above
+    // proves the provider accepts the highspeed model for this token plan.
+    expect(duration).toBeLessThan(30000);
   }, TEST_TIMEOUT);
 });
