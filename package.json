@@ -1,7 +1,7 @@
 {
-  "name": "liminal-ai",
+  "name": "liminal-sites",
   "version": "2.1.0",
-  "description": "Creative coding agent with internal Ralph-Wiggum Loop and multi-domain intelligence",
+  "description": "Living website evolution engine seeded from Liminal",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,11 +9,11 @@
   "license": "BUSL-1.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KyaniteLabs/liminal.git"
+    "url": "git+https://github.com/KyaniteLabs/liminal-sites.git"
   },
-  "homepage": "https://github.com/KyaniteLabs/liminal#readme",
+  "homepage": "https://github.com/KyaniteLabs/liminal-sites#readme",
   "bugs": {
-    "url": "https://github.com/KyaniteLabs/liminal/issues"
+    "url": "https://github.com/KyaniteLabs/liminal-sites/issues"
   },
   "files": [
     "dist",
@@ -84,9 +84,10 @@
     "proof:route-performance": "tsx scripts/proof/route-performance-budget.ts"
   },
   "keywords": [
-    "generative-art",
+    "website-evolution",
+    "generative-design",
     "creative-coding",
-    "p5js",
+    "mcp",
     "agent"
   ],
   "devDependencies": {
@@ -159,6 +160,8 @@
     "vite": "8.0.9"
   },
   "bin": {
+    "liminal-sites": "bin/liminal",
+    "lsites": "bin/liminal",
     "liminal": "bin/liminal",
     "lim": "bin/liminal"
   },
