@@ -1,4 +1,14 @@
-# AGENTS.md — Liminal Agent Instructions
+# AGENTS.md — Liminal Sites Agent Instructions
+
+## Liminal Sites Overlay
+
+This repository is a full-history product clone of `KyaniteLabs/liminal`.
+
+Work here has two categories:
+- **Product-specific:** website evolution, runtime skins, site adapters, MCP surface, repo-native PR workflows, and Liminal Sites branding stay in this repo.
+- **Shared foundation:** fixes to generation, routing, preview, provider truth, evaluation, persistence, workbench reliability, or safety gates must be considered for backport to upstream Liminal.
+
+Use `upstream` for the original Liminal remote and `origin` for the dedicated Liminal Sites remote once created. Do not silently strand shared Liminal fixes here.
 
 **Last Updated:** 2026-04-15
 
@@ -24,7 +34,7 @@ Codex should use only the active Matt Pocock subset: `setup-matt-pocock-skills`,
 
 ### Issue tracker
 
-Issues are tracked in GitHub Issues for `KyaniteLabs/liminal`; see `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues for `KyaniteLabs/liminal-sites`; see `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
