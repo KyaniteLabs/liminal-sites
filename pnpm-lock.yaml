@@ -139,8 +139,8 @@ importers:
         specifier: ^5.0.6
         version: 5.0.6
       '@types/express-rate-limit':
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^6.0.2
+        version: 6.0.2(express@5.2.1)
       '@types/helmet':
         specifier: ^0.0.48
         version: 0.0.48
@@ -1387,8 +1387,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
-  '@types/express-rate-limit@5.1.3':
-    resolution: {integrity: sha512-H+TYy3K53uPU2TqPGFYaiWc2xJV6+bIFkDd/Ma2/h67Pa6ARk9kWE0p/K9OH1Okm0et9Sfm66fmXoAxsH2PHXg==}
+  '@types/express-rate-limit@6.0.2':
+    resolution: {integrity: sha512-e1xZLOOlxCDvplAGq7rDcXtbdBu2CWRsMjaIu1LVqGxWtKvwr884YE5mPs3IvHeG/OMDhf24oTaqG5T1bV3rBQ==}
+    deprecated: This is a stub types definition. express-rate-limit provides its own type definitions, so you do not need this installed.
 
   '@types/express-serve-static-core@5.1.1':
     resolution: {integrity: sha512-v4zIMr/cX7/d2BpAEX3KNKL/JrT1s43s96lLvvdTmza1oEvDudCqK9aF/djc/SWgy8Yh0h30TZx5VpzqFCxk5A==}
@@ -4399,9 +4400,6 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
-
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
@@ -5482,9 +5480,11 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/express-rate-limit@5.1.3':
+  '@types/express-rate-limit@6.0.2(express@5.2.1)':
     dependencies:
-      '@types/express': 5.0.6
+      express-rate-limit: 8.5.1(express@5.2.1)
+    transitivePeerDependencies:
+      - express
 
   '@types/express-serve-static-core@5.1.1':
     dependencies:
@@ -9014,8 +9014,6 @@ snapshots:
     optional: true
 
   zod@3.25.76: {}
-
-  zod@4.3.6: {}
 
   zod@4.4.3: {}
 
