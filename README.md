@@ -45,6 +45,18 @@ See [docs/BACKPORT_POLICY.md](docs/BACKPORT_POLICY.md).
 
 See [docs/plans/2026-05-07-liminal-sites-repo-carveout.md](docs/plans/2026-05-07-liminal-sites-repo-carveout.md).
 
+## Inherited Liminal Engine
+
+While Liminal Sites carves out its product surface, the inherited Liminal engine retains its launch-verified capabilities:
+
+- **12 creative domains** — p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen
+- **CreativeBoard critique** — 3-agent board (Minimalist / Expressionist / Technician) deliberates on output
+- **Swarm generation** — 5 default runtime personas (Kai / Nova / Rex / Sam / Max) generate in parallel and vote on best
+
+| Mode | Flag | Description |
+|------|------|-------------|
+| **Swarm** | `--use-swarm` | Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel and vote on best |
+
 ## Development
 
 The inherited commands still work while the product is carved out:
