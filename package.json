@@ -151,14 +151,6 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "overrides": {
-    "basic-ftp": "5.3.1",
-    "hono": "4.12.16",
-    "ip-address": "10.2.0",
-    "picomatch": "4.0.4",
-    "protobufjs": "^7.5.5",
-    "vite": "8.0.9"
-  },
   "bin": {
     "liminal-sites": "bin/liminal",
     "lsites": "bin/liminal",
