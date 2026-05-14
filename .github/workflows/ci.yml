@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 20
       - name: Enable pnpm
-        run: corepack enable
+        run: npm install -g corepack@latest && corepack enable
       - name: Verify toolchain
         run: |
           echo "Node: $(node --version)"
@@ -117,7 +117,7 @@ jobs:
         with:
           node-version: 20
       - name: Enable pnpm
-        run: corepack enable
+        run: npm install -g corepack@latest && corepack enable
       - name: Verify toolchain
         run: |
           echo "Node: $(node --version)"
@@ -137,7 +137,7 @@ jobs:
         with:
           node-version: 20
       - name: Enable pnpm
-        run: corepack enable
+        run: npm install -g corepack@latest && corepack enable
       - name: Verify toolchain
         run: |
           echo "Node: $(node --version)"
