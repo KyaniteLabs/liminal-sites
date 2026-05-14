@@ -68,4 +68,9 @@ pnpm test
 pnpm gui:dev
 ```
 
+### GUI and TUI Commands
+
+- `pnpm gui` - Launch Studio GUI (the artist-facing workbench)
+- `pnpm tui` - Launch Bubble Tea operator cockpit (keyboard-first interface)
+
 The inherited CLI entrypoint remains available as `liminal`; this package also exposes `liminal-sites` and `lsites` while the user-facing command shape is finalized.
