@@ -57,3 +57,13 @@ pnpm gui:dev
 ```
 
 The inherited CLI entrypoint remains available as `liminal`; this package also exposes `liminal-sites` and `lsites` while the user-facing command shape is finalized.
+
+## Inherited Liminal Capabilities
+
+While Liminal Sites is being carved out, the underlying Liminal engine keeps the same launch-verified surface:
+
+- **12 creative domains** — p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen
+- **CreativeBoard critique** — 3-agent board (Minimalist / Expressionist / Technician) deliberates on output
+- **Swarm generation** — 5 default runtime personas (Kai / Nova / Rex / Sam / Max) generate in parallel and vote on best
+
+Swarm mode (`--use-swarm`) keeps the documented behavior: Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel and vote on best.
