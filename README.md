@@ -53,8 +53,12 @@ The inherited commands still work while the product is carved out:
 pnpm install
 pnpm typecheck
 pnpm test
+pnpm gui
+pnpm tui
 pnpm gui:dev
 ```
+
+For more details on the user surface contract, see [docs/USER_SURFACE_CONTRACT.md](docs/USER_SURFACE_CONTRACT.md).
 
 The inherited CLI entrypoint remains available as `liminal`; this package also exposes `liminal-sites` and `lsites` while the user-facing command shape is finalized.
 
