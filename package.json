@@ -137,7 +137,7 @@
     "p5": "^2.2.3",
     "path-to-regexp": "8.4.2",
     "picomatch": "4.0.4",
-    "puppeteer": "^24.40.0",
+    "puppeteer": "^25.0.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remark": "^15.0.1",
