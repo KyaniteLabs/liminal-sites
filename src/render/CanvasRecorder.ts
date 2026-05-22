@@ -62,7 +62,10 @@ export class CanvasRecorder {
 
         // Wrap code for rendering
         const html = this.wrapForDomain(code, domain);
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.setContent(html, { waitUntil: 'domcontentloaded' });
+        if (typeof page.waitForNetworkIdle === 'function') {
+          await page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 }).catch(() => undefined);
+        }
 
         // Wait for canvas to appear
         await page.waitForSelector('canvas', { timeout: 10000 });

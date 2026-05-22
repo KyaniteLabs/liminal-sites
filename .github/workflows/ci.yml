@@ -11,6 +11,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PNPM_VERSION: 10.24.0
+
 concurrency:
   group: liminal-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -24,8 +27,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 20
-      - name: Enable pnpm
-        run: corepack enable
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
       - name: Verify toolchain
         run: |
           echo "Node: $(node --version)"
@@ -116,8 +121,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 20
-      - name: Enable pnpm
-        run: corepack enable
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
       - name: Verify toolchain
         run: |
           echo "Node: $(node --version)"
@@ -136,8 +143,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 20
-      - name: Enable pnpm
-        run: corepack enable
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
       - name: Verify toolchain
         run: |
           echo "Node: $(node --version)"
