@@ -6,6 +6,28 @@ The product goal is simple:
 
 > A website should not stay frozen after launch. Liminal Sites learns the owner's taste, generates visual directions, previews them safely, and turns the chosen direction into either a runtime skin or a reviewed source-code patch.
 
+## Launch Surface
+
+Liminal Sites launches across 12 creative domains: p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen.
+
+CreativeBoard critique uses a 3-agent board (Minimalist / Expressionist / Technician) to sharpen artifacts before they become product-facing output.
+
+The runtime swarm remains separate: 5 default runtime personas (Kai / Nova / Rex / Sam / Max). Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel when the swarm lane is selected.
+
+## Ready-to-show market path
+
+```bash
+pnpm install
+pnpm gui
+pnpm tui
+liminal "a luminous blue-green particle garden"
+pnpm run proof:live-provider-smoke -- --provider=glm --timeout-ms=120000
+pnpm exec tsx scripts/proof/creative-copilot-proof.ts --provider=glm --all --timeout-ms=120000 --max-tokens=4096 --out=.omx/proof/market-all-domain-sweep
+liminal market status
+```
+
+The launch sweep covers p5, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, and TextGen. HyperFrames saves HTML/GSAP composition artifacts, and Revideo code artifacts are generated; native rendered video/still capture is a separate follow-up.
+
 ## Current State
 
 This repo is a full-history clone of `KyaniteLabs/liminal`, seeded at:
@@ -45,18 +67,6 @@ See [docs/BACKPORT_POLICY.md](docs/BACKPORT_POLICY.md).
 
 See [docs/plans/2026-05-07-liminal-sites-repo-carveout.md](docs/plans/2026-05-07-liminal-sites-repo-carveout.md).
 
-## Inherited Liminal Engine
-
-While Liminal Sites carves out its product surface, the inherited Liminal engine retains its launch-verified capabilities:
-
-- **12 creative domains** — p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen
-- **CreativeBoard critique** — 3-agent board (Minimalist / Expressionist / Technician) deliberates on output
-- **Swarm generation** — 5 default runtime personas (Kai / Nova / Rex / Sam / Max) generate in parallel and vote on best
-
-| Mode | Flag | Description |
-|------|------|-------------|
-| **Swarm** | `--use-swarm` | Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel and vote on best |
-
 ## Development
 
 The inherited commands still work while the product is carved out:
@@ -65,12 +75,34 @@ The inherited commands still work while the product is carved out:
 pnpm install
 pnpm typecheck
 pnpm test
+pnpm gui
+pnpm tui
 pnpm gui:dev
 ```
 
-### GUI and TUI Commands
-
-- `pnpm gui` - Launch Studio GUI (the artist-facing workbench)
-- `pnpm tui` - Launch Bubble Tea operator cockpit (keyboard-first interface)
+For more details on the user surface contract, see [docs/USER_SURFACE_CONTRACT.md](docs/USER_SURFACE_CONTRACT.md).
 
 The inherited CLI entrypoint remains available as `liminal`; this package also exposes `liminal-sites` and `lsites` while the user-facing command shape is finalized.
+
+## Ready-to-show market path
+
+The fastest path to a ready-to-show market demo across the full creative surface:
+
+```bash
+liminal "a luminous blue-green particle garden"
+pnpm run proof:live-provider-smoke -- --provider=glm --timeout-ms=120000
+pnpm exec tsx scripts/proof/creative-copilot-proof.ts --provider=glm --all --timeout-ms=120000 --max-tokens=4096 --out=.omx/proof/market-all-domain-sweep
+liminal market status
+```
+
+This sweep exercises every supported creative domain — p5, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, and TextGen — without narrowing the surface for a single demo. HyperFrames saves HTML/GSAP composition artifacts, and Revideo code artifacts are generated; native rendered video/still capture is a separate follow-up.
+
+## Inherited Liminal Capabilities
+
+While Liminal Sites is being carved out, the underlying Liminal engine keeps the same launch-verified surface:
+
+- **12 creative domains** — p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen
+- **CreativeBoard critique** — 3-agent board (Minimalist / Expressionist / Technician) deliberates on output
+- **Swarm generation** — 5 default runtime personas (Kai / Nova / Rex / Sam / Max) generate in parallel and vote on best
+
+Swarm mode (`--use-swarm`) keeps the documented behavior: Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel and vote on best.
