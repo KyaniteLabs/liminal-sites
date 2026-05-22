@@ -1,6 +1,6 @@
 {
   "contract": "liminal-final-qa-test-surface-ledger-v1",
-  "updatedAt": "2026-05-07T00:35:00Z",
+  "updatedAt": "2026-05-22T04:34:36Z",
   "policy": "No test file may remain under test/pending for final QA. Every skipped/gated test file must have owner, launch risk, reason, action, and verification before final QA can be claimed.",
   "pendingTests": [],
   "skippedOrGatedTests": [
@@ -19,6 +19,14 @@
       "reason": "Provider comparison proof is intentionally gated behind RUN_MODEL_COMPARISON because it uses local LM Studio plus live cloud credentials.",
       "action": "Keep classified and run before model-comparison release claims.",
       "verification": "RUN_MODEL_COMPARISON=1 pnpm vitest run test/e2e/model-comparison.test.ts --coverage=false --reporter=dot --pool=forks"
+    },
+    {
+      "path": "test/e2e/sandbox-self-improve.e2e.test.ts",
+      "owner": "Browser/e2e runtime",
+      "launchRisk": "verified-browser-and-provider-gated",
+      "reason": "Sandbox self-improve e2e is intentionally gated outside normal CI because it exercises Puppeteer/Chrome sandbox execution and a one-step provider-backed improvement path.",
+      "action": "Keep classified and run before release claims that depend on combined sandbox execution and self-improvement behavior.",
+      "verification": "env -u CI pnpm vitest run test/e2e/sandbox-self-improve.e2e.test.ts --coverage=false --reporter=dot --pool=forks"
     },
     {
       "path": "test/e2e/cloud-providers.test.ts",

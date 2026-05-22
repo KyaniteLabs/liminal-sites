@@ -75,7 +75,34 @@ The inherited commands still work while the product is carved out:
 pnpm install
 pnpm typecheck
 pnpm test
+pnpm gui
+pnpm tui
 pnpm gui:dev
 ```
 
+For more details on the user surface contract, see [docs/USER_SURFACE_CONTRACT.md](docs/USER_SURFACE_CONTRACT.md).
+
 The inherited CLI entrypoint remains available as `liminal`; this package also exposes `liminal-sites` and `lsites` while the user-facing command shape is finalized.
+
+## Ready-to-show market path
+
+The fastest path to a ready-to-show market demo across the full creative surface:
+
+```bash
+liminal "a luminous blue-green particle garden"
+pnpm run proof:live-provider-smoke -- --provider=glm --timeout-ms=120000
+pnpm exec tsx scripts/proof/creative-copilot-proof.ts --provider=glm --all --timeout-ms=120000 --max-tokens=4096 --out=.omx/proof/market-all-domain-sweep
+liminal market status
+```
+
+This sweep exercises every supported creative domain — p5, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, and TextGen — without narrowing the surface for a single demo. HyperFrames saves HTML/GSAP composition artifacts, and Revideo code artifacts are generated; native rendered video/still capture is a separate follow-up.
+
+## Inherited Liminal Capabilities
+
+While Liminal Sites is being carved out, the underlying Liminal engine keeps the same launch-verified surface:
+
+- **12 creative domains** — p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen
+- **CreativeBoard critique** — 3-agent board (Minimalist / Expressionist / Technician) deliberates on output
+- **Swarm generation** — 5 default runtime personas (Kai / Nova / Rex / Sam / Max) generate in parallel and vote on best
+
+Swarm mode (`--use-swarm`) keeps the documented behavior: Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel and vote on best.
