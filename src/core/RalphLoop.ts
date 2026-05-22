@@ -152,6 +152,12 @@ function generationEvaluationFromQualityEvaluation(evaluation: RalphQualityEvalu
   };
 }
 
+function createRalphScoringEngine(defaultStrategy: string): ScoringEngine {
+  return new ScoringEngine(defaultStrategy, undefined, {
+    disableReliableLlmBoost: process.env.NODE_ENV === 'test' || process.env.LIMINAL_CI_FAST === '1',
+  });
+}
+
 export class RalphLoop {
   /**
    * Run the Ralph-Wiggum Loop
@@ -658,7 +664,7 @@ export class RalphLoop {
                       );
                     }
                     Logger.warn('RalphLoop', 'Browser render infra unavailable, falling back to legacy scoring for candidate');
-                    const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                    const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                     const quickEvaluation = await scoringEngine.scoreReliable({
                       output: candidate.code,
                       criteria: normalizedOptions.evaluationCriteria,
@@ -687,7 +693,7 @@ export class RalphLoop {
                         );
                       }
                       Logger.warn('RalphLoop', 'Evaluator LLM unavailable for rendered-evidence scoring, falling back to legacy scoring for candidate');
-                      const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                      const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                       const quickEvaluation = await scoringEngine.scoreReliable({
                         output: candidate.code,
                         criteria: normalizedOptions.evaluationCriteria,
@@ -705,7 +711,7 @@ export class RalphLoop {
                     }
                   }
                 } else {
-                  const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                  const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                   const quickEvaluation = await scoringEngine.scoreReliable({
                     output: candidate.code,
                     criteria: normalizedOptions.evaluationCriteria,
@@ -851,7 +857,7 @@ export class RalphLoop {
                 );
               }
               Logger.warn('RalphLoop', 'Browser render infra unavailable, falling back to legacy scoring');
-              const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+              const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
               const quickEvaluation = await scoringEngine.scoreReliable(
                 {
                   output: currentCode,
@@ -882,7 +888,7 @@ export class RalphLoop {
                   );
                 }
                 Logger.warn('RalphLoop', 'Evaluator LLM unavailable for rendered-evidence scoring, falling back to legacy scoring');
-                const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                 const quickEvaluation = await scoringEngine.scoreReliable(
                   {
                     output: currentCode,
@@ -902,7 +908,7 @@ export class RalphLoop {
             }
           } else {
             // legacy mode
-            const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+            const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
             evaluation = await scoringEngine.scoreReliable(
               {
                 output: currentCode,
@@ -972,7 +978,7 @@ export class RalphLoop {
                     });
 
                     if (renderEvidence.infraUnavailable) {
-                      const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                      const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                       const quickRepairEval = await scoringEngine.scoreReliable({
                         output: repairCode,
                         criteria: normalizedOptions.evaluationCriteria,
@@ -1001,7 +1007,7 @@ export class RalphLoop {
                           );
                         }
                         Logger.warn('RalphLoop', 'Evaluator LLM unavailable for rendered-evidence repair scoring, falling back to legacy scoring');
-                        const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                        const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                         const quickRepairEval = await scoringEngine.scoreReliable({
                           output: repairCode,
                           criteria: normalizedOptions.evaluationCriteria,
@@ -1018,7 +1024,7 @@ export class RalphLoop {
                       }
                     }
                   } else {
-                    const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                    const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                     repairEval = await scoringEngine.scoreReliable({
                       output: repairCode,
                       criteria: normalizedOptions.evaluationCriteria,
