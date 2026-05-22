@@ -6,6 +6,28 @@ The product goal is simple:
 
 > A website should not stay frozen after launch. Liminal Sites learns the owner's taste, generates visual directions, previews them safely, and turns the chosen direction into either a runtime skin or a reviewed source-code patch.
 
+## Launch Surface
+
+Liminal Sites launches across 12 creative domains: p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen.
+
+CreativeBoard critique uses a 3-agent board (Minimalist / Expressionist / Technician) to sharpen artifacts before they become product-facing output.
+
+The runtime swarm remains separate: 5 default runtime personas (Kai / Nova / Rex / Sam / Max). Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel when the swarm lane is selected.
+
+## Ready-to-show market path
+
+```bash
+pnpm install
+pnpm gui
+pnpm tui
+liminal "a luminous blue-green particle garden"
+pnpm run proof:live-provider-smoke -- --provider=glm --timeout-ms=120000
+pnpm exec tsx scripts/proof/creative-copilot-proof.ts --provider=glm --all --timeout-ms=120000 --max-tokens=4096 --out=.omx/proof/market-all-domain-sweep
+liminal market status
+```
+
+The launch sweep covers p5, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, and TextGen. HyperFrames saves HTML/GSAP composition artifacts, and Revideo code artifacts are generated; native rendered video/still capture is a separate follow-up.
+
 ## Current State
 
 This repo is a full-history clone of `KyaniteLabs/liminal`, seeded at:
