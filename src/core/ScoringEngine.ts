@@ -116,6 +116,10 @@ export interface ScoringStrategy {
   score(input: ScoringInput): ScoringResult | Promise<ScoringResult>;
 }
 
+export interface ScoringEngineOptions {
+  disableReliableLlmBoost?: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Built-in strategies
 // ---------------------------------------------------------------------------
@@ -428,8 +432,9 @@ export class LLMScoringStrategy implements ScoringStrategy {
 export class ScoringEngine {
   private strategies = new Map<string, ScoringStrategy>();
   private defaultStrategyName: string;
+  private disableReliableLlmBoost: boolean;
 
-  constructor(defaultStrategy: string = 'comprehensive', llm?: LLMClient) {
+  constructor(defaultStrategy: string = 'comprehensive', llm?: LLMClient, options: ScoringEngineOptions = {}) {
     // Register built-in strategies
     this.register(new ComprehensiveStrategy());
     this.register(new FastStrategy());
@@ -449,6 +454,7 @@ export class ScoringEngine {
     this.registerAlias('fast', 'keyword');
 
     this.defaultStrategyName = defaultStrategy;
+    this.disableReliableLlmBoost = options.disableReliableLlmBoost ?? false;
   }
 
   /** Register an alias name that maps to an existing strategy. */
@@ -564,7 +570,7 @@ export class ScoringEngine {
     const MIN_DIMENSIONS = 6;
     const dimensionCount = Object.keys(result.dimensions).length;
 
-    if (dimensionCount >= MIN_DIMENSIONS) {
+    if (dimensionCount >= MIN_DIMENSIONS || this.disableReliableLlmBoost) {
       return result; // Already sufficient coverage
     }
 
