@@ -1,6 +1,7 @@
 {
   "name": "liminal-sites",
   "version": "2.1.0",
+  "packageManager": "pnpm@10.24.0",
   "description": "Living website evolution engine seeded from Liminal",
   "type": "module",
   "main": "dist/index.js",
@@ -153,11 +154,13 @@
   },
   "overrides": {
     "basic-ftp": "5.3.1",
-    "hono": "4.12.16",
+    "hono": "4.12.18",
     "ip-address": "10.2.0",
     "picomatch": "4.0.4",
-    "protobufjs": "^7.5.5",
-    "vite": "8.0.9"
+    "protobufjs": "^7.5.8",
+    "vite": "8.0.9",
+    "@protobufjs/utf8": "1.1.1",
+    "ws": "8.20.1"
   },
   "bin": {
     "liminal-sites": "bin/liminal",
@@ -196,11 +199,13 @@
       "cookie": "0.7.0",
       "path-to-regexp": "8.4.0",
       "basic-ftp": "5.3.1",
-      "hono": "4.12.16",
+      "hono": "4.12.18",
       "ip-address": "10.2.0",
-      "protobufjs": "^7.5.5",
+      "protobufjs": "^7.5.8",
       "vite": "8.0.9",
-      "uuid": "^14.0.0"
+      "uuid": "^14.0.0",
+      "@protobufjs/utf8": "1.1.1",
+      "ws": "8.20.1"
     }
   }
 }
