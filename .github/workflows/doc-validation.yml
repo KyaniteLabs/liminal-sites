@@ -14,13 +14,13 @@ concurrency:
 
 jobs:
   validate-docs:
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Check Version Consistency
         run: node -e "const pkg = require('./package.json'); console.log('Package version:', pkg.version); console.log('OK');"
       - name: Check Documentation Links

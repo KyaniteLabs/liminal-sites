@@ -20,12 +20,13 @@ import { RevideoGenerator } from '../../src/generators/revideo/RevideoGenerator.
 import { ShaderGenerator } from '../../src/generators/glsl/ShaderGenerator.js';
 import { ThreeGenerator } from '../../src/generators/three/ThreeGenerator.js';
 import { HydraGenerator } from '../../src/generators/hydra/HydraGenerator.js';
+import { HTMLWebGenerator } from '../../src/generators/html/HTMLWebGenerator.js';
 import { HyperFramesGenerator } from '../../src/generators/hyperframes/HyperFramesGenerator.js';
 import { ASCIIArtGenerator } from '../../src/generators/ascii/ASCIIArtGenerator.js';
 import { TextGenerativeGenerator } from '../../src/generators/textgen/TextGenerativeGenerator.js';
 import { KineticGenerator } from '../../src/generators/kinetic/KineticGenerator.js';
 
-const LAUNCH_CREATIVE_DOMAINS = ['p5', 'svg', 'glsl', 'three', 'hydra', 'strudel', 'tone', 'revideo', 'hyperframes', 'ascii', 'kinetic', 'textgen'] as const;
+const LAUNCH_CREATIVE_DOMAINS = ['p5', 'three', 'shader', 'hydra', 'tone', 'strudel', 'svg', 'html', 'textgen', 'kinetic', 'ascii', 'revideo', 'hyperframes'] as const;
 type Domain = typeof LAUNCH_CREATIVE_DOMAINS[number];
 
 type GeneratorLike = { generate(prompt: string, options?: { signal?: AbortSignal; maxTokens?: number; useGeneratorTools?: boolean }): Promise<string> | string };
@@ -36,9 +37,10 @@ const PROMPTS: Record<Domain, string> = {
   strudel: 'create a Strudel live coding rhythm with kick snare hats and bass pattern',
   tone: 'create a Tone.js ambient synth sequence with reverb and a clear start affordance',
   revideo: 'create a Revideo timeline composition with animated title text and subtitle fade',
-  glsl: 'create a GLSL fragment shader with animated plasma colors',
+  shader: 'create a GLSL fragment shader with animated plasma colors',
   three: 'create a Three.js scene with a rotating cube and visible lighting',
   hydra: 'create a Hydra video synth patch with oscillator and kaleidoscope modulation',
+  html: 'create a compact single-file HTML landing section for a living website with semantic structure, responsive CSS, and one subtle animation',
   hyperframes: 'create a HyperFrames promo composition with GSAP timeline, staged image-like clips, title card, data-composition-id, clip timing attributes, and window.__timelines registration',
   ascii: 'create ASCII art of a moonlit mountain landscape',
   kinetic: 'create kinetic typography with animated words orbiting a luminous threshold',
@@ -46,7 +48,7 @@ const PROMPTS: Record<Domain, string> = {
 };
 
 const EXTENSIONS: Record<Domain, string> = {
-  p5: 'js', svg: 'svg', strudel: 'js', tone: 'html', revideo: 'tsx', glsl: 'frag', three: 'js', hydra: 'js', hyperframes: 'html', ascii: 'txt', kinetic: 'html', textgen: 'txt',
+  p5: 'js', three: 'js', shader: 'frag', hydra: 'js', tone: 'html', strudel: 'js', svg: 'svg', html: 'html', textgen: 'txt', kinetic: 'html', ascii: 'txt', revideo: 'tsx', hyperframes: 'html',
 };
 
 const DOMAIN_TIMEOUT_FLOORS_MS: Partial<Record<Domain, number>> = {
@@ -109,7 +111,11 @@ function parseArgs(argv: string[]): { outDir: string; domains: Domain[]; timeout
 }
 
 function parseDomains(value: string): Domain[] {
-  return value.split(',').map(item => item.trim()).filter(Boolean) as Domain[];
+  return value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map((domain) => domain === 'glsl' ? 'shader' : domain) as Domain[];
 }
 
 function errorMessage(error: unknown): string {
@@ -123,9 +129,10 @@ function createGenerator(domain: Domain, config: { baseUrl?: string; model?: str
     case 'strudel': return new StrudelGenerator(config);
     case 'tone': return new ToneGenerator(config);
     case 'revideo': return new RevideoGenerator(config);
-    case 'glsl': return new ShaderGenerator(config);
+    case 'shader': return new ShaderGenerator(config);
     case 'three': return new ThreeGenerator(config);
     case 'hydra': return new HydraGenerator(config);
+    case 'html': return new HTMLWebGenerator(config);
     case 'hyperframes': return new HyperFramesGenerator(config);
     case 'ascii': return new ASCIIArtGenerator(config);
     case 'kinetic': return new KineticGenerator(config);

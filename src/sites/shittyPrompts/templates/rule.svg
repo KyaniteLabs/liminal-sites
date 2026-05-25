@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" preserveAspectRatio="xMidYMid meet">
+  <rect width="1280" height="320" fill="#000"/>
+  <line x1="48" y1="64" x2="1232" y2="64" stroke="#E8E4D8" stroke-width="1"/>
+  <line x1="48" y1="68" x2="1232" y2="68" stroke="#E8E4D8" stroke-width="3"/>
+  <text x="640" y="175" font-family="JetBrains Mono, monospace" font-size="36" fill="#E8E4D8" text-anchor="middle">{{PROMPT_TEXT}}</text>
+  <line x1="48" y1="254" x2="1232" y2="254" stroke="#E8E4D8" stroke-width="3"/>
+  <line x1="48" y1="258" x2="1232" y2="258" stroke="#E8E4D8" stroke-width="1"/>
+</svg>
