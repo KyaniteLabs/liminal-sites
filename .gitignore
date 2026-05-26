@@ -4,9 +4,14 @@ package-lock.json
 
 # Build output
 dist/
-.tsbuildinfo
+*.tsbuildinfo
 dist-desktop/
 .desktop-package/
+.cache/
+.tmp/
+tmp/
+temp/
+*.tgz
 
 # Coverage
 coverage/
@@ -27,14 +32,24 @@ tmp-e2e/
 # OS
 .DS_Store
 Thumbs.db
+.AppleDouble
+.LSOverride
 
 # Logs
 *.log
 npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Keep committed audit evidence readable even though ad hoc logs stay ignored.
+!docs/**/*.log
 
 # Environment
 .env
-.env.local
+.env.*
+!.env.example
+!.env.dogfood
 
 # LiminalFS runtime database (SQLite)
 .liminal/
@@ -66,6 +81,8 @@ dogfood-temp/
 
 # Test results (generated artifacts)
 test-results/
+playwright-report/
+blob-report/
 
 # Landing page assets (build output)
 landing-*.png
@@ -75,9 +92,6 @@ live-p5-test.png
 
 # Stream evolution artifacts
 stream/
-
-# Generated HTML in docs
-docs/*.html
 
 # Compost heap generated HTML
 compost/heap/*.html
@@ -120,8 +134,14 @@ audit-*.png
 # oh-my-claudecode runtime state
 .omc/
 
-# oh-my-codex runtime state
-.omx/
+# oh-my-codex runtime state. Proof receipts and durable plans are versioned.
+.omx/*
+!.omx/context/
+!.omx/context/**
+!.omx/plans/
+!.omx/plans/**
+!.omx/proof/
+!.omx/proof/**
 
 # Agent session artifacts
 ISSUE-REPORT.md
@@ -135,7 +155,6 @@ test-api-export-temp/
 test-api-gallery-temp/
 test-gallery-temp/
 .omc/state/
-bubbletea/
 
 # Duplicate " 2" files (copy artifacts from agents/tools)
 * 2.*

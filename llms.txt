@@ -1,22 +1,28 @@
-# Liminal
+# Liminal Sites
 
-> Model-agnostic creative coding studio and agentic art workbench.
+> Living website evolution engine from KyaniteLabs.
 
-Liminal turns natural-language prompts into creative-code artifacts across p5.js, GLSL, Three.js, SVG, Hydra, Strudel, Tone.js, Revideo, ASCII, kinetic text, and other creative domains. It includes a chat-first Studio, CLI, TUI, multi-agent critique, taste learning, compost/dreaming systems, and self-improvement workflows.
+Homepage: https://kyanitelabs.github.io/liminal-sites/
+Repository: https://github.com/KyaniteLabs/liminal-sites
+Core engine: https://github.com/KyaniteLabs/liminal
+
+Liminal Sites helps operators refresh real websites through AI-assisted visual directions, taste memory, before-and-after previews, runtime skin exports, rollback receipts, and repo-native patch planning. It specializes the Liminal creative engine for website profiles, design systems, brand constraints, live preview, and MCP-accessible operator workflows.
 
 ## Use cases
-- AI-assisted creative coding
-- Generative art and shader iteration
-- Music and live-coding experiments
-- Model comparison for creative tasks
-- Creative-code evaluation and critique
-- Local-first artist workbench with provider flexibility
+- AI-assisted website redesign
+- Living website evolution after launch
+- Runtime CSS/JS skin generation
+- Design-system variation and comparison
+- Repo-native website patch planning
+- MCP tools for site operators and coding agents
 
 ## Key paths
 - `README.md`: public overview and quick start
-- `docs/`: launch, proof, architecture, and model-assimilation docs
-- `gui/`: Studio interface
-- `src/`: creative generation and orchestration code
+- `docs/index.html`: public landing page
+- `docs/COLLABORATOR_QUICKSTART.md`: operator quickstart
+- `docs/LIVING_SITES_VERTICAL_SLICES.md`: product slice inventory
+- `src/sites/`: website profile, variant, skin, preference, and repo-patch logic
+- `src/mcp/`: MCP server and site tools
 
 ## Keywords
-AI creative coding studio, generative art agent, LLM art workbench, creative coding CLI, p5.js AI generator, GLSL shader agent, Three.js generation, AI music coding, model-agnostic creative system.
+Liminal Sites, AI website design agent, living website engine, generative web design, runtime skin generator, AI design-system patching, website evolution tool, MCP website tools, KyaniteLabs.

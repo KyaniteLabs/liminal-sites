@@ -1,3 +1,5 @@
+> Historical note (2026-05-26): This intake was captured before the KyaniteLabs consolidation. The canonical public repository is now `KyaniteLabs/liminal-sites`; old `Pushing-Squares/liminal-sites` references below are historical evidence, not current routing.
+
         # Factory intake for issue #17: Backprop: compose operator abort signals with provider timeouts
 
         Repository: `Pushing-Squares/liminal-sites`
