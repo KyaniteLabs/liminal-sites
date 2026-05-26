@@ -9,11 +9,11 @@
   "license": "BUSL-1.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Pushing-Squares/liminal-sites.git"
+    "url": "git+https://github.com/KyaniteLabs/liminal-sites.git"
   },
-  "homepage": "https://github.com/Pushing-Squares/liminal-sites#readme",
+  "homepage": "https://kyanitelabs.github.io/liminal-sites/",
   "bugs": {
-    "url": "https://github.com/Pushing-Squares/liminal-sites/issues"
+    "url": "https://github.com/KyaniteLabs/liminal-sites/issues"
   },
   "files": [
     "dist",

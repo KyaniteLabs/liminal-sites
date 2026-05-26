@@ -1,81 +1,58 @@
 # Liminal Sites
 
-Liminal Sites is the dedicated repository for turning Liminal into a living website evolution product.
+[Public landing page](https://kyanitelabs.github.io/liminal-sites/) | [GitHub repository](https://github.com/KyaniteLabs/liminal-sites) | [AI discovery file](llms.txt)
 
-The product goal is simple:
+> Living website evolution for people who want a site that can keep learning after launch.
 
-> A website should not stay frozen after launch. Liminal Sites learns the owner's taste, generates visual directions, previews them safely, and turns the chosen direction into either a runtime skin or a reviewed source-code patch.
+Liminal Sites turns the Liminal creative engine toward websites. It helps an operator ingest a real site or brand brief, generate reviewable design directions, preview before-and-after states, remember taste decisions, and export either a runtime skin or a repo-native patch plan.
 
-## Current State
-
-This repo is a full-history clone of `KyaniteLabs/liminal`, seeded at:
+This is the official public KyaniteLabs repository for Liminal Sites. The canonical remote is:
 
 ```text
-cd3084799f2f3a7ef286e644ac3a890eef029bf6
+https://github.com/KyaniteLabs/liminal-sites.git
 ```
 
-That history is intentional. Base Liminal is still evolving, and shared fixes discovered here should be propagated back upstream instead of trapped in this product fork.
+## What It Does
 
-## Repository Relationship
+- Creates site profiles from URLs, local paths, brand briefs, constraints, and stack hints.
+- Generates visual directions with design tokens, CSS, optional JavaScript, screenshots, and receipts.
+- Lets operators compare variants, save preferences, rollback, and keep a visible decision history.
+- Exports runtime skin packages for safer adoption before source-code edits.
+- Plans repo-native website patches when the owner wants code changes instead of an injected skin.
+- Exposes the operator path through Studio, CLI commands, proof scripts, and the Liminal Sites MCP server.
 
-- `upstream`: `https://github.com/KyaniteLabs/liminal.git`
-- `origin`: `https://github.com/Pushing-Squares/liminal-sites.git`
-- source lineage: full Git history is preserved, not snapshotted
-- product boundary: this repo specializes the Liminal engine for living websites
+## Product Modes
 
-## First Product Shape
+| Mode | Best for | Output |
+| --- | --- | --- |
+| Runtime Skin Mode | Fast, reversible site refreshes | `liminal-skin.css`, optional JS, receipts, install notes |
+| Repo-Native PR Mode | Durable design-system evolution | Branch/patch plan, verification checklist, PR-ready handoff |
+| Operator Dashboard | Repeated site work | Profiles, variants, preferences, saved runs, rollback receipts |
+| MCP Mode | Agent-driven operation | Tools/resources for external agents and local MCP clients |
 
-Liminal Sites has two delivery modes:
-
-1. **Runtime Skin Mode**
-   Generate a reviewable CSS/JS skin that can be injected into an existing site without editing the source repo.
-
-2. **Repo-Native PR Mode**
-   Let Liminal inspect a website repo, evolve the design system, create a branch, run verification, and propose a PR with real code changes.
-
-Runtime Skin Mode is the safer MVP. Repo-Native PR Mode is the deeper product.
-
-## Backport Rule
-
-If a change fixes shared Liminal foundations, such as generation routing, preview rendering, provider truth, evaluation, filesystem persistence, or workbench reliability, it should be considered for upstream Liminal.
-
-See [docs/BACKPORT_POLICY.md](docs/BACKPORT_POLICY.md).
-
-## Immediate Implementation Plan
-
-See [docs/plans/2026-05-07-liminal-sites-repo-carveout.md](docs/plans/2026-05-07-liminal-sites-repo-carveout.md).
-
-## Development
-
-The inherited commands still work while the product is carved out. The canonical visible surfaces remain Studio for the GUI cockpit and Bubble Tea for the operator cockpit:
+## Quick Start
 
 ```bash
 pnpm install
-pnpm typecheck
-pnpm test
+pnpm build
 pnpm gui
 pnpm tui
+```
+
+Then open the Living Site tab in Studio. Use `pnpm tui` for the Bubble Tea operator cockpit. For the MCP surface:
+
+```bash
+liminal-sites-mcp
+```
+
+Proof commands for the current operator path:
+
+```bash
 pnpm proof:living-sites-operator
 pnpm proof:living-sites-full-liminal
 pnpm proof:living-sites-reliability
 pnpm proof:living-sites-sweep
 ```
-
-The inherited CLI entrypoint remains available as `liminal`; this package also exposes `liminal-sites` and `lsites` while the user-facing command shape is finalized.
-
-## Living Site Operator Path
-
-The first product slice is executable now:
-
-```bash
-pnpm build
-pnpm gui
-liminal-sites-mcp
-```
-
-Studio includes a Living Site tab for profile creation, real website ingestion, screenshot-backed design receipts, runtime-skin generation, aesthetic comparison, preference memory, evolution, Full Liminal creative composition, preview mounting, export, installable deployment packages, saved-site dashboard history, rollback receipts, operator runbooks with readiness and recovery checks, and repo-patch planning. The MCP server exposes the same operator path through tools and resources for external agents and local MCP clients.
-
-The full vertical-slice handoff is documented in [docs/LIVING_SITES_VERTICAL_SLICES.md](docs/LIVING_SITES_VERTICAL_SLICES.md). Start collaborators with [docs/COLLABORATOR_QUICKSTART.md](docs/COLLABORATOR_QUICKSTART.md) for usage instructions, capabilities, and current development state, then use [docs/LIVING_SITES_DEMO_GALLERY.md](docs/LIVING_SITES_DEMO_GALLERY.md) for the curated demo talk track. Run `pnpm proof:living-sites-full-liminal` for the strict before/after website dogfood proof, `pnpm proof:living-sites-reliability` for a multi-scenario reliability gallery, and `pnpm proof:living-sites-sweep` for the local visual, MCP, docs, and handoff receipt before calling the product journey complete.
 
 ## Ready-to-show market path
 
@@ -95,3 +72,35 @@ Market shorthand: p5, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, Hyp
 HyperFrames saves HTML/GSAP composition artifacts, and Revideo code artifacts are generated; native rendered video/still capture is a separate follow-up.
 
 Creative review language stays distinct: CreativeBoard critique means the 3-agent board (Minimalist / Expressionist / Technician). Runtime swarm language means 5 default runtime personas (Kai / Nova / Rex / Sam / Max). Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel.
+
+## Relationship To Liminal Core
+
+Liminal Sites keeps the inherited Liminal engine where it helps: generation routing, provider truth, preview rendering, evaluation, taste learning, filesystem persistence, and workbench telemetry. Website-specific product work stays here. Shared engine fixes should be considered for backport to [KyaniteLabs/liminal](https://github.com/KyaniteLabs/liminal).
+
+See [docs/BACKPORT_POLICY.md](docs/BACKPORT_POLICY.md).
+
+## User-Facing Docs
+
+- [Public landing page](https://kyanitelabs.github.io/liminal-sites/)
+- [Collaborator quickstart](docs/COLLABORATOR_QUICKSTART.md)
+- [Vertical slices](docs/LIVING_SITES_VERTICAL_SLICES.md)
+- [Demo gallery](docs/LIVING_SITES_DEMO_GALLERY.md)
+- [Backport policy](docs/BACKPORT_POLICY.md)
+
+## AI Discovery
+
+[`llms.txt`](llms.txt) gives AI assistants and search crawlers a compact summary of the product, public URLs, and best-fit keywords.
+
+Best-fit searches: AI website design agent, living website engine, generative web design, website evolution tool, runtime skin generator, AI design-system patching, MCP website tools, Liminal Sites.
+
+## Development Notes
+
+The inherited `liminal` CLI remains available while this product repo specializes around websites. This package also exposes `liminal-sites`, `lsites`, and `liminal-sites-mcp`.
+
+Current verification starts with:
+
+```bash
+pnpm check:doc-links
+pnpm typecheck
+pnpm proof:living-sites-operator
+```
