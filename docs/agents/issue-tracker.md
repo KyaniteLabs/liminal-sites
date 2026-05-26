@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and PRDs for this repo live in GitHub Issues for `Pushing-Squares/liminal-sites`. Use the `gh` CLI from inside this clone so the repo is inferred from `git remote -v`.
+Issues and PRDs for this repo live in GitHub Issues for `KyaniteLabs/liminal-sites`. Use the `gh` CLI from inside this clone so the repo is inferred from `git remote -v`.
 
 Shared-foundation fixes should also be evaluated for upstream `KyaniteLabs/liminal`; see `docs/BACKPORT_POLICY.md`.
 

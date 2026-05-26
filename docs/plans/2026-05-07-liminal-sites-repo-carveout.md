@@ -1,5 +1,7 @@
 # Liminal Sites Repository Carveout Implementation Plan
 
+> Current state (2026-05-26): The carveout identity work is complete enough for public routing. The canonical public repository is `KyaniteLabs/liminal-sites`; this plan is retained as implementation history, not as live repository setup guidance.
+
 **Goal:** Turn the full-history Liminal clone into a dedicated Liminal Sites product repository for living website evolution.
 
 **Architecture:** Preserve the inherited Liminal engine and add a website-specific layer around profiles, aesthetic variants, runtime skins, and repo-native PR workflows. Keep upstream Liminal configured as `upstream` so shared engine fixes can be backported cleanly.
