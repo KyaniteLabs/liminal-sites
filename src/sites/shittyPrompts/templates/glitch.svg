@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" preserveAspectRatio="xMidYMid meet">
+  <rect width="1280" height="320" fill="#000"/>
+  <text x="32" y="48" font-family="JetBrains Mono, monospace" font-size="11" fill="#E8E4D8" opacity="0.3">ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR</text>
+  <rect x="0" y="80" width="400" height="4" fill="#E8E4D8" opacity="0.15"/>
+  <rect x="600" y="100" width="680" height="2" fill="#E8E4D8" opacity="0.1"/>
+  <text x="640" y="165" font-family="JetBrains Mono, monospace" font-size="36" fill="#E8E4D8" text-anchor="middle" dx="3" dy="2" opacity="0.2">{{PROMPT_TEXT}}</text>
+  <text x="640" y="165" font-family="JetBrains Mono, monospace" font-size="36" fill="#E8E4D8" text-anchor="middle" dx="-2" dy="-1" opacity="0.2">{{PROMPT_TEXT}}</text>
+  <text x="640" y="165" font-family="JetBrains Mono, monospace" font-size="36" fill="#E8E4D8" text-anchor="middle">{{PROMPT_TEXT}}</text>
+  <rect x="0" y="200" width="900" height="2" fill="#E8E4D8" opacity="0.1"/>
+  <text x="32" y="296" font-family="JetBrains Mono, monospace" font-size="11" fill="#E8E4D8" opacity="0.3">ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR ERR</text>
+</svg>

@@ -15,6 +15,7 @@ import { applyBridgeProviderEnv, resolveBridgeProviderConfig, summarizeBridgeRun
 import { LLMClient } from '../dist/llm/LLMClient.js';
 import { logSecurityEvent } from '../dist/security/SecurityLogger.js';
 import { collectRepositoryOpportunityEvidence, scanGreenSystemOpportunities } from '../dist/improvement/OpportunityScanner.js';
+import { WebsiteEvolutionEngine, planSitePatch } from '../dist/sites/index.js';
 import { buildGuiBridgeInput } from './bridgeInput.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -125,6 +126,7 @@ function buildDeterministicOrganism(prompt, traits = {}, seed = {}) {
 
 // In-memory store for "Run in preview" so GET /preview can serve the code
 const previewStore = new Map();
+const livingSitePreviewStore = new Map();
 const tuiBridge = new TuiBridgeService();
 
 const P5_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
@@ -152,6 +154,7 @@ function setStudioCommonSecurityHeaders(res) {
 
 function setPreviewSecurityHeaders(res, options = {}) {
   const organism = options.profile === 'organism';
+  const frameAncestors = ["'self'", ...configuredFrameAncestors()].join(' ');
   setStudioCommonSecurityHeaders(res);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Content-Security-Policy', [
@@ -166,11 +169,20 @@ function setPreviewSecurityHeaders(res, options = {}) {
     "connect-src 'none'",
     "font-src 'none'",
     "frame-src 'none'",
-    "frame-ancestors 'self'",
+    `frame-ancestors ${frameAncestors}`,
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'none'",
   ].join('; '));
+}
+
+function configuredFrameAncestors() {
+  const defaults = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+  const configured = String(process.env.LIMINAL_STUDIO_FRAME_ANCESTORS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => /^https?:\/\/[a-zA-Z0-9.-]+(?::\d+)?$/.test(value));
+  return [...new Set([...defaults, ...configured])];
 }
 
 function escapeHtml(value) {
@@ -184,6 +196,187 @@ function escapeHtml(value) {
 
 function escapeScript(value) {
   return String(value).replace(/<\/script>/gi, '<\\/script>');
+}
+
+function findLivingSiteVariant(engine, siteId, skinId) {
+  return engine.listVariants(siteId).then((variants) => {
+    const spec = variants.find((variant) => variant.skinId === skinId);
+    if (!spec) {
+      const error = new Error(`Skin ${skinId} was not found for site ${siteId}`);
+      error.statusCode = 404;
+      throw error;
+    }
+    return spec;
+  });
+}
+
+function findLivingSiteCreativeComposition(engine, siteId, compositionId) {
+  return engine.getCreativeComposition(siteId, compositionId).catch((err) => {
+    const error = new Error(err?.message || `Creative composition ${compositionId} was not found for site ${siteId}`);
+    error.statusCode = err?.code === 'ENOENT' ? 404 : err?.statusCode || 500;
+    throw error;
+  });
+}
+
+function validateLivingSiteArtifactPath(rootDir, artifactPath) {
+  const root = fs.realpathSync(path.resolve(rootDir));
+  const resolved = fs.realpathSync(path.resolve(artifactPath));
+  const relative = path.relative(root, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    const error = new Error('Unsafe living-site artifact path');
+    error.statusCode = 403;
+    throw error;
+  }
+  return resolved;
+}
+
+function renderLivingSitePreview(spec, version, composition) {
+  const safeName = escapeHtml(spec.name || 'Living site');
+  const safePrompt = escapeHtml(spec.prompt || '');
+  const score = typeof spec.quality?.score === 'number' ? spec.quality.score.toFixed(2) : 'n/a';
+  const safeCss = spec.runtime?.css || '';
+  const safeCreativeCss = composition?.runtime?.css || '';
+  const safeJs = escapeScript(spec.runtime?.js || '');
+  const safeCreativeJs = escapeScript(composition?.runtime?.js || '');
+  const safeCreativeStatus = composition ? ` + ${escapeHtml((composition.domains || []).join(' + '))}` : '';
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${safeName} v${version}</title>
+  <style>
+    ${safeCss}
+    ${safeCreativeCss}
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--liminal-site-font-body, ui-sans-serif, system-ui);
+      background: var(--liminal-site-bg, #0b0d12);
+      color: var(--liminal-site-text, #eef2ff);
+      overflow-x: hidden;
+    }
+    .living-preview {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: clamp(20px, 4vw, 52px);
+      gap: clamp(28px, 5vw, 64px);
+    }
+    .living-preview__nav,
+    .living-preview__metrics,
+    .living-preview__card {
+      border: 1px solid var(--liminal-site-line, rgba(255,255,255,0.18));
+      background: color-mix(in srgb, var(--liminal-site-surface, #151822) 78%, transparent);
+      backdrop-filter: blur(16px);
+    }
+    .living-preview__nav {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 16px;
+      border-radius: calc(var(--liminal-site-radius, 12px) * 0.8);
+    }
+    .living-preview__brand { font-weight: 700; letter-spacing: 0; }
+    .living-preview__status { color: var(--liminal-site-muted, #a7b0c2); font-size: 0.82rem; }
+    .living-preview__hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: clamp(18px, 4vw, 42px);
+      align-items: end;
+    }
+    .living-preview h1 {
+      margin: 0;
+      max-width: 12ch;
+      color: var(--liminal-site-text, #eef2ff);
+      font-size: clamp(3rem, 11vw, 8rem);
+      line-height: 0.9;
+      letter-spacing: 0;
+    }
+    .living-preview p {
+      color: var(--liminal-site-muted, #a7b0c2);
+      line-height: 1.55;
+      max-width: 60ch;
+    }
+    .living-preview__card {
+      display: grid;
+      gap: 18px;
+      padding: clamp(18px, 3vw, 28px);
+      border-radius: var(--liminal-site-radius, 12px);
+    }
+    .living-preview__pill {
+      width: max-content;
+      border: 1px solid var(--liminal-site-line, rgba(255,255,255,0.18));
+      color: var(--liminal-site-accent, #8ee6ff);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+    }
+    .living-preview__metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      border-radius: var(--liminal-site-radius, 12px);
+      overflow: hidden;
+    }
+    .living-preview__metrics div {
+      padding: 18px;
+      background: color-mix(in srgb, var(--liminal-site-surface, #151822) 86%, transparent);
+    }
+    .living-preview__metrics span {
+      display: block;
+      color: var(--liminal-site-muted, #a7b0c2);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .living-preview__metrics strong { display: block; margin-top: 8px; font-size: 1.5rem; }
+    @media (max-width: 760px) {
+      .living-preview__hero { grid-template-columns: 1fr; }
+      .living-preview h1 { max-width: 9ch; font-size: clamp(3rem, 18vw, 5rem); }
+      .living-preview__metrics { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="liminal-sites-active">
+  <main class="living-preview">
+    <nav class="living-preview__nav">
+      <div class="living-preview__brand">${safeName}</div>
+      <div class="living-preview__status">living skin ${escapeHtml(spec.skinId)}${safeCreativeStatus}</div>
+    </nav>
+    <section class="living-preview__hero">
+      <div>
+        <h1>Website that keeps learning.</h1>
+        <p>${safePrompt || 'This preview shows the generated runtime skin mounted on a realistic first-viewport website shell.'}</p>
+        <div class="living-preview__metrics">
+          <div><span>Quality</span><strong>${score}</strong></div>
+          <div><span>Motion</span><strong>${escapeHtml(spec.tokens?.motion?.rhythm || 'pulse')}</strong></div>
+          <div><span>Density</span><strong>${escapeHtml(spec.tokens?.shape?.density || 'balanced')}</strong></div>
+        </div>
+      </div>
+      <article class="living-preview__card">
+        <span class="living-preview__pill">${escapeHtml(spec.provenance?.source || 'generated')}</span>
+        <h2>Operator receipt</h2>
+        <p>Palette, typography, motion, shape, provenance, and runtime behavior are all exported as reviewable assets.</p>
+      </article>
+    </section>
+  </main>
+  <script>
+    window.fetch = undefined;
+    window.XMLHttpRequest = undefined;
+    window.WebSocket = undefined;
+    window.EventSource = undefined;
+    window.open = undefined;
+    ${safeJs}
+    ${safeCreativeJs}
+  </script>
+</body>
+</html>`;
 }
 
 function parseOrganismPreview(code) {
@@ -381,6 +574,10 @@ function validateSSEOrigin(req, res, next) {
  */
 export function createApp(configPath, port = 5174) {
   const app = express();
+  const livingSitesRoot = process.env.LIMINAL_SITES_ROOT || path.join(cwd, '.liminal-sites');
+  const livingSiteEngine = new WebsiteEvolutionEngine({
+    rootDir: livingSitesRoot,
+  });
   app.disable('x-powered-by');
   app.use((_req, res, next) => {
     setStudioCommonSecurityHeaders(res);
@@ -444,7 +641,7 @@ export function createApp(configPath, port = 5174) {
     // ATELIER_CONFIG_PATH is legacy compatibility for pre-Liminal installs.
     configPath || process.env.LIMINAL_CONFIG_PATH || process.env.ATELIER_CONFIG_PATH || path.join(process.env.HOME || '', '.liminal', 'config.json');
 
-  const backendOrigin = `http://localhost:${port}`;
+  const backendOrigin = process.env.LIMINAL_STUDIO_BACKEND_ORIGIN || `http://127.0.0.1:${port}`;
 
   app.post('/api/tui/session', (_req, res) => {
     try {
@@ -642,6 +839,333 @@ export function createApp(configPath, port = 5174) {
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
+  });
+
+  app.post('/api/living-sites/profile', async (req, res) => {
+    try {
+      const profile = await livingSiteEngine.createProfile(req.body || {});
+      res.status(200).json({ profile });
+    } catch (err) {
+      res.status(400).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/projects', async (_req, res) => {
+    try {
+      const projects = await livingSiteEngine.listProjectSummaries();
+      res.status(200).json({ projects });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/variants', async (req, res) => {
+    try {
+      const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
+      if (!prompt) return res.status(400).json({ error: 'prompt is required' });
+      const run = await livingSiteEngine.generateVariants(req.params.siteId, {
+        prompt,
+        count: req.body?.count,
+        mode: req.body?.mode,
+      });
+      res.status(200).json({ run });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/ingest', async (req, res) => {
+    try {
+      const ingestion = await livingSiteEngine.ingestSource(req.params.siteId, {
+        sourceUrl: req.body?.sourceUrl,
+        sourcePath: req.body?.sourcePath,
+        captureVisual: req.body?.captureVisual,
+        viewport: req.body?.viewport,
+      });
+      res.status(200).json({ ingestion });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/ingestions', async (req, res) => {
+    try {
+      const ingestions = await livingSiteEngine.listIngestions(req.params.siteId);
+      res.status(200).json({ ingestions });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/ingestions/:ingestionId/screenshot', async (req, res) => {
+    try {
+      const ingestion = await livingSiteEngine.getIngestion(req.params.siteId, req.params.ingestionId);
+      if (!ingestion.screenshotPath) return res.status(404).json({ error: 'ingestion screenshot was not captured' });
+      const screenshotPath = validateLivingSiteArtifactPath(livingSitesRoot, ingestion.screenshotPath);
+      res.type('png').sendFile(screenshotPath);
+    } catch (err) {
+      res.status(err.statusCode || 404).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/aesthetic-assessment', async (req, res) => {
+    try {
+      const assessment = await livingSiteEngine.compareAesthetics(req.params.siteId, {
+        skinIds: req.body?.skinIds,
+        recordWinnerPreference: req.body?.recordWinnerPreference,
+      });
+      res.status(200).json({ assessment });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/aesthetic-assessments', async (req, res) => {
+    try {
+      const assessments = await livingSiteEngine.listAestheticAssessments(req.params.siteId);
+      res.status(200).json({ assessments });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/creative-composition', async (req, res) => {
+    try {
+      const composition = await livingSiteEngine.composeCreativeSite(req.params.siteId, {
+        skinId: req.body?.skinId,
+        prompt: req.body?.prompt,
+        strategy: req.body?.strategy,
+        domainMode: req.body?.domainMode,
+        domains: req.body?.domains,
+        candidatesPerDomain: req.body?.candidatesPerDomain,
+        maxIterations: req.body?.maxIterations,
+        includeAudio: req.body?.includeAudio,
+        includeVideoAssets: req.body?.includeVideoAssets,
+      });
+      res.status(200).json({ composition });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/capabilities', async (req, res) => {
+    try {
+      const capabilities = await livingSiteEngine.inspectCreativeCapabilities(req.params.siteId);
+      res.status(200).json({ capabilities });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/creative-compositions', async (req, res) => {
+    try {
+      const compositions = await livingSiteEngine.listCreativeCompositions(req.params.siteId);
+      res.status(200).json({ compositions });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/creative-compositions/:compositionId/assets/:fileName', async (req, res) => {
+    try {
+      const composition = await findLivingSiteCreativeComposition(livingSiteEngine, req.params.siteId, req.params.compositionId);
+      const fileMap = {
+        'liminal-creative.css': { type: 'css', body: composition.runtime.css },
+        'liminal-creative.js': { type: 'js', body: composition.runtime.js },
+        'manifest.json': { type: 'json', body: `${JSON.stringify(composition.runtime.manifest, null, 2)}\n` },
+        'liminal-creative-manifest.json': { type: 'json', body: `${JSON.stringify(composition.runtime.manifest, null, 2)}\n` },
+      };
+      const asset = fileMap[req.params.fileName];
+      if (!asset) return res.status(404).json({ error: 'creative composition asset was not found' });
+      res.type(asset.type).send(asset.body);
+    } catch (err) {
+      res.status(err.statusCode || 404).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/deployment-package', async (req, res) => {
+    try {
+      const publicBaseUrl = req.body?.publicBaseUrl || `${req.protocol}://${req.get('host')}`;
+      const deployment = await livingSiteEngine.createDeploymentPackage(req.params.siteId, {
+        skinId: req.body?.skinId,
+        compositionId: req.body?.compositionId,
+        publicBaseUrl,
+      });
+      res.status(200).json({ deployment });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/deployments', async (req, res) => {
+    try {
+      const deployments = await livingSiteEngine.listDeploymentPackages(req.params.siteId);
+      res.status(200).json({ deployments });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/deployments/:deploymentId/assets/:fileName', async (req, res) => {
+    try {
+      const deployment = await livingSiteEngine.getDeploymentPackage(req.params.siteId, req.params.deploymentId);
+      const fileMap = {
+        'liminal-skin.css': deployment.files.cssPath,
+        'liminal-skin.js': deployment.files.jsPath,
+        'liminal-creative.css': deployment.files.creativeCssPath,
+        'liminal-creative.js': deployment.files.creativeJsPath,
+        'liminal-creative-manifest.json': deployment.files.creativeManifestPath,
+        'manifest.json': deployment.files.manifestPath,
+        'install.html': deployment.files.installHtmlPath,
+        'README.md': deployment.files.readmePath,
+      };
+      const filePath = fileMap[req.params.fileName];
+      if (!filePath) return res.status(404).json({ error: 'deployment asset was not found' });
+      const safePath = validateLivingSiteArtifactPath(livingSitesRoot, filePath);
+      if (req.params.fileName.endsWith('.css')) res.type('css');
+      if (req.params.fileName.endsWith('.js')) res.type('js');
+      if (req.params.fileName.endsWith('.json')) res.type('json');
+      if (req.params.fileName.endsWith('.html')) res.type('html');
+      if (req.params.fileName.endsWith('.md')) res.type('text/plain');
+      res.sendFile(safePath);
+    } catch (err) {
+      res.status(err.statusCode || 404).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/rollback', async (req, res) => {
+    try {
+      const rollback = await livingSiteEngine.createRollbackReceipt(req.params.siteId, {
+        skinId: req.body?.skinId,
+        reason: req.body?.reason,
+      });
+      res.status(200).json({ rollback });
+    } catch (err) {
+      res.status(err.statusCode || 400).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/rollbacks', async (req, res) => {
+    try {
+      const rollbacks = await livingSiteEngine.listRollbackReceipts(req.params.siteId);
+      res.status(200).json({ rollbacks });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/operator-runbook', async (req, res) => {
+    try {
+      const runbook = await livingSiteEngine.createOperatorRunbook(req.params.siteId, {
+        skinId: req.body?.skinId,
+      });
+      res.status(200).json({ runbook });
+    } catch (err) {
+      res.status(err.statusCode || 400).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/operator-runbooks', async (req, res) => {
+    try {
+      const runbooks = await livingSiteEngine.listOperatorRunbooks(req.params.siteId);
+      res.status(200).json({ runbooks });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/preferences', async (req, res) => {
+    try {
+      const preference = await livingSiteEngine.recordPreference({
+        siteId: req.params.siteId,
+        skinId: req.body?.skinId,
+        kind: req.body?.kind,
+        note: req.body?.note,
+      });
+      res.status(200).json({ preference });
+    } catch (err) {
+      res.status(err.statusCode || 400).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/evolve', async (req, res) => {
+    try {
+      const run = await livingSiteEngine.evolve(req.params.siteId, {
+        prompt: req.body?.prompt,
+        count: req.body?.count,
+      });
+      res.status(200).json({ run });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/export', async (req, res) => {
+    try {
+      const skinId = typeof req.body?.skinId === 'string' ? req.body.skinId : '';
+      if (!skinId) return res.status(400).json({ error: 'skinId is required' });
+      const result = await livingSiteEngine.exportRuntimeSkin(req.params.siteId, skinId, req.body?.outputDir);
+      res.status(200).json({ export: result });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/export-creative', async (req, res) => {
+    try {
+      const compositionId = typeof req.body?.compositionId === 'string' ? req.body.compositionId : '';
+      if (!compositionId) return res.status(400).json({ error: 'compositionId is required' });
+      const result = await livingSiteEngine.exportCreativeComposition(req.params.siteId, compositionId, req.body?.outputDir);
+      res.status(200).json({ export: result });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/plan-patch', async (req, res) => {
+    try {
+      const skinId = typeof req.body?.skinId === 'string' ? req.body.skinId : '';
+      const repoRoot = typeof req.body?.repoRoot === 'string' ? req.body.repoRoot : '';
+      if (!skinId || !repoRoot) return res.status(400).json({ error: 'skinId and repoRoot are required' });
+      const spec = await findLivingSiteVariant(livingSiteEngine, req.params.siteId, skinId);
+      const composition = typeof req.body?.compositionId === 'string'
+        ? await findLivingSiteCreativeComposition(livingSiteEngine, req.params.siteId, req.body.compositionId)
+        : undefined;
+      const plan = await planSitePatch({ repoRoot, spec, composition });
+      res.status(200).json({ plan });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/preview', async (req, res) => {
+    try {
+      const skinId = typeof req.body?.skinId === 'string' ? req.body.skinId : '';
+      if (!skinId) return res.status(400).json({ error: 'skinId is required' });
+      const spec = await findLivingSiteVariant(livingSiteEngine, req.params.siteId, skinId);
+      const composition = typeof req.body?.compositionId === 'string'
+        ? await findLivingSiteCreativeComposition(livingSiteEngine, req.params.siteId, req.body.compositionId)
+        : undefined;
+      const version = Date.now();
+      livingSitePreviewStore.set(version, { spec, composition });
+      res.status(200).json({ url: `${backendOrigin}/living-site-preview?version=${version}` });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/living-site-preview', (req, res) => {
+    const version = Math.max(1, parseInt(String(req.query.version), 10) || 1);
+    const storedPreview = livingSitePreviewStore.get(version);
+    const spec = storedPreview?.spec ?? storedPreview;
+    const composition = storedPreview?.composition;
+    if (!spec) {
+      setPreviewSecurityHeaders(res);
+      res.status(404).send('<!DOCTYPE html><html><body><main>Living site preview expired or missing.</main></body></html>');
+      return;
+    }
+    setPreviewSecurityHeaders(res);
+    res.send(renderLivingSitePreview(spec, version, composition));
   });
 
   // Run in preview: store code and return URL to preview it

@@ -3,6 +3,12 @@
 
 set -euo pipefail
 
+if ! command -v rg >/dev/null 2>&1; then
+    echo "ERROR: ripgrep (rg) is required for orphan source checks." >&2
+    echo "Install ripgrep before running pnpm check:orphans." >&2
+    exit 2
+fi
+
 orphans=0
 for file in $(find src -name '*.ts' -not -name 'index.ts' -not -name '*.d.ts' 2>/dev/null || true); do
     basename=$(basename "$file" .ts)

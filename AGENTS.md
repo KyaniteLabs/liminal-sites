@@ -1,3 +1,17 @@
+
+
+<!-- EMPOWER_ORCHESTRATOR:START -->
+Factory automation is allowed only when the operator can still understand and recover from what is about to happen.
+Before dispatching automation or creating a durable system change, state the four-question blast-radius check:
+
+1. **Scale** — how many repositories, files, jobs, runners, users, or environments can this touch?
+2. **Severity** — what is the worst plausible breakage if this is wrong?
+3. **Reversibility** — how quickly can the operator roll it back or stop it?
+4. **Predictability** — is the system deterministic enough to trust unattended execution?
+
+If any answer is unclear, narrow the action, add a dry run, or require explicit operator confirmation before continuing.
+<!-- EMPOWER_ORCHESTRATOR:END -->
+
 # AGENTS.md — Liminal Sites Agent Instructions
 
 ## Liminal Sites Overlay
@@ -8,7 +22,7 @@ Work here has two categories:
 - **Product-specific:** website evolution, runtime skins, site adapters, MCP surface, repo-native PR workflows, and Liminal Sites branding stay in this repo.
 - **Shared foundation:** fixes to generation, routing, preview, provider truth, evaluation, persistence, workbench reliability, or safety gates must be considered for backport to upstream Liminal.
 
-Use `upstream` for the original Liminal remote and `origin` for the dedicated Liminal Sites remote once created. Do not silently strand shared Liminal fixes here.
+Use `upstream` for the original Liminal remote and `origin` for the dedicated personal Liminal Sites remote. Do not silently strand shared Liminal fixes here.
 
 **Last Updated:** 2026-04-15
 
@@ -34,7 +48,7 @@ Codex should use only the active Matt Pocock subset: `setup-matt-pocock-skills`,
 
 ### Issue tracker
 
-Issues are tracked in GitHub Issues for `KyaniteLabs/liminal-sites`; see `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues for `simongonzalezdc/liminal-sites`; see `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

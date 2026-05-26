@@ -30,6 +30,7 @@ const CuratorMode = React.lazy(() => import('./components/CuratorMode').then((mo
 const ActivityDashboard = React.lazy(() => import('./components/ActivityDashboard').then((module) => ({ default: module.ActivityDashboard })));
 const CompostVisualizer = React.lazy(() => import('./components/CompostVisualizer').then((module) => ({ default: module.CompostVisualizer })));
 const OperatorCockpit = React.lazy(() => import('./components/OperatorCockpit').then((module) => ({ default: module.OperatorCockpit })));
+const LivingSiteStudio = React.lazy(() => import('./components/LivingSiteStudio').then((module) => ({ default: module.LivingSiteStudio })));
 
 // State types
 interface MergeProposal {
@@ -185,6 +186,7 @@ export default function App() {
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [createRunError, setCreateRunError] = useState<string | null>(null);
   const [failedPreviewSrc, setFailedPreviewSrc] = useState<string | null>(null);
+  const [livingSiteRunSignal, setLivingSiteRunSignal] = useState<number>(0);
   const [improveReport, setImproveReport] = useState<ImproveReport | null>(null);
   const [improveLoading, setImproveLoading] = useState<boolean>(false);
   const [improveError, setImproveError] = useState<string | null>(null);
@@ -770,6 +772,8 @@ export default function App() {
     ? 'Connecting'
     : activeMode.id === 'improve'
       ? improveLoading ? 'Scanning' : 'Scan'
+    : activeMode.id === 'living'
+      ? 'Generate'
     : bridge.submitting || runStatus === 'running'
       ? createExecutionMode === 'draft' ? 'Generating' : 'Polishing'
       : createExecutionMode === 'draft' ? 'Generate' : 'Polish';
@@ -784,6 +788,8 @@ export default function App() {
     ? 'Preview unavailable'
     : bridgeSummary.active
       ? bridgeSummary.stageTitle
+      : activeMode.id === 'living'
+        ? 'No living preview yet'
       : runStatus === 'running'
         ? 'Generating'
         : 'No artifact yet';
@@ -791,6 +797,8 @@ export default function App() {
     ? bridgeSummary.stageSubtitle
     : bridgeSummary.active
       ? bridgeSummary.stageSubtitle
+      : activeMode.id === 'living'
+        ? 'Generate a living-site skin and mount the selected preview.'
       : 'Send a creative prompt; live output will appear here.';
   const clarificationRequest = activeMode.id === 'generate' ? latestClarificationRequest(bridge.events) : null;
   const cognitiveReceipt = activeMode.id === 'generate' ? latestCognitiveReceipt(bridge.events) : null;
@@ -808,6 +816,10 @@ export default function App() {
   const handleWorkbenchRun = () => {
     if (activeMode.id === 'improve') {
       void scanImproveOpportunities();
+      return;
+    }
+    if (activeMode.id === 'living') {
+      setLivingSiteRunSignal((value) => value + 1);
       return;
     }
     if (activeMode.id === 'generate') {
@@ -1267,7 +1279,7 @@ export default function App() {
       onPromptChange={setCreatePrompt}
       onRun={handleWorkbenchRun}
       onCancelRun={bridgeSummary.active ? () => void bridge.cancelCurrent() : undefined}
-      runDisabled={activeMode.id === 'improve' ? improveLoading : bridge.submitting || runStatus === 'running' || !createPrompt.trim() || (runNeedsBridgeSession && !bridge.session)}
+      runDisabled={activeMode.id === 'improve' ? improveLoading : activeMode.id === 'living' ? !createPrompt.trim() : bridge.submitting || runStatus === 'running' || !createPrompt.trim() || (runNeedsBridgeSession && !bridge.session)}
       stageBusy={bridgeSummary.active || runStatus === 'running'}
       artifactReady={activeMode.id === 'generate' && hasSyncTarget}
       runLabel={bridge.submitting ? 'Sending' : bridge.session?.pendingAction ? 'Review' : runLabel}
@@ -1563,6 +1575,15 @@ export default function App() {
             </div>
           )}
         </div>
+      )}
+
+      {activeTab === 'livingSite' && (
+        <LivingSiteStudio
+          apiBase={API}
+          prompt={createPrompt}
+          runSignal={livingSiteRunSignal}
+          onPreview={(url, previewError) => dispatchLive(setPreviewRunResult(url, previewError))}
+        />
       )}
 
       {activeTab === 'curator' && (
