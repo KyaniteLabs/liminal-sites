@@ -176,7 +176,7 @@
     "lim": "bin/liminal"
   },
   "optionalDependencies": {
-    "@hyperframes/producer": "^0.6.33",
+    "@hyperframes/producer": "^0.6.46",
     "@revideo/2d": "^0.10.4",
     "@revideo/core": "^0.10.4",
     "@revideo/ffmpeg": "^0.10.4",
