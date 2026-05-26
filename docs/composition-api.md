@@ -19,6 +19,24 @@
 
 The Composition System enables you to combine outputs from multiple Liminal generators into editable, composable projects. Think of it like a Photoshop or After Effects for creative coding — each generator output becomes a layer that can be positioned, animated, and blended with others.
 
+### Living Sites Full Liminal Mode
+
+Living Sites uses the composition system through `WebsiteEvolutionEngine.composeCreativeSite`:
+
+```typescript
+await engine.composeCreativeSite(siteId, {
+  skinId,
+  strategy: 'full-liminal',
+  domainMode: 'all',
+  candidatesPerDomain: 1,
+  maxIterations: 2,
+  includeAudio: true,
+  includeVideoAssets: true,
+});
+```
+
+The API route `POST /api/living-sites/:siteId/creative-composition` and MCP tool `liminal_site_compose_creative` expose the same fields. The response includes a `capabilityMatrix`, `rejectedCandidates`, selected `layers`, render/scoring receipts, and an installable runtime manifest. The MCP resource `liminal://sites/{siteId}/capabilities` returns the current capability inventory and latest composition receipt.
+
 ### Key Concepts
 
 #### Layers

@@ -833,3 +833,6 @@ export type {
   LayerManagerOptions,
   LayerAdapter,
 } from './composition/index.js';
+
+export * from './sites/index.js';
+export * from './mcp/index.js';

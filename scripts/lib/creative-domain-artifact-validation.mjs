@@ -3,9 +3,11 @@ import path from 'node:path';
 const EXPECTED_EXTENSIONS = {
   p5: '.js',
   svg: '.svg',
+  shader: '.frag',
   glsl: '.frag',
   three: '.js',
   hydra: '.js',
+  html: '.html',
   strudel: '.js',
   tone: '.html',
   revideo: '.tsx',
@@ -48,6 +50,7 @@ function domainChecks(domain, source) {
       addCheck(checks, 'svg-close', /<\/svg>\s*$/i.test(trimmed), 'missing closing </svg>');
       addCheck(checks, 'svg-visible-shape', /<(path|circle|rect|line|polyline|polygon|ellipse|text)\b/i.test(source), 'missing visible SVG shape');
       break;
+    case 'shader':
     case 'glsl':
       addCheck(checks, 'glsl-main', /\bvoid\s+main\s*\(/.test(source), 'missing void main()');
       addCheck(checks, 'glsl-output', /\b(gl_FragColor|fragColor)\b/.test(source), 'missing fragment output');
@@ -62,6 +65,13 @@ function domainChecks(domain, source) {
     case 'hydra':
       addCheck(checks, 'hydra-source', /\b(osc|shape|noise|voronoi|gradient|solid)\s*\(/.test(source), 'missing Hydra visual source');
       addCheck(checks, 'hydra-output', /\.out\s*\(|\brender\s*\(/.test(source), 'missing Hydra out()/render()');
+      break;
+    case 'html':
+      addCheck(checks, 'html-shell', /<!doctype html>|<html[\s>]/i.test(source), 'missing HTML shell');
+      addCheck(checks, 'html-head', /<head[\s>][\s\S]*<\/head>/i.test(source), 'missing complete <head>');
+      addCheck(checks, 'html-body', /<body[\s>][\s\S]*<\/body>/i.test(source), 'missing complete <body>');
+      addCheck(checks, 'html-style', /<style[\s>]|style=|class=/i.test(source), 'missing styling');
+      addCheck(checks, 'html-visible-copy', />[^<]{12,}</.test(source), 'missing visible copy');
       break;
     case 'strudel':
       addCheck(checks, 'strudel-pattern', /\b(s|note|stack|sound)\s*\(/.test(source), 'missing Strudel pattern function');

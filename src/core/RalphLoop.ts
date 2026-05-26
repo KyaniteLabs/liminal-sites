@@ -76,6 +76,7 @@ import { AmbiguityDetector } from './AmbiguityDetector.js';
 import { env } from '../utils/env.js';
 import { Provider } from '../types/providers.js';
 import { LiminalError } from '../errors/index.js';
+import { isAbortError } from '../utils/abort.js';
 
 export type { LoopOptions, LoopResult, IterationContext, NormalizedLoopOptions };
 
@@ -150,12 +151,6 @@ function generationEvaluationFromQualityEvaluation(evaluation: RalphQualityEvalu
       : undefined),
     reasoning: evaluation.evaluatorReasoning ?? extractScoringReasoning(evaluation),
   };
-}
-
-function createRalphScoringEngine(defaultStrategy: string): ScoringEngine {
-  return new ScoringEngine(defaultStrategy, undefined, {
-    disableReliableLlmBoost: process.env.NODE_ENV === 'test' || process.env.LIMINAL_CI_FAST === '1',
-  });
 }
 
 export class RalphLoop {
@@ -664,7 +659,7 @@ export class RalphLoop {
                       );
                     }
                     Logger.warn('RalphLoop', 'Browser render infra unavailable, falling back to legacy scoring for candidate');
-                    const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                    const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                     const quickEvaluation = await scoringEngine.scoreReliable({
                       output: candidate.code,
                       criteria: normalizedOptions.evaluationCriteria,
@@ -693,7 +688,7 @@ export class RalphLoop {
                         );
                       }
                       Logger.warn('RalphLoop', 'Evaluator LLM unavailable for rendered-evidence scoring, falling back to legacy scoring for candidate');
-                      const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                      const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                       const quickEvaluation = await scoringEngine.scoreReliable({
                         output: candidate.code,
                         criteria: normalizedOptions.evaluationCriteria,
@@ -711,7 +706,7 @@ export class RalphLoop {
                     }
                   }
                 } else {
-                  const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                  const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                   const quickEvaluation = await scoringEngine.scoreReliable({
                     output: candidate.code,
                     criteria: normalizedOptions.evaluationCriteria,
@@ -857,7 +852,7 @@ export class RalphLoop {
                 );
               }
               Logger.warn('RalphLoop', 'Browser render infra unavailable, falling back to legacy scoring');
-              const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+              const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
               const quickEvaluation = await scoringEngine.scoreReliable(
                 {
                   output: currentCode,
@@ -888,7 +883,7 @@ export class RalphLoop {
                   );
                 }
                 Logger.warn('RalphLoop', 'Evaluator LLM unavailable for rendered-evidence scoring, falling back to legacy scoring');
-                const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                 const quickEvaluation = await scoringEngine.scoreReliable(
                   {
                     output: currentCode,
@@ -908,7 +903,7 @@ export class RalphLoop {
             }
           } else {
             // legacy mode
-            const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+            const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
             evaluation = await scoringEngine.scoreReliable(
               {
                 output: currentCode,
@@ -978,7 +973,7 @@ export class RalphLoop {
                     });
 
                     if (renderEvidence.infraUnavailable) {
-                      const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                      const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                       const quickRepairEval = await scoringEngine.scoreReliable({
                         output: repairCode,
                         criteria: normalizedOptions.evaluationCriteria,
@@ -1007,7 +1002,7 @@ export class RalphLoop {
                           );
                         }
                         Logger.warn('RalphLoop', 'Evaluator LLM unavailable for rendered-evidence repair scoring, falling back to legacy scoring');
-                        const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                        const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                         const quickRepairEval = await scoringEngine.scoreReliable({
                           output: repairCode,
                           criteria: normalizedOptions.evaluationCriteria,
@@ -1024,7 +1019,7 @@ export class RalphLoop {
                       }
                     }
                   } else {
-                    const scoringEngine = createRalphScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
+                    const scoringEngine = new ScoringEngine(normalizedOptions.evaluationStrategy ?? 'detailed');
                     repairEval = await scoringEngine.scoreReliable({
                       output: repairCode,
                       criteria: normalizedOptions.evaluationCriteria,
@@ -1249,6 +1244,11 @@ export class RalphLoop {
           code: currentCode,
           timestamp: iterationContext.timestamp,
         });
+
+        if (normalizedOptions.signal?.aborted) {
+          reason = 'aborted by user';
+          break;
+        }
 
         // Persist before any break gate below. High-quality first iterations can
         // stop immediately, but they still need gallery and run artifacts.
@@ -1494,6 +1494,12 @@ export class RalphLoop {
         }
 
       } catch (error) {
+        if (isAbortError(error) || normalizedOptions.signal?.aborted) {
+          completed = false;
+          reason = 'aborted by user';
+          break;
+        }
+
         // Report error to Meta-Harness (skip during tests to avoid log pollution)
         if (process.env.NODE_ENV !== 'test') {
           await metaHarness.onGenerationComplete({

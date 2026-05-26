@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" preserveAspectRatio="xMidYMid meet">
+  <rect width="1280" height="320" fill="#000"/>
+  <line x1="48" y1="48" x2="240" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.4"/>
+  <line x1="80" y1="48" x2="272" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.3"/>
+  <line x1="240" y1="48" x2="48" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.4"/>
+  <line x1="272" y1="48" x2="80" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.3"/>
+  <line x1="1040" y1="48" x2="1232" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.4"/>
+  <line x1="1008" y1="48" x2="1200" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.3"/>
+  <line x1="1232" y1="48" x2="1040" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.4"/>
+  <line x1="1200" y1="48" x2="1008" y2="240" stroke="#E8E4D8" stroke-width="1" opacity="0.3"/>
+  <text x="640" y="175" font-family="JetBrains Mono, monospace" font-size="36" fill="#E8E4D8" text-anchor="middle">{{PROMPT_TEXT}}</text>
+</svg>

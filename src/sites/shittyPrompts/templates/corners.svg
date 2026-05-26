@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" preserveAspectRatio="xMidYMid meet">
+  <rect width="1280" height="320" fill="#000"/>
+  <text x="32" y="60" font-family="JetBrains Mono, monospace" font-size="20" fill="#E8E4D8">&#x250C;&#x2500;&#x2500;&#x2500;</text>
+  <text x="1180" y="60" font-family="JetBrains Mono, monospace" font-size="20" fill="#E8E4D8">&#x2500;&#x2500;&#x2500;&#x2510;</text>
+  <text x="32" y="295" font-family="JetBrains Mono, monospace" font-size="20" fill="#E8E4D8">&#x2514;&#x2500;&#x2500;&#x2500;</text>
+  <text x="1180" y="295" font-family="JetBrains Mono, monospace" font-size="20" fill="#E8E4D8">&#x2500;&#x2500;&#x2500;&#x2518;</text>
+  <text x="640" y="175" font-family="JetBrains Mono, monospace" font-size="36" fill="#E8E4D8" text-anchor="middle">{{PROMPT_TEXT}}</text>
+</svg>

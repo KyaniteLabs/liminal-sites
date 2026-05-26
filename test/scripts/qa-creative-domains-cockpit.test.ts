@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '../..');
 const scriptPath = path.join(repoRoot, 'scripts', 'qa-creative-domains.mjs');
 
-const domains = ['p5', 'svg', 'glsl', 'three', 'hydra', 'strudel', 'tone', 'revideo', 'hyperframes', 'ascii', 'kinetic', 'textgen'];
+const domains = ['p5', 'three', 'shader', 'hydra', 'tone', 'strudel', 'svg', 'html', 'textgen', 'kinetic', 'ascii', 'revideo', 'hyperframes'];
 
 describe('creative-domain QA cockpit script', () => {
   it('is valid JavaScript syntax', () => {
@@ -62,11 +62,13 @@ describe('creative-domain QA cockpit script', () => {
       expect(() => scripts.forEach((script) => new vm.Script(script))).not.toThrow();
       expect(cockpit).toContain('Run machine checks');
       expect(cockpit).toContain('Manual checks that still need human senses');
+      expect(cockpit).not.toContain('undefined');
+      expect(checklist).not.toContain('undefined');
       expect(cockpit).toContain('/artifact/p5');
       expect(checklist).toContain('## Recording order');
       expect(bugReport).toContain('Expected vs actual');
       expect(bugReport).toContain('Marketing-recording impact');
-      expect(summary.domains).toHaveLength(12);
+      expect(summary.domains).toHaveLength(13);
       expect(summary.missingDomains).toEqual([]);
     } finally {
       rmSync(tempRoot, { recursive: true, force: true });
@@ -83,7 +85,13 @@ describe('creative-domain QA cockpit script', () => {
 
       const receipt = {
         domains: domains.map((domain) => {
-          const ext = domain === 'svg' ? 'svg' : domain === 'ascii' || domain === 'textgen' ? 'txt' : 'html';
+          const ext = domain === 'svg'
+            ? 'svg'
+            : domain === 'shader'
+              ? 'frag'
+              : domain === 'ascii' || domain === 'textgen'
+                ? 'txt'
+                : 'html';
           const artifactPath = path.join(artifactDir, `${domain}.${ext}`);
           writeFileSync(
             artifactPath,
@@ -102,9 +110,12 @@ describe('creative-domain QA cockpit script', () => {
       });
 
       const summary = JSON.parse(readFileSync(path.join(outDir, 'summary.json'), 'utf8'));
-      expect(summary.domains).toHaveLength(12);
+      expect(summary.domains).toHaveLength(13);
       expect(summary.missingDomains).toEqual([]);
-      expect(readFileSync(path.join(outDir, 'checklist.md'), 'utf8')).toContain('## Recording order');
+      const checklist = readFileSync(path.join(outDir, 'checklist.md'), 'utf8');
+      expect(checklist).toContain('## Recording order');
+      expect(checklist).toContain('HTML page renders visible responsive layout');
+      expect(checklist).not.toContain('undefined');
       expect(readFileSync(path.join(outDir, 'bug-report.md'), 'utf8')).toContain('Marketing-recording impact');
     } finally {
       rmSync(tempRoot, { recursive: true, force: true });

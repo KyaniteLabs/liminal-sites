@@ -69,7 +69,7 @@ export async function runInSandbox(
   options?: SandboxOptions
 ): Promise<SandboxResult> {
   const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const disableSandbox = options?.disableSandbox ?? false;
+  const disableSandbox = options?.disableSandbox ?? process.env.CI === 'true';
   let browser: Browser | null = null;
 
   try {

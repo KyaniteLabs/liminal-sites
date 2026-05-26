@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { validateCreativeDomainArtifact } from '../lib/creative-domain-artifact-validation.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const LAUNCH_CREATIVE_DOMAINS = ['p5', 'svg', 'glsl', 'three', 'hydra', 'strudel', 'tone', 'revideo', 'hyperframes', 'ascii', 'kinetic', 'textgen'];
+const LAUNCH_CREATIVE_DOMAINS = ['p5', 'three', 'shader', 'hydra', 'tone', 'strudel', 'svg', 'html', 'textgen', 'kinetic', 'ascii', 'revideo', 'hyperframes'];
 const DEFAULT_RECEIPT = path.join(ROOT, '.omx/proof/domain-gauntlet-live.json');
 const DEFAULT_LEDGER = path.join(ROOT, 'docs/launch/final-qa-test-surface-ledger.json');
 const DEFAULT_PROOF_OUT = path.join(ROOT, '.omx/proof/final-qa-surface-gate.json');

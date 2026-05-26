@@ -4,7 +4,7 @@ Liminal Sites is a full-history product clone of Liminal, not a dead-end fork.
 
 ## Remotes
 
-- `origin`: the dedicated Liminal Sites repository
+- `origin`: `https://github.com/Pushing-Squares/liminal-sites.git`
 - `upstream`: `https://github.com/KyaniteLabs/liminal.git`
 
 ## Classify Every Non-Trivial Change
