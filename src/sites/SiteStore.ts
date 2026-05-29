@@ -1,6 +1,18 @@
 import fs from 'fs/promises';
 import path from 'path';
-import type { PreferenceEvent, SiteAestheticAssessment, SiteCreativeComposition, SiteDeploymentPackage, SiteOperatorRunbook, SiteProfile, SiteRollbackReceipt, SkinSpec, WebsiteIngestionResult } from './types.js';
+import type {
+  PreferenceEvent,
+  SiteAestheticAssessment,
+  SiteCreativeComposition,
+  SiteDeploymentPackage,
+  SiteOperatorRunbook,
+  SiteProfile,
+  SiteRollbackReceipt,
+  SiteSensoriumConfig,
+  SiteSensoriumDeploymentPackage,
+  SkinSpec,
+  WebsiteIngestionResult,
+} from './types.js';
 import { assertSafeSiteId } from './siteIds.js';
 
 export class SiteStore {
@@ -136,6 +148,44 @@ export class SiteStore {
     return deployments.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }
 
+  async writeSensoriumConfig(config: SiteSensoriumConfig): Promise<void> {
+    await this.writeJson(this.sensoriumConfigPath(config.siteId, config.configId), config);
+  }
+
+  async readSensoriumConfig(siteId: string, configId: string): Promise<SiteSensoriumConfig> {
+    return this.readJson<SiteSensoriumConfig>(this.sensoriumConfigPath(siteId, configId));
+  }
+
+  async listSensoriumConfigs(siteId: string): Promise<SiteSensoriumConfig[]> {
+    const dir = this.sitePath(siteId, 'sensorium-configs');
+    const entries = await fs.readdir(dir).catch(() => []);
+    const configs = await Promise.all(
+      entries
+        .filter((entry) => entry.endsWith('.json'))
+        .map((entry) => this.readJson<SiteSensoriumConfig>(path.join(dir, entry))),
+    );
+    return configs.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  async writeSensoriumDeploymentPackage(deployment: SiteSensoriumDeploymentPackage): Promise<void> {
+    await this.writeJson(this.sensoriumDeploymentPackagePath(deployment.siteId, deployment.deploymentId), deployment);
+  }
+
+  async readSensoriumDeploymentPackage(siteId: string, deploymentId: string): Promise<SiteSensoriumDeploymentPackage> {
+    return this.readJson<SiteSensoriumDeploymentPackage>(this.sensoriumDeploymentPackagePath(siteId, deploymentId));
+  }
+
+  async listSensoriumDeploymentPackages(siteId: string): Promise<SiteSensoriumDeploymentPackage[]> {
+    const dir = this.sitePath(siteId, 'sensorium-deployments');
+    const entries = await fs.readdir(dir).catch(() => []);
+    const deployments = await Promise.all(
+      entries
+        .filter((entry) => entry.endsWith('.json'))
+        .map((entry) => this.readJson<SiteSensoriumDeploymentPackage>(path.join(dir, entry))),
+    );
+    return deployments.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
   async writeRollbackReceipt(receipt: SiteRollbackReceipt): Promise<void> {
     await this.writeJson(this.rollbackReceiptPath(receipt.siteId, receipt.rollbackId), receipt);
   }
@@ -186,6 +236,12 @@ export class SiteStore {
     return this.sitePath(siteId, 'deployments', deploymentId, fileName);
   }
 
+  sensoriumDeploymentArtifactPath(siteId: string, deploymentId: string, fileName: string): string {
+    assertSafeSiteId(deploymentId);
+    if (!/^[a-z0-9][a-z0-9._-]{1,120}$/i.test(fileName)) throw new Error(`Unsafe sensorium deployment artifact name: ${fileName}`);
+    return this.sitePath(siteId, 'sensorium-deployments', deploymentId, fileName);
+  }
+
   async appendPreference(event: PreferenceEvent): Promise<PreferenceEvent[]> {
     const events = await this.listPreferences(event.siteId);
     events.push(event);
@@ -228,6 +284,16 @@ export class SiteStore {
   private deploymentPackagePath(siteId: string, deploymentId: string): string {
     assertSafeSiteId(deploymentId);
     return this.sitePath(siteId, 'deployments', `${deploymentId}.json`);
+  }
+
+  private sensoriumConfigPath(siteId: string, configId: string): string {
+    assertSafeSiteId(configId);
+    return this.sitePath(siteId, 'sensorium-configs', `${configId}.json`);
+  }
+
+  private sensoriumDeploymentPackagePath(siteId: string, deploymentId: string): string {
+    assertSafeSiteId(deploymentId);
+    return this.sitePath(siteId, 'sensorium-deployments', `${deploymentId}.json`);
   }
 
   private rollbackReceiptPath(siteId: string, rollbackId: string): string {

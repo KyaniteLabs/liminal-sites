@@ -26,7 +26,7 @@ describe('Living Sites API', () => {
     const address = server.address();
     port = typeof address === 'object' && address && 'port' in address ? address.port : 0;
     expect(port).toBeGreaterThan(0);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (server) await new Promise((resolve) => server.close(resolve));
@@ -118,6 +118,31 @@ describe('Living Sites API', () => {
       compositionId: creativeResponse.composition.compositionId,
     });
     const deploymentsResponse = await get(`/api/living-sites/${siteId}/deployments`);
+    const sensoriumConfigResponse = await post(`/api/living-sites/${siteId}/sensorium-config`, {
+      source: 'posthog-fixture',
+      events: [
+        {
+          event: '$pageview',
+          distinctId: 'visitor-1',
+          properties: { $pathname: '/', dwell_seconds: 80, $is_returning: true },
+        },
+        {
+          event: '$scroll_depth',
+          distinctId: 'visitor-1',
+          properties: { $pathname: '/', scroll_depth: 74 },
+        },
+        {
+          event: '$autocapture',
+          distinctId: 'visitor-2',
+          properties: { $pathname: '/', $el_text: 'Act' },
+        },
+      ],
+    });
+    const sensoriumConfigsResponse = await get(`/api/living-sites/${siteId}/sensorium-configs`);
+    const sensoriumDeploymentResponse = await post(`/api/living-sites/${siteId}/sensorium-deployment`, {
+      configId: sensoriumConfigResponse.config.configId,
+    });
+    const sensoriumDeploymentsResponse = await get(`/api/living-sites/${siteId}/sensorium-deployments`);
     const rollbackResponse = await post(`/api/living-sites/${siteId}/rollback`, {
       skinId,
       reason: 'Operator wants a verified recovery point.',
@@ -132,6 +157,15 @@ describe('Living Sites API', () => {
     const deploymentInstall = await realFetch(`http://127.0.0.1:${port}${deploymentInstallPath}`, { signal: AbortSignal.timeout(8000) });
     const deploymentCssText = await deploymentCss.text();
     const deploymentInstallText = await deploymentInstall.text();
+    const sensoriumCssPath = new URL(sensoriumDeploymentResponse.deployment.manifest.assets.css).pathname;
+    const sensoriumJsPath = new URL(sensoriumDeploymentResponse.deployment.manifest.assets.js).pathname;
+    const sensoriumConfigPath = new URL(sensoriumDeploymentResponse.deployment.manifest.assets.config).pathname;
+    const sensoriumCss = await realFetch(`http://127.0.0.1:${port}${sensoriumCssPath}`, { signal: AbortSignal.timeout(8000) });
+    const sensoriumJs = await realFetch(`http://127.0.0.1:${port}${sensoriumJsPath}`, { signal: AbortSignal.timeout(8000) });
+    const sensoriumConfig = await realFetch(`http://127.0.0.1:${port}${sensoriumConfigPath}`, { signal: AbortSignal.timeout(8000) });
+    const sensoriumCssText = await sensoriumCss.text();
+    const sensoriumJsText = await sensoriumJs.text();
+    const sensoriumConfigText = await sensoriumConfig.text();
     const creativeJsAsset = await realFetch(`http://127.0.0.1:${port}/api/living-sites/${siteId}/creative-compositions/${creativeResponse.composition.compositionId}/assets/liminal-creative.js`, { signal: AbortSignal.timeout(8000) });
     const creativeManifestAsset = await realFetch(`http://127.0.0.1:${port}/api/living-sites/${siteId}/creative-compositions/${creativeResponse.composition.compositionId}/assets/manifest.json`, { signal: AbortSignal.timeout(8000) });
     const creativeJsText = await creativeJsAsset.text();
@@ -166,6 +200,11 @@ describe('Living Sites API', () => {
     expect(assessmentsResponse.assessments).toHaveLength(1);
     expect(deploymentResponse.deployment.installSnippets.combined).toContain('data-liminal-sites');
     expect(deploymentResponse.deployment.installSnippets.combined).toContain('data-liminal-sites-creative');
+    expect(sensoriumConfigResponse.config.signalVector.sampleSize).toBe(3);
+    expect(sensoriumConfigResponse.config.guardrails.protectedSurfaces).toContain('analytics');
+    expect(sensoriumConfigsResponse.configs).toHaveLength(1);
+    expect(sensoriumDeploymentResponse.deployment.installSnippets.combined).toContain('data-liminal-sites-sensorium');
+    expect(sensoriumDeploymentsResponse.deployments).toHaveLength(1);
     expect(creativeResponse.composition.domains).toEqual(expect.arrayContaining(['shader', 'textgen']));
     expect(creativeResponse.composition.layers.every((layer) => layer.validation.valid)).toBe(true);
     expect(creativeResponse.composition.capabilityMatrix.summary.used).toBe(2);
@@ -185,7 +224,7 @@ describe('Living Sites API', () => {
     expect(runbooksResponse.runbooks).toHaveLength(1);
     expect(projectsResponse.projects[0]).toMatchObject({
       profile: { siteId },
-      counts: { creativeCompositions: 2, deployments: 1, rollbacks: 1, operatorRunbooks: 1 },
+      counts: { creativeCompositions: 2, deployments: 1, sensoriumConfigs: 1, sensoriumDeployments: 1, rollbacks: 1, operatorRunbooks: 1 },
       latest: { operatorRunbook: { runbookId: runbookResponse.runbook.runbookId } },
     });
     expect(projectsResponse.projects[0].receipts[0]).toMatchObject({
@@ -198,6 +237,9 @@ describe('Living Sites API', () => {
     });
     expect(deploymentCssText).toContain('--liminal-sites-bg');
     expect(deploymentInstallText).toContain('data-liminal-sites');
+    expect(sensoriumCssText).toContain('liminal-sites-sensorium-layer');
+    expect(sensoriumJsText).toContain('__liminalSitesSensorium');
+    expect(sensoriumConfigText).toContain(sensoriumConfigResponse.config.configId);
     expect(creativeJsText).toContain('__liminalSitesCreative');
     expect(creativeManifestText).toContain('"domains"');
     expect(creativeManifestText).toContain('"capabilityMatrix"');

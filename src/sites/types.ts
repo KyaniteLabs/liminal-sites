@@ -472,6 +472,148 @@ export interface SiteDeploymentPackage {
   operatorNotes: string[];
 }
 
+const SensoriumScoreSchema = z.number().min(0).max(1);
+
+export const RawSensoriumEventSchema = z.object({
+  event: z.string().trim().min(1).max(160),
+  timestamp: z.string().datetime().optional(),
+  distinctId: z.string().trim().max(160).optional(),
+  properties: z.record(z.string(), z.unknown()).default({}),
+});
+
+export type RawSensoriumEvent = z.infer<typeof RawSensoriumEventSchema>;
+
+export const SiteSensoriumConfigInputSchema = z.object({
+  source: z.enum(['posthog-fixture', 'posthog-export', 'manual']).default('posthog-fixture'),
+  events: z.array(RawSensoriumEventSchema).max(1000).default([]),
+  window: z.object({
+    from: z.string().datetime().optional(),
+    to: z.string().datetime().optional(),
+  }).optional(),
+  reducedMotion: z.boolean().default(false),
+  notes: z.array(z.string().trim().min(1).max(320)).default([]),
+});
+
+export type SiteSensoriumConfigInput = z.input<typeof SiteSensoriumConfigInputSchema>;
+
+export const SiteSignalVectorSchema = z.object({
+  sampleSize: z.number().int().min(0),
+  attention: SensoriumScoreSchema,
+  intent: SensoriumScoreSchema,
+  depth: SensoriumScoreSchema,
+  friction: SensoriumScoreSchema,
+  returnWarmth: SensoriumScoreSchema,
+  novelty: SensoriumScoreSchema,
+  silence: SensoriumScoreSchema,
+  confidence: SensoriumScoreSchema,
+  notes: z.array(z.string()),
+});
+
+export type SiteSignalVector = z.infer<typeof SiteSignalVectorSchema>;
+
+export const AestheticIntentSchema = z.object({
+  calmness: SensoriumScoreSchema,
+  clarity: SensoriumScoreSchema,
+  warmth: SensoriumScoreSchema,
+  motion: SensoriumScoreSchema,
+  complexity: SensoriumScoreSchema,
+  contrast: SensoriumScoreSchema,
+  experimentalism: SensoriumScoreSchema,
+  notes: z.array(z.string()),
+});
+
+export type AestheticIntent = z.infer<typeof AestheticIntentSchema>;
+
+export const AestheticLayerConfigSchema = z.object({
+  paletteTemperature: SensoriumScoreSchema,
+  motionIntensity: SensoriumScoreSchema,
+  visualDensity: SensoriumScoreSchema,
+  textureStrength: SensoriumScoreSchema,
+  contrastSupport: SensoriumScoreSchema,
+  experimentalBias: SensoriumScoreSchema,
+  reducedMotion: z.boolean(),
+  cssVariables: z.record(z.string(), z.string()),
+  runtimeFlags: z.object({
+    protectContent: z.literal(true),
+    pointerEvents: z.literal('none'),
+    source: z.literal('liminal-sites-sensorium'),
+  }),
+});
+
+export type AestheticLayerConfig = z.infer<typeof AestheticLayerConfigSchema>;
+
+export interface SiteSensoriumConfig {
+  configId: string;
+  siteId: string;
+  createdAt: string;
+  source: z.infer<typeof SiteSensoriumConfigInputSchema>['source'];
+  eventWindow?: {
+    from?: string;
+    to?: string;
+  };
+  signalVector: SiteSignalVector;
+  intent: AestheticIntent;
+  layerConfig: AestheticLayerConfig;
+  guardrails: {
+    missionLocked: true;
+    protectedSurfaces: string[];
+    clamps: Record<string, { min: number; max: number }>;
+    notes: string[];
+  };
+  provenance: {
+    engine: 'liminal-sites';
+    sensor: 'posthog';
+    mode: 'fixture-first';
+    eventCount: number;
+    notes: string[];
+  };
+}
+
+export const SiteSensoriumDeploymentPackageInputSchema = z.object({
+  configId: z.string().regex(/^[a-z0-9][a-z0-9-]{2,100}$/),
+  publicBaseUrl: z.string().trim().url().optional(),
+});
+
+export type SiteSensoriumDeploymentPackageInput = z.input<typeof SiteSensoriumDeploymentPackageInputSchema>;
+
+export interface SiteSensoriumDeploymentPackage {
+  deploymentId: string;
+  siteId: string;
+  configId: string;
+  createdAt: string;
+  mode: 'sensorium-runtime-snippet';
+  assetBaseUrl: string;
+  outputDir: string;
+  files: {
+    cssPath: string;
+    jsPath: string;
+    configPath: string;
+    manifestPath: string;
+    installHtmlPath: string;
+    readmePath: string;
+  };
+  installSnippets: {
+    head: string;
+    bodyEnd: string;
+    combined: string;
+  };
+  manifest: {
+    deploymentId: string;
+    siteId: string;
+    configId: string;
+    mode: 'sensorium-runtime-snippet';
+    assets: {
+      css: string;
+      js: string;
+      config: string;
+      manifest: string;
+      installHtml: string;
+    };
+  };
+  verificationChecklist: string[];
+  operatorNotes: string[];
+}
+
 export const SiteRollbackReceiptInputSchema = z.object({
   skinId: z.string().regex(/^[a-z0-9][a-z0-9-]{2,100}$/),
   reason: z.string().trim().max(1000).optional(),
@@ -527,11 +669,20 @@ export interface SiteOperatorRunbook {
 }
 
 export interface SiteReceiptSummary {
-  kind: 'ingestion' | 'aesthetic-assessment' | 'creative-composition' | 'deployment' | 'rollback' | 'operator-runbook';
+  kind:
+    | 'ingestion'
+    | 'aesthetic-assessment'
+    | 'creative-composition'
+    | 'deployment'
+    | 'sensorium-config'
+    | 'sensorium-deployment'
+    | 'rollback'
+    | 'operator-runbook';
   id: string;
   label: string;
   createdAt: string;
   skinId?: string;
+  configId?: string;
 }
 
 export interface SiteProjectSummary {
@@ -551,6 +702,8 @@ export interface SiteProjectSummary {
     aestheticAssessments: number;
     creativeCompositions: number;
     deployments: number;
+    sensoriumConfigs: number;
+    sensoriumDeployments: number;
     rollbacks: number;
     operatorRunbooks: number;
   };
@@ -582,6 +735,16 @@ export interface SiteProjectSummary {
     deployment?: {
       deploymentId: string;
       skinId: string;
+      createdAt: string;
+    };
+    sensoriumConfig?: {
+      configId: string;
+      createdAt: string;
+      confidence: number;
+    };
+    sensoriumDeployment?: {
+      deploymentId: string;
+      configId: string;
       createdAt: string;
     };
     preference?: {
