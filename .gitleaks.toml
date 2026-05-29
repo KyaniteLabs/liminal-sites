@@ -1,0 +1,10 @@
+[allowlist]
+description = "Ignore local agent/runtime directories; tracked source is scanned separately."
+paths = [
+  '''^\.claude/''',
+  '''^\.omx/''',
+  '''^\.omc/''',
+  '''^\.tmp/''',
+  '''^node_modules/''',
+  '''^dist/''',
+]
