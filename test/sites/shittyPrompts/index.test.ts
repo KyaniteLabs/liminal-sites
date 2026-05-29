@@ -3,11 +3,11 @@ import { shittyPrompts } from '../../../src/sites/index.js';
 
 describe('shittyPrompts barrel', () => {
   it('exports all public symbols', () => {
-    expect(shittyPrompts.ShittyPromptsEngine).toBeDefined();
-    expect(shittyPrompts.ShittyPromptsStore).toBeDefined();
-    expect(shittyPrompts.PromptPairGenerator).toBeDefined();
-    expect(shittyPrompts.FrameGenerator).toBeDefined();
-    expect(shittyPrompts.CurationApi).toBeDefined();
-    expect(shittyPrompts.PromptPairSchema).toBeDefined();
+    expect(typeof shittyPrompts.ShittyPromptsEngine).toBe('function');
+    expect(typeof shittyPrompts.ShittyPromptsStore).toBe('function');
+    expect(typeof shittyPrompts.PromptPairGenerator).toBe('function');
+    expect(typeof shittyPrompts.FrameGenerator).toBe('function');
+    expect(typeof shittyPrompts.CurationApi).toBe('function');
+    expect(shittyPrompts.PromptPairSchema.safeParse).toEqual(expect.any(Function));
   });
 });
