@@ -30,11 +30,42 @@ export function ShittyPromptsTab({ api }: ShittyPromptsTabProps): React.JSX.Elem
   const [error, setError] = useState<string | null>(null);
 
   const refresh = async () => {
-    setCandidates(await api.listByStatus('candidate'));
-    setApproved(await api.listByStatus('approved'));
+    try {
+      const [candidateRows, approvedRows] = await Promise.all([
+        api.listByStatus('candidate'),
+        api.listByStatus('approved'),
+      ]);
+      setCandidates(candidateRows);
+      setApproved(approvedRows);
+      setError(null);
+    } catch (err) {
+      setCandidates([]);
+      setApproved([]);
+      setError(err instanceof Error ? err.message : String(err));
+    }
   };
 
   useEffect(() => { void refresh(); }, []);
+
+  const acceptPair = async (id: string) => {
+    setError(null);
+    try {
+      await api.accept(id);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const rejectPair = async (id: string) => {
+    setError(null);
+    try {
+      await api.reject(id);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   const generate = async () => {
     setBusy(true);
@@ -76,8 +107,8 @@ export function ShittyPromptsTab({ api }: ShittyPromptsTabProps): React.JSX.Elem
               <div className="sp-with">{p.withContext}</div>
               <div className="sp-meta">{p.failureMode}</div>
               <div className="sp-actions">
-                <button type="button" className="atelier-btn atelier-btn--primary" onClick={async () => { await api.accept(p.id); await refresh(); }}>Accept</button>
-                <button type="button" className="atelier-btn atelier-btn--secondary" onClick={async () => { await api.reject(p.id); await refresh(); }}>Reject</button>
+                <button type="button" className="atelier-btn atelier-btn--primary" onClick={() => void acceptPair(p.id)}>Accept</button>
+                <button type="button" className="atelier-btn atelier-btn--secondary" onClick={() => void rejectPair(p.id)}>Reject</button>
               </div>
             </li>
           ))}

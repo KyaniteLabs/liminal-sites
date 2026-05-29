@@ -39,6 +39,8 @@ jobs:
         run: pnpm check:orphans
       - name: Package script target check
         run: pnpm check:script-targets
+      - name: Secret scan
+        run: pnpm security:secrets
       - run: pnpm lint
       - run: pnpm build
       - name: Prompt surface audit

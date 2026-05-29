@@ -399,7 +399,7 @@ describe('LLMClient getSafeConfig', () => {
   });
 
   it('redacts API key in safe config', () => {
-    const client = new LLMClient({ apiKey: 'test-key' });
+    const client = new LLMClient({ apiKey: 'fixture-redaction-value' });
     const safeConfig = client.getSafeConfig();
 
     expect(safeConfig.apiKey).toBe('[REDACTED]');

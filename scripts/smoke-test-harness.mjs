@@ -68,7 +68,7 @@ async function main() {
     fail('No base URL found. Set HARNESS_BASE_URL or LLM_BASE_URL');
     process.exit(1);
   }
-  pass(`API key: ${apiKey.slice(0, 8)}...`);
+  pass('API key: configured (redacted)');
   pass(`Base URL: ${baseUrl}`);
   pass(`Model: ${model}`);
 

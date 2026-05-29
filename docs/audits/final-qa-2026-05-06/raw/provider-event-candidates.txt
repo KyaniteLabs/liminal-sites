@@ -10142,7 +10142,7 @@ test/unit/llm/LLMClientExtended.test.ts:383:    const client = new LLMClient({ p
 test/unit/llm/LLMClientExtended.test.ts:390:describe('LLMClient getSafeConfig', () => {
 test/unit/llm/LLMClientExtended.test.ts:393:    delete process.env.LIMINAL_LLM_API_KEY;
 test/unit/llm/LLMClientExtended.test.ts:398:    delete process.env.LIMINAL_LLM_API_KEY;
-test/unit/llm/LLMClientExtended.test.ts:402:    const client = new LLMClient({ apiKey: 'test-key' });
+test/unit/llm/LLMClientExtended.test.ts:402:    const client = new LLMClient({ apiKey: 'fixture-redaction-value' });
 test/unit/llm/LLMClientExtended.test.ts:410:    const client = new LLMClient();
 test/unit/llm/LLMClientExtended.test.ts:417:describe('LLMClient complete failure provenance', () => {
 test/unit/llm/LLMClientExtended.test.ts:418:  it('returns provider, model, endpoint, status, retryability, and body on provider errors', async () => {

@@ -49,7 +49,7 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
-!.env.dogfood
+!.env.*.example
 
 # LiminalFS runtime database (SQLite)
 .liminal/
