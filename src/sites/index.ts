@@ -8,4 +8,5 @@ export * from './ingest/index.js';
 export * from './aesthetic/index.js';
 export * from './deploy/index.js';
 export * from './creative/index.js';
+export * from './sensorium/index.js';
 export * as shittyPrompts from './shittyPrompts/index.js';

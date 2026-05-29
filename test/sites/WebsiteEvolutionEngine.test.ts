@@ -178,6 +178,107 @@ describe('WebsiteEvolutionEngine', () => {
     expect(listed.map((item) => item.deploymentId)).toEqual([deployment.deploymentId]);
   });
 
+  it('creates fixture-backed PostHog sensorium configs and deployment packages', async () => {
+    const rootDir = await tempRoot();
+    const engine = new WebsiteEvolutionEngine({ rootDir });
+    const profile = await engine.createProfile({
+      name: 'Kyanite Sensorium Site',
+      sourceUrl: 'https://kyanitelabs.tech',
+      brandBrief: 'A precise public lab site with ambient proof and restrained motion.',
+    });
+    const config = await engine.createSensoriumConfig(profile.siteId, {
+      source: 'posthog-fixture',
+      reducedMotion: false,
+      events: [
+        {
+          event: '$pageview',
+          distinctId: 'visitor-1',
+          properties: { $pathname: '/', dwell_seconds: 92, $is_returning: true },
+        },
+        {
+          event: '$scroll_depth',
+          distinctId: 'visitor-1',
+          properties: { $pathname: '/', scroll_depth: 76 },
+        },
+        {
+          event: '$autocapture',
+          distinctId: 'visitor-2',
+          properties: { $pathname: '/', $el_text: 'Start a project' },
+        },
+      ],
+    });
+    const deployment = await engine.createSensoriumDeploymentPackage(profile.siteId, {
+      configId: config.configId,
+      publicBaseUrl: 'http://127.0.0.1:7777',
+    });
+    const configs = await engine.listSensoriumConfigs(profile.siteId);
+    const deployments = await engine.listSensoriumDeploymentPackages(profile.siteId);
+    const projects = await engine.listProjectSummaries();
+
+    expect(config.signalVector.sampleSize).toBe(3);
+    expect(config.layerConfig.runtimeFlags.pointerEvents).toBe('none');
+    expect(deployment.installSnippets.combined).toContain('data-liminal-sites-sensorium');
+    expect(deployment.manifest.assets.config).toContain('liminal-sensorium-config.json');
+    await expect(fs.readFile(deployment.files.cssPath, 'utf8')).resolves.toContain('liminal-sites-sensorium-layer');
+    await expect(fs.readFile(deployment.files.jsPath, 'utf8')).resolves.toContain('__liminalSitesSensorium');
+    await expect(fs.readFile(deployment.files.configPath, 'utf8')).resolves.toContain(config.configId);
+    expect(configs.map((item) => item.configId)).toEqual([config.configId]);
+    expect(deployments.map((item) => item.deploymentId)).toEqual([deployment.deploymentId]);
+    expect(projects[0]).toMatchObject({
+      profile: { siteId: profile.siteId },
+      counts: { sensoriumConfigs: 1, sensoriumDeployments: 1 },
+      latest: {
+        sensoriumConfig: { configId: config.configId },
+        sensoriumDeployment: { deploymentId: deployment.deploymentId },
+      },
+    });
+    expect(projects[0].receipts.map((receipt) => receipt.kind)).toEqual(expect.arrayContaining(['sensorium-config', 'sensorium-deployment']));
+  });
+
+  it('does not treat stale sensorium deployments as ready for newer configs', async () => {
+    const rootDir = await tempRoot();
+    const sourcePath = await sourceFixture();
+    const engine = new WebsiteEvolutionEngine({ rootDir });
+    const profile = await engine.createProfile({
+      name: 'Stale Sensorium Guard',
+      sourcePath,
+      brandBrief: 'A launch site with ambient analytics receipts.',
+    });
+    await engine.ingestSource(profile.siteId, { captureVisual: false });
+    const run = await engine.generateVariants(profile.siteId, { prompt: 'Create an operator-safe direction.', count: 1 });
+    await engine.compareAesthetics(profile.siteId, { skinIds: [run.variants[0].skinId] });
+    const composition = await engine.composeCreativeSite(profile.siteId, { skinId: run.variants[0].skinId });
+    await engine.createDeploymentPackage(profile.siteId, {
+      skinId: run.variants[0].skinId,
+      compositionId: composition.compositionId,
+      publicBaseUrl: 'http://127.0.0.1:7777',
+    });
+    const firstConfig = await engine.createSensoriumConfig(profile.siteId, {
+      events: [{ event: '$pageview', distinctId: 'visitor-1', properties: { $pathname: '/' } }],
+    });
+    await engine.createSensoriumDeploymentPackage(profile.siteId, {
+      configId: firstConfig.configId,
+      publicBaseUrl: 'http://127.0.0.1:7777',
+    });
+    const latestConfig = await engine.createSensoriumConfig(profile.siteId, {
+      events: [{ event: '$dead_click', distinctId: 'visitor-2', properties: { $pathname: '/pricing' } }],
+    });
+
+    const runbook = await engine.createOperatorRunbook(profile.siteId, { skinId: run.variants[0].skinId });
+    const projects = await engine.listProjectSummaries();
+
+    expect(latestConfig.configId).not.toBe(firstConfig.configId);
+    expect(runbook.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'sensorium',
+        status: 'warning',
+        action: 'Create a sensorium deployment package for the saved config.',
+      }),
+    ]));
+    expect(runbook.recoveryPaths.join(' ')).not.toContain(firstConfig.configId);
+    expect(projects[0].nextOperatorAction).toContain('latest ambient config');
+  });
+
   it('summarizes saved project history and records rollback receipts', async () => {
     const rootDir = await tempRoot();
     const engine = new WebsiteEvolutionEngine({ rootDir });

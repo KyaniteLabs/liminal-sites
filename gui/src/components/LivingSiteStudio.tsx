@@ -104,6 +104,46 @@ interface LivingSiteDeployment {
   operatorNotes: string[];
 }
 
+interface LivingSiteSensoriumConfig {
+  configId: string;
+  siteId: string;
+  createdAt: string;
+  source: 'posthog-fixture' | 'posthog-export' | 'manual';
+  signalVector: {
+    sampleSize: number;
+    confidence: number;
+    attention: number;
+    intent: number;
+    friction: number;
+    notes: string[];
+  };
+  layerConfig: {
+    reducedMotion: boolean;
+    cssVariables: Record<string, string>;
+  };
+}
+
+interface LivingSiteSensoriumDeployment {
+  deploymentId: string;
+  configId: string;
+  assetBaseUrl: string;
+  installSnippets: {
+    head: string;
+    bodyEnd: string;
+    combined: string;
+  };
+  manifest: {
+    assets: {
+      css: string;
+      js: string;
+      config: string;
+      installHtml: string;
+    };
+  };
+  verificationChecklist: string[];
+  operatorNotes: string[];
+}
+
 interface LivingSiteCapabilityMatrix {
   fullRunSatisfied: boolean;
   summary: {
@@ -161,6 +201,8 @@ interface LivingSiteProjectSummary {
     aestheticAssessments: number;
     creativeCompositions: number;
     deployments: number;
+    sensoriumConfigs: number;
+    sensoriumDeployments: number;
     rollbacks: number;
     operatorRunbooks: number;
   };
@@ -168,6 +210,8 @@ interface LivingSiteProjectSummary {
     variant?: { skinId: string; name: string; createdAt: string; qualityScore: number };
     ingestion?: { ingestionId: string; title: string; createdAt: string };
     deployment?: { deploymentId: string; skinId: string; createdAt: string };
+    sensoriumConfig?: { configId: string; createdAt: string; confidence: number };
+    sensoriumDeployment?: { deploymentId: string; configId: string; createdAt: string };
     creativeComposition?: { compositionId: string; skinId: string; createdAt: string; domains: string[]; qualityScore: number };
     rollback?: { rollbackId: string; skinId: string; createdAt: string };
     operatorRunbook?: { runbookId: string; skinId?: string; status: string; createdAt: string };
@@ -227,7 +271,25 @@ interface SitePatchPlan {
   operatorSteps: string[];
 }
 
-type LivingAction = 'ingest' | 'generate' | 'compare' | 'evolve' | 'preview' | 'preference' | 'export' | 'creative' | 'deploy' | 'rollback' | 'runbook' | 'dashboard' | 'patch' | null;
+type LivingAction = 'ingest' | 'generate' | 'compare' | 'evolve' | 'preview' | 'preference' | 'export' | 'creative' | 'deploy' | 'sensorium-config' | 'sensorium-deploy' | 'rollback' | 'runbook' | 'dashboard' | 'patch' | null;
+
+const DEFAULT_SENSORIUM_EVENTS = JSON.stringify([
+  {
+    event: '$pageview',
+    distinctId: 'visitor-1',
+    properties: { $pathname: '/', dwell_seconds: 84, $is_returning: true },
+  },
+  {
+    event: '$scroll_depth',
+    distinctId: 'visitor-1',
+    properties: { $pathname: '/', scroll_depth: 78 },
+  },
+  {
+    event: '$autocapture',
+    distinctId: 'visitor-2',
+    properties: { $pathname: '/', $el_text: 'Start a project' },
+  },
+], null, 2);
 
 export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: LivingSiteStudioProps) {
   const [siteName, setSiteName] = useState('Liminal Sites Demo');
@@ -249,6 +311,9 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
   const [composition, setComposition] = useState<LivingSiteCreativeComposition | null>(null);
   const [exportPath, setExportPath] = useState('');
   const [deployment, setDeployment] = useState<LivingSiteDeployment | null>(null);
+  const [sensoriumEventsJson, setSensoriumEventsJson] = useState(DEFAULT_SENSORIUM_EVENTS);
+  const [sensoriumConfig, setSensoriumConfig] = useState<LivingSiteSensoriumConfig | null>(null);
+  const [sensoriumDeployment, setSensoriumDeployment] = useState<LivingSiteSensoriumDeployment | null>(null);
   const [dashboard, setDashboard] = useState<LivingSiteProjectSummary[]>([]);
   const [rollback, setRollback] = useState<LivingSiteRollback | null>(null);
   const [runbook, setRunbook] = useState<LivingSiteRunbook | null>(null);
@@ -344,6 +409,8 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
       setAssessment(null);
       setComposition(null);
       setDeployment(null);
+      setSensoriumConfig(null);
+      setSensoriumDeployment(null);
       setRollback(null);
       setRunbook(null);
       await refreshDashboardAfterMutation(`generated ${data.run.variants?.length || 0} variants`);
@@ -369,6 +436,8 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
       setIngestion(data.ingestion);
       setAssessment(null);
       setComposition(null);
+      setSensoriumConfig(null);
+      setSensoriumDeployment(null);
       setRollback(null);
       setRunbook(null);
       if (data.ingestion?.recommendedBrandBrief) setBrandBrief(data.ingestion.recommendedBrandBrief);
@@ -417,6 +486,8 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
       setAssessment(null);
       setComposition(null);
       setDeployment(null);
+      setSensoriumConfig(null);
+      setSensoriumDeployment(null);
       setRollback(null);
       setRunbook(null);
       await refreshDashboardAfterMutation('evolved from memory');
@@ -466,6 +537,8 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
       });
       setComposition(data.composition);
       setDeployment(null);
+      setSensoriumConfig(null);
+      setSensoriumDeployment(null);
       setRunbook(null);
       setPatchPlan(null);
       await refreshDashboardAfterMutation(`${data.composition?.strategy || 'creative'} composition ready`);
@@ -528,6 +601,50 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
       setDeployment(data.deployment);
       setRunbook(null);
       await refreshDashboardAfterMutation('deployment package ready');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setStatus('error');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function prepareSensoriumConfig() {
+    if (!profile) return;
+    setBusy('sensorium-config');
+    setError(null);
+    try {
+      const parsed = JSON.parse(sensoriumEventsJson);
+      const events = Array.isArray(parsed) ? parsed : parsed?.events;
+      if (!Array.isArray(events)) throw new Error('Paste a PostHog export array or an object with an events array.');
+      const data = await postJson(`${apiBase}/living-sites/${encodeURIComponent(profile.siteId)}/sensorium-config`, {
+        source: 'posthog-export',
+        events,
+        notes: ['Operator-provided PostHog export; no API key is stored in Liminal Sites.'],
+      });
+      setSensoriumConfig(data.config);
+      setSensoriumDeployment(null);
+      setRunbook(null);
+      await refreshDashboardAfterMutation(`sensorium config ${Math.round((data.config?.signalVector?.confidence || 0) * 100)}% confidence`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setStatus('error');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function createSensoriumDeploymentPackage() {
+    if (!profile || !sensoriumConfig) return;
+    setBusy('sensorium-deploy');
+    setError(null);
+    try {
+      const data = await postJson(`${apiBase}/living-sites/${encodeURIComponent(profile.siteId)}/sensorium-deployment`, {
+        configId: sensoriumConfig.configId,
+      });
+      setSensoriumDeployment(data.deployment);
+      setRunbook(null);
+      await refreshDashboardAfterMutation('sensorium package ready');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus('error');
@@ -691,6 +808,8 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
             <span><b>{currentProject?.counts.aestheticAssessments ?? 0}</b> comparisons</span>
             <span><b>{currentProject?.counts.creativeCompositions ?? 0}</b> creative</span>
             <span><b>{currentProject?.counts.deployments ?? 0}</b> packages</span>
+            <span><b>{currentProject?.counts.sensoriumConfigs ?? 0}</b> sensorium configs</span>
+            <span><b>{currentProject?.counts.sensoriumDeployments ?? 0}</b> sensorium packages</span>
             <span><b>{currentProject?.counts.rollbacks ?? 0}</b> rollbacks</span>
             <span><b>{currentProject?.counts.operatorRunbooks ?? 0}</b> runbooks</span>
           </div>
@@ -873,6 +992,54 @@ export function LivingSiteStudio({ apiBase, prompt, runSignal, onPreview }: Livi
             </div>
           </div>
         )}
+        <div className="living-site-sensorium">
+          <div>
+            <span>PostHog Sensorium</span>
+            <strong>{sensoriumConfig?.configId || currentProject?.latest.sensoriumConfig?.configId || 'no config'}</strong>
+            <small>{sensoriumConfig ? `${Math.round(sensoriumConfig.signalVector.confidence * 100)}% confidence` : 'waiting'}</small>
+          </div>
+          <label>
+            <span className="atelier-label">PostHog events JSON</span>
+            <textarea
+              className="atelier-input living-site-sensorium__events"
+              value={sensoriumEventsJson}
+              onChange={(event) => setSensoriumEventsJson(event.target.value)}
+              spellCheck={false}
+            />
+          </label>
+          <div className="living-site-actions">
+            <button type="button" className="atelier-btn atelier-btn--secondary" onClick={() => void prepareSensoriumConfig()} disabled={Boolean(busy) || !profile}>
+              {busy === 'sensorium-config' ? 'Preparing' : 'Prepare sensorium'}
+            </button>
+            <button type="button" className="atelier-btn" onClick={() => void createSensoriumDeploymentPackage()} disabled={Boolean(busy) || !sensoriumConfig}>
+              {busy === 'sensorium-deploy' ? 'Packaging' : 'Package sensorium'}
+            </button>
+          </div>
+          {sensoriumConfig && (
+            <div className="living-site-sensorium__metrics">
+              <span><b>{sensoriumConfig.signalVector.sampleSize}</b> events</span>
+              <span><b>{sensoriumConfig.signalVector.attention.toFixed(2)}</b> attention</span>
+              <span><b>{sensoriumConfig.signalVector.intent.toFixed(2)}</b> intent</span>
+              <span><b>{sensoriumConfig.signalVector.friction.toFixed(2)}</b> friction</span>
+            </div>
+          )}
+          {sensoriumDeployment && (
+            <div className="living-site-sensorium__package">
+              <div>
+                <span>Sensorium Package</span>
+                <strong>{sensoriumDeployment.deploymentId}</strong>
+                <small>{sensoriumDeployment.assetBaseUrl}</small>
+              </div>
+              <pre className="atelier-code living-site-output">{sensoriumDeployment.installSnippets.combined}</pre>
+              <a className="living-site-deployment__link" href={sensoriumDeployment.manifest.assets.installHtml} target="_blank" rel="noreferrer">
+                Open sensorium preview
+              </a>
+              <div className="living-site-deployment__checks">
+                {sensoriumDeployment.verificationChecklist.slice(0, 4).map((item) => <span key={item}>{item}</span>)}
+              </div>
+            </div>
+          )}
+        </div>
         {rollback && (
           <div className="living-site-rollback">
             <div>

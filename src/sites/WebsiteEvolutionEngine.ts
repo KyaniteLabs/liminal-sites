@@ -9,6 +9,8 @@ import {
   SiteOperatorRunbookInputSchema,
   SiteProfileInputSchema,
   SiteRollbackReceiptInputSchema,
+  SiteSensoriumConfigInputSchema,
+  SiteSensoriumDeploymentPackageInputSchema,
   type PreferenceEvent,
   type RuntimeCreativeExport,
   type RuntimeSkinExport,
@@ -28,6 +30,10 @@ import {
   type SiteReceiptSummary,
   type SiteRollbackReceipt,
   type SiteRollbackReceiptInput,
+  type SiteSensoriumConfig,
+  type SiteSensoriumConfigInput,
+  type SiteSensoriumDeploymentPackage,
+  type SiteSensoriumDeploymentPackageInput,
   type SiteSkinTokens,
   type SkinSpec,
   type VariantRun,
@@ -44,6 +50,8 @@ import { createRuntimeDeploymentPackage } from './deploy/RuntimeDeploymentPackag
 import { composeCreativeSite as buildCreativeSiteComposition, exportCreativeCompositionFiles } from './creative/CreativeSiteComposer.js';
 import { composeFullLiminalCreativeSite } from './creative/LiminalSiteCreativeOrchestrator.js';
 import { buildLiminalCapabilityMatrix } from './creative/LiminalCapabilityMatrix.js';
+import { createSensoriumConfigFromEvents } from './sensorium/SensoriumPipeline.js';
+import { createRuntimeSensoriumPackage } from './sensorium/RuntimeSensoriumPackage.js';
 
 export class WebsiteEvolutionEngine {
   private readonly store: SiteStore;
@@ -286,6 +294,44 @@ export class WebsiteEvolutionEngine {
     return this.store.listDeploymentPackages(siteId);
   }
 
+  async createSensoriumConfig(siteId: string, input: SiteSensoriumConfigInput = {}): Promise<SiteSensoriumConfig> {
+    await this.store.readProfile(siteId);
+    const parsed = SiteSensoriumConfigInputSchema.parse(input);
+    const config = createSensoriumConfigFromEvents(siteId, parsed);
+    await this.store.writeSensoriumConfig(config);
+    return config;
+  }
+
+  async getSensoriumConfig(siteId: string, configId: string): Promise<SiteSensoriumConfig> {
+    return this.store.readSensoriumConfig(siteId, configId);
+  }
+
+  async listSensoriumConfigs(siteId: string): Promise<SiteSensoriumConfig[]> {
+    return this.store.listSensoriumConfigs(siteId);
+  }
+
+  async createSensoriumDeploymentPackage(siteId: string, input: SiteSensoriumDeploymentPackageInput): Promise<SiteSensoriumDeploymentPackage> {
+    const parsed = SiteSensoriumDeploymentPackageInputSchema.parse(input);
+    const profile = await this.store.readProfile(siteId);
+    const config = await this.store.readSensoriumConfig(siteId, parsed.configId);
+    const deployment = await createRuntimeSensoriumPackage({
+      profile,
+      config,
+      publicBaseUrl: parsed.publicBaseUrl,
+      artifactPath: (deploymentId, fileName) => this.store.sensoriumDeploymentArtifactPath(siteId, deploymentId, fileName),
+    });
+    await this.store.writeSensoriumDeploymentPackage(deployment);
+    return deployment;
+  }
+
+  async getSensoriumDeploymentPackage(siteId: string, deploymentId: string): Promise<SiteSensoriumDeploymentPackage> {
+    return this.store.readSensoriumDeploymentPackage(siteId, deploymentId);
+  }
+
+  async listSensoriumDeploymentPackages(siteId: string): Promise<SiteSensoriumDeploymentPackage[]> {
+    return this.store.listSensoriumDeploymentPackages(siteId);
+  }
+
   async createRollbackReceipt(siteId: string, input: SiteRollbackReceiptInput): Promise<SiteRollbackReceipt> {
     const parsed = SiteRollbackReceiptInputSchema.parse(input);
     const selected = await this.store.readVariant(siteId, parsed.skinId);
@@ -344,6 +390,8 @@ export class WebsiteEvolutionEngine {
       assessments,
       creativeCompositions,
       deployments,
+      sensoriumConfigs,
+      sensoriumDeployments,
       rollbacks,
     ] = await Promise.all([
       this.store.readProfile(siteId),
@@ -353,6 +401,8 @@ export class WebsiteEvolutionEngine {
       this.store.listAestheticAssessments(siteId),
       this.store.listCreativeCompositions(siteId),
       this.store.listDeploymentPackages(siteId),
+      this.store.listSensoriumConfigs(siteId),
+      this.store.listSensoriumDeploymentPackages(siteId),
       this.store.listRollbackReceipts(siteId),
     ]);
     const publishedSkinId = preferences.filter((event) => event.kind === 'publish').at(-1)?.skinId;
@@ -369,6 +419,10 @@ export class WebsiteEvolutionEngine {
     const latestDeployment = selectedSkinId
       ? deployments.filter((deployment) => deployment.skinId === selectedSkinId).at(-1) ?? deployments.at(-1)
       : deployments.at(-1);
+    const latestSensoriumConfig = sensoriumConfigs.at(-1);
+    const latestSensoriumDeployment = latestSensoriumConfig
+      ? sensoriumDeployments.filter((deployment) => deployment.configId === latestSensoriumConfig.configId).at(-1)
+      : sensoriumDeployments.at(-1);
     const latestRollback = selectedSkinId
       ? rollbacks.filter((rollback) => rollback.skinId === selectedSkinId).at(-1) ?? rollbacks.at(-1)
       : rollbacks.at(-1);
@@ -431,6 +485,15 @@ export class WebsiteEvolutionEngine {
         action: latestDeployment && selectedSkinId && latestDeployment.skinId === selectedSkinId ? undefined : 'Create a deployment package for the selected skin.',
       },
       {
+        id: 'sensorium',
+        label: 'PostHog sensorium prepared',
+        status: latestSensoriumConfig && !latestSensoriumDeployment ? 'warning' : 'ready',
+        detail: latestSensoriumConfig
+          ? `Latest sensorium config ${latestSensoriumConfig.configId} has ${(latestSensoriumConfig.signalVector.confidence * 100).toFixed(0)}% confidence.`
+          : 'No optional PostHog sensorium config is attached to this runbook.',
+        action: latestSensoriumConfig && !latestSensoriumDeployment ? 'Create a sensorium deployment package for the saved config.' : undefined,
+      },
+      {
         id: 'rollback-receipt',
         label: 'Rollback receipt ready',
         status: latestRollback && selectedSkinId && latestRollback.skinId === selectedSkinId ? 'ready' : selectedVariant ? 'warning' : 'blocked',
@@ -454,8 +517,8 @@ export class WebsiteEvolutionEngine {
       summary: operatorRunbookSummary(profile.name, status, selectedVariant?.name),
       checks,
       operatorJourney: operatorJourney(checks),
-      recoveryPaths: recoveryPaths({ selectedSkinId, latestComposition, latestDeployment, latestRollback, publishedSkinId }),
-      receipts: runbookReceipts({ latestIngestion, latestAssessment, latestComposition, latestDeployment, latestRollback }),
+      recoveryPaths: recoveryPaths({ selectedSkinId, latestComposition, latestDeployment, latestSensoriumDeployment, latestRollback, publishedSkinId }),
+      receipts: runbookReceipts({ latestIngestion, latestAssessment, latestComposition, latestDeployment, latestSensoriumConfig, latestSensoriumDeployment, latestRollback }),
     };
     await this.store.writeOperatorRunbook(runbook);
     return runbook;
@@ -513,6 +576,8 @@ export class WebsiteEvolutionEngine {
       aestheticAssessments,
       creativeCompositions,
       deployments,
+      sensoriumConfigs,
+      sensoriumDeployments,
       rollbacks,
       operatorRunbooks,
     ] = await Promise.all([
@@ -522,6 +587,8 @@ export class WebsiteEvolutionEngine {
       this.store.listAestheticAssessments(profile.siteId),
       this.store.listCreativeCompositions(profile.siteId),
       this.store.listDeploymentPackages(profile.siteId),
+      this.store.listSensoriumConfigs(profile.siteId),
+      this.store.listSensoriumDeploymentPackages(profile.siteId),
       this.store.listRollbackReceipts(profile.siteId),
       this.store.listOperatorRunbooks(profile.siteId),
     ]);
@@ -531,6 +598,11 @@ export class WebsiteEvolutionEngine {
     const latestAssessment = aestheticAssessments.at(-1);
     const latestComposition = creativeCompositions.at(-1);
     const latestDeployment = deployments.at(-1);
+    const latestSensoriumConfig = sensoriumConfigs.at(-1);
+    const latestSensoriumDeployment = sensoriumDeployments.at(-1);
+    const latestSensoriumConfigHasDeployment = latestSensoriumConfig
+      ? sensoriumDeployments.some((deployment) => deployment.configId === latestSensoriumConfig.configId)
+      : false;
     const latestRollback = rollbacks.at(-1);
     const latestRunbook = operatorRunbooks.at(-1);
     const publishedSkinId = preferences.filter((event) => event.kind === 'publish').at(-1)?.skinId;
@@ -561,6 +633,20 @@ export class WebsiteEvolutionEngine {
         label: `Deployment package for ${item.skinId}`,
         createdAt: item.createdAt,
         skinId: item.skinId,
+      })),
+      ...sensoriumConfigs.map((item) => ({
+        kind: 'sensorium-config' as const,
+        id: item.configId,
+        label: `PostHog sensorium config at ${(item.signalVector.confidence * 100).toFixed(0)}% confidence`,
+        createdAt: item.createdAt,
+        configId: item.configId,
+      })),
+      ...sensoriumDeployments.map((item) => ({
+        kind: 'sensorium-deployment' as const,
+        id: item.deploymentId,
+        label: `Sensorium deployment for ${item.configId}`,
+        createdAt: item.createdAt,
+        configId: item.configId,
       })),
       ...rollbacks.map((item) => ({
         kind: 'rollback' as const,
@@ -594,6 +680,8 @@ export class WebsiteEvolutionEngine {
         aestheticAssessments: aestheticAssessments.length,
         creativeCompositions: creativeCompositions.length,
         deployments: deployments.length,
+        sensoriumConfigs: sensoriumConfigs.length,
+        sensoriumDeployments: sensoriumDeployments.length,
         rollbacks: rollbacks.length,
         operatorRunbooks: operatorRunbooks.length,
       },
@@ -627,6 +715,16 @@ export class WebsiteEvolutionEngine {
           skinId: latestDeployment.skinId,
           createdAt: latestDeployment.createdAt,
         } : undefined,
+        sensoriumConfig: latestSensoriumConfig ? {
+          configId: latestSensoriumConfig.configId,
+          createdAt: latestSensoriumConfig.createdAt,
+          confidence: latestSensoriumConfig.signalVector.confidence,
+        } : undefined,
+        sensoriumDeployment: latestSensoriumDeployment ? {
+          deploymentId: latestSensoriumDeployment.deploymentId,
+          configId: latestSensoriumDeployment.configId,
+          createdAt: latestSensoriumDeployment.createdAt,
+        } : undefined,
         preference: latestPreference ? {
           eventId: latestPreference.eventId,
           skinId: latestPreference.skinId,
@@ -652,6 +750,9 @@ export class WebsiteEvolutionEngine {
         aestheticAssessments: aestheticAssessments.length,
         creativeCompositions: creativeCompositions.length,
         deployments: deployments.length,
+        sensoriumConfigs: sensoriumConfigs.length,
+        sensoriumDeployments: sensoriumDeployments.length,
+        latestSensoriumConfigHasDeployment,
         rollbacks: rollbacks.length,
         operatorRunbooks: operatorRunbooks.length,
       }),
@@ -703,6 +804,9 @@ function nextOperatorAction(counts: {
   aestheticAssessments: number;
   creativeCompositions: number;
   deployments: number;
+  sensoriumConfigs: number;
+  sensoriumDeployments: number;
+  latestSensoriumConfigHasDeployment: boolean;
   rollbacks: number;
   operatorRunbooks: number;
 }): string {
@@ -711,6 +815,7 @@ function nextOperatorAction(counts: {
   if (counts.aestheticAssessments === 0) return 'Run the aesthetic comparison loop to rank the current directions.';
   if (counts.creativeCompositions === 0) return 'Compose the selected skin into a full creative composition layer.';
   if (counts.deployments === 0) return 'Create a deployment package for the selected direction.';
+  if (counts.sensoriumConfigs > 0 && !counts.latestSensoriumConfigHasDeployment) return 'Create a sensorium deployment package for the latest ambient config so the layer is reversible.';
   if (counts.rollbacks === 0) return 'Record a rollback receipt before treating the install path as reversible.';
   if (counts.operatorRunbooks === 0) return 'Generate an operator runbook to see readiness checks and recovery paths.';
   return 'Continue evolving from taste memory, then publish or roll back with receipts.';
@@ -728,7 +833,9 @@ const receiptKindRecencyRank: Record<SiteReceiptSummary['kind'], number> = {
   'aesthetic-assessment': 20,
   'creative-composition': 30,
   deployment: 40,
-  rollback: 50,
+  'sensorium-config': 45,
+  'sensorium-deployment': 50,
+  rollback: 55,
   'operator-runbook': 60,
 };
 
@@ -762,6 +869,7 @@ function recoveryPaths(input: {
   selectedSkinId?: string;
   latestComposition?: SiteCreativeComposition;
   latestDeployment?: SiteDeploymentPackage;
+  latestSensoriumDeployment?: SiteSensoriumDeploymentPackage;
   latestRollback?: SiteRollbackReceipt;
   publishedSkinId?: string;
 }): string[] {
@@ -771,6 +879,9 @@ function recoveryPaths(input: {
   }
   if (input.latestDeployment) {
     paths.push(`Deployment package ${input.latestDeployment.deploymentId} can reinstall ${input.latestDeployment.skinId}.`);
+  }
+  if (input.latestSensoriumDeployment) {
+    paths.push(`Sensorium deployment ${input.latestSensoriumDeployment.deploymentId} can reinstall ${input.latestSensoriumDeployment.configId}.`);
   }
   if (input.latestComposition) {
     paths.push(`Creative composition ${input.latestComposition.compositionId} can reinstall ${input.latestComposition.domains.join(' + ')} layers.`);
@@ -789,6 +900,8 @@ function runbookReceipts(input: {
   latestAssessment?: SiteAestheticAssessment;
   latestComposition?: SiteCreativeComposition;
   latestDeployment?: SiteDeploymentPackage;
+  latestSensoriumConfig?: SiteSensoriumConfig;
+  latestSensoriumDeployment?: SiteSensoriumDeploymentPackage;
   latestRollback?: SiteRollbackReceipt;
 }): SiteReceiptSummary[] {
   const receipts: SiteReceiptSummary[] = [];
@@ -825,6 +938,24 @@ function runbookReceipts(input: {
       label: `Deployment package for ${input.latestDeployment.skinId}`,
       createdAt: input.latestDeployment.createdAt,
       skinId: input.latestDeployment.skinId,
+    });
+  }
+  if (input.latestSensoriumConfig) {
+    receipts.push({
+      kind: 'sensorium-config',
+      id: input.latestSensoriumConfig.configId,
+      label: `PostHog sensorium config at ${(input.latestSensoriumConfig.signalVector.confidence * 100).toFixed(0)}% confidence`,
+      createdAt: input.latestSensoriumConfig.createdAt,
+      configId: input.latestSensoriumConfig.configId,
+    });
+  }
+  if (input.latestSensoriumDeployment) {
+    receipts.push({
+      kind: 'sensorium-deployment',
+      id: input.latestSensoriumDeployment.deploymentId,
+      label: `Sensorium deployment for ${input.latestSensoriumDeployment.configId}`,
+      createdAt: input.latestSensoriumDeployment.createdAt,
+      configId: input.latestSensoriumDeployment.configId,
     });
   }
   if (input.latestRollback) {

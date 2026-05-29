@@ -1119,6 +1119,78 @@ export function createApp(configPath, port = 5174) {
     }
   });
 
+  app.post('/api/living-sites/:siteId/sensorium-config', async (req, res) => {
+    try {
+      const config = await livingSiteEngine.createSensoriumConfig(req.params.siteId, {
+        source: req.body?.source,
+        events: req.body?.events,
+        window: req.body?.window,
+        reducedMotion: req.body?.reducedMotion,
+        notes: req.body?.notes,
+      });
+      res.status(200).json({ config });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/sensorium-configs', async (req, res) => {
+    try {
+      const configs = await livingSiteEngine.listSensoriumConfigs(req.params.siteId);
+      res.status(200).json({ configs });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/living-sites/:siteId/sensorium-deployment', async (req, res) => {
+    try {
+      const publicBaseUrl = req.body?.publicBaseUrl || `${req.protocol}://${req.get('host')}`;
+      const deployment = await livingSiteEngine.createSensoriumDeploymentPackage(req.params.siteId, {
+        configId: req.body?.configId,
+        publicBaseUrl,
+      });
+      res.status(200).json({ deployment });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/sensorium-deployments', async (req, res) => {
+    try {
+      const deployments = await livingSiteEngine.listSensoriumDeploymentPackages(req.params.siteId);
+      res.status(200).json({ deployments });
+    } catch (err) {
+      res.status(err.statusCode || 500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.get('/api/living-sites/:siteId/sensorium-deployments/:deploymentId/assets/:fileName', async (req, res) => {
+    try {
+      const deployment = await livingSiteEngine.getSensoriumDeploymentPackage(req.params.siteId, req.params.deploymentId);
+      const fileMap = {
+        'liminal-sensorium.css': deployment.files.cssPath,
+        'liminal-sensorium.js': deployment.files.jsPath,
+        'liminal-sensorium-config.json': deployment.files.configPath,
+        'liminal-sensorium-manifest.json': deployment.files.manifestPath,
+        'manifest.json': deployment.files.manifestPath,
+        'install.html': deployment.files.installHtmlPath,
+        'README.md': deployment.files.readmePath,
+      };
+      const filePath = fileMap[req.params.fileName];
+      if (!filePath) return res.status(404).json({ error: 'sensorium deployment asset was not found' });
+      const safePath = validateLivingSiteArtifactPath(livingSitesRoot, filePath);
+      if (req.params.fileName.endsWith('.css')) res.type('css');
+      if (req.params.fileName.endsWith('.js')) res.type('js');
+      if (req.params.fileName.endsWith('.json')) res.type('json');
+      if (req.params.fileName.endsWith('.html')) res.type('html');
+      if (req.params.fileName.endsWith('.md')) res.type('text/plain');
+      res.sendFile(safePath);
+    } catch (err) {
+      res.status(err.statusCode || 404).json({ error: err.message || String(err) });
+    }
+  });
+
   app.post('/api/living-sites/:siteId/rollback', async (req, res) => {
     try {
       const rollback = await livingSiteEngine.createRollbackReceipt(req.params.siteId, {
