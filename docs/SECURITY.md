@@ -41,6 +41,19 @@ docker run \
 
 ## Environment Variables
 
+### Secret-Safe Runtime Boundary
+
+Liminal Sites is public-facing, so credentials must stay out of the static site, Git history, logs, screenshots, pull requests, and generated artifacts.
+
+- Browser and GitHub Pages builds may contain public identifiers only, such as a PostHog project key or public asset URL.
+- Model/provider credentials (`OPENAI_API_KEY`, `MINIMAX_API_KEY`, `GLM_API_KEY`, `OPENROUTER_API_KEY`, and `LIMINAL_*_API_KEY`) must live only in a local shell, a local `.env.*` file ignored by Git, `~/.liminal/config.json`, or a server-side deployment secret store.
+- Live generation must run through the local/operator process or a server-side endpoint. Do not call cloud model providers directly from browser code.
+- Logs may say whether a provider is configured, but must never print secret values, prefixes, suffixes, hashes, request bodies, provider payloads, or authorization headers.
+- Copy `.env.dogfood.example` to `.env.dogfood` for local dogfood runs. The real `.env.dogfood` file is ignored and must never be committed.
+- Run `pnpm security:secrets` before pushing any branch that touches provider/runtime, CI, docs, or examples.
+
+PostHog note: a PostHog browser project key is not a model-provider secret, but personal PostHog API keys, webhook secrets, and ingestion proxy credentials are server-side secrets and follow the same rules above.
+
 ### Security-Related Variables
 
 | Variable | Description | Default | Security Impact |

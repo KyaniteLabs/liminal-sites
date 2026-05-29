@@ -16,6 +16,13 @@ import { LLMClient } from '../dist/llm/LLMClient.js';
 import { logSecurityEvent } from '../dist/security/SecurityLogger.js';
 import { collectRepositoryOpportunityEvidence, scanGreenSystemOpportunities } from '../dist/improvement/OpportunityScanner.js';
 import { WebsiteEvolutionEngine, planSitePatch } from '../dist/sites/index.js';
+import {
+  CurationApi,
+  FrameGenerator,
+  PromptPairGenerator,
+  ShittyPromptsEngine,
+  ShittyPromptsStore,
+} from '../dist/sites/shittyPrompts/index.js';
 import { buildGuiBridgeInput } from './bridgeInput.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -554,6 +561,25 @@ function isSameSecretTarget(incoming = {}, existing = {}) {
   return true;
 }
 
+function createOllamaPromptPairGenerator(model) {
+  return new PromptPairGenerator({
+    async complete(prompt) {
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, prompt, stream: false }),
+      });
+      if (!response.ok) throw new Error(`Ollama error: ${response.statusText}`);
+      const data = await response.json();
+      return String(data.response ?? '');
+    },
+  });
+}
+
+function parsePromptPairStatus(value) {
+  return value === 'approved' || value === 'rejected' ? value : 'candidate';
+}
+
 // F5: CSRF protection on SSE endpoints
 function validateSSEOrigin(req, res, next) {
   const origin = req.headers.origin;
@@ -578,6 +604,8 @@ export function createApp(configPath, port = 5174) {
   const livingSiteEngine = new WebsiteEvolutionEngine({
     rootDir: livingSitesRoot,
   });
+  const shittyPromptsStore = new ShittyPromptsStore(path.join(livingSitesRoot, 'shitty-prompts'));
+  const shittyPromptsCuration = new CurationApi(shittyPromptsStore);
   app.disable('x-powered-by');
   app.use((_req, res, next) => {
     setStudioCommonSecurityHeaders(res);
@@ -771,6 +799,64 @@ export function createApp(configPath, port = 5174) {
       });
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/shitty-prompts/pairs', async (req, res) => {
+    try {
+      const status = parsePromptPairStatus(req.query?.status);
+      const pairs = await shittyPromptsStore.listByStatus(status);
+      res.json({ pairs });
+    } catch (err) {
+      res.status(500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/shitty-prompts/run', async (req, res) => {
+    try {
+      const body = req.body || {};
+      const provider = body.provider === 'ollama' ? 'ollama' : null;
+      if (!provider) {
+        res.status(400).json({ error: 'Shitty Prompts generation currently supports local Ollama only.' });
+        return;
+      }
+      const model = typeof body.model === 'string' && body.model.trim() ? body.model.trim() : 'gemma3:4b';
+      const pairCount = Math.max(1, Math.min(50, Number.parseInt(String(body.pairCount ?? 12), 10) || 12));
+      const engine = new ShittyPromptsEngine({
+        store: shittyPromptsStore,
+        pairGen: createOllamaPromptPairGenerator(model),
+        frameGen: new FrameGenerator(),
+      });
+      res.json(await engine.run({ pairCount, provider, model }));
+    } catch (err) {
+      res.status(500).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/shitty-prompts/pairs/:id/accept', async (req, res) => {
+    try {
+      await shittyPromptsCuration.accept(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(404).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/shitty-prompts/pairs/:id/reject', async (req, res) => {
+    try {
+      await shittyPromptsCuration.reject(req.params.id);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(404).json({ error: err.message || String(err) });
+    }
+  });
+
+  app.post('/api/shitty-prompts/pairs/:id/edit', async (req, res) => {
+    try {
+      await shittyPromptsCuration.edit(req.params.id, req.body || {});
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(404).json({ error: err.message || String(err) });
     }
   });
 

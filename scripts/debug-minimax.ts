@@ -10,8 +10,7 @@ console.log('🔍 Debugging MiniMax API Key\n');
 // Check environment
 const apiKey = process.env.MINIMAX_API_KEY;
 console.log('MINIMAX_API_KEY present:', !!apiKey);
-console.log('MINIMAX_API_KEY length:', apiKey?.length || 0);
-console.log('MINIMAX_API_KEY prefix:', apiKey?.slice(0, 10) + '...');
+console.log('MINIMAX_API_KEY value:', apiKey ? 'configured (redacted)' : 'missing');
 
 // Create client
 const llm = new LLMClient({

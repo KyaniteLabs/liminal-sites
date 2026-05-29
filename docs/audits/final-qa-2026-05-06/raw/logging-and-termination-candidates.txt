@@ -954,8 +954,7 @@ test/integration/entropy-genesis-fallback.test.ts:44:          throw new Error('
 test/integration/entropy-genesis-fallback.test.ts:69:          throw new Error('event store unreachable');
 scripts/debug-minimax.ts:8:console.log('🔍 Debugging MiniMax API Key\n');
 scripts/debug-minimax.ts:12:console.log('MINIMAX_API_KEY present:', !!apiKey);
-scripts/debug-minimax.ts:13:console.log('MINIMAX_API_KEY length:', apiKey?.length || 0);
-scripts/debug-minimax.ts:14:console.log('MINIMAX_API_KEY prefix:', apiKey?.slice(0, 10) + '...');
+scripts/debug-minimax.ts:13:console.log('MINIMAX_API_KEY value:', apiKey ? 'configured (redacted)' : 'missing');
 scripts/debug-minimax.ts:26:console.log('\nClient config:');
 scripts/debug-minimax.ts:27:console.log('  baseUrl:', (llm as any).config?.baseUrl);
 scripts/debug-minimax.ts:28:console.log('  model:', (llm as any).config?.model);
@@ -1009,7 +1008,7 @@ scripts/dogfood/dogfood-minimax-m27.ts:228:  console.log('\n📡 Configuration:'
 scripts/dogfood/dogfood-minimax-m27.ts:229:  console.log(`   Provider: ${process.env.LIMINAL_LLM_PROVIDER}`);
 scripts/dogfood/dogfood-minimax-m27.ts:230:  console.log(`   Model: ${process.env.LIMINAL_LLM_MODEL}`);
 scripts/dogfood/dogfood-minimax-m27.ts:231:  console.log(`   Base URL: ${process.env.LIMINAL_LLM_BASE_URL}`);
-scripts/dogfood/dogfood-minimax-m27.ts:232:  console.log(`   API Key: ${process.env.LIMINAL_LLM_API_KEY?.slice(0, 10)}...`);
+scripts/dogfood/dogfood-minimax-m27.ts:232:  console.log('   API Key: configured (redacted)');
 scripts/dogfood/dogfood-minimax-m27.ts:234:  console.log('\n🚀 Starting tests (one at a time)...\n');
 scripts/dogfood/dogfood-minimax-m27.ts:245:      console.log('   [waiting 2s before next test...]');
 scripts/dogfood/dogfood-minimax-m27.ts:250:  console.log('\n' + '='.repeat(70));

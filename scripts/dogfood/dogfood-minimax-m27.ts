@@ -229,7 +229,7 @@ async function main() {
   console.log(`   Provider: ${process.env.LIMINAL_LLM_PROVIDER}`);
   console.log(`   Model: ${process.env.LIMINAL_LLM_MODEL}`);
   console.log(`   Base URL: ${process.env.LIMINAL_LLM_BASE_URL}`);
-  console.log(`   API Key: ${process.env.LIMINAL_LLM_API_KEY?.slice(0, 10)}...`);
+  console.log('   API Key: configured (redacted)');
   
   console.log('\n🚀 Starting tests (one at a time)...\n');
   

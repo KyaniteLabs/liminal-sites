@@ -55,7 +55,8 @@ async function main() {
     if (!screenshotLoaded) throw new Error('Ingestion screenshot did not load in the operator receipt.');
     await page.locator('.living-site-panel--profile').getByRole('button', { name: 'Generate' }).click();
     await page.locator('.living-site-variant').first().waitFor({ state: 'visible', timeout: 12_000 });
-    await page.locator('.living-site-panel').last().getByRole('button', { name: 'Favorite' }).click();
+    const selectedSkinPanel = page.locator('section.living-site-panel').filter({ hasText: 'Selected Skin' });
+    await selectedSkinPanel.getByRole('button', { name: 'Favorite' }).click();
     await page.getByText('taste memory updated').waitFor({ state: 'visible', timeout: 12_000 });
     await page.locator('.living-site-panel--profile').getByRole('button', { name: 'Evolve' }).click();
     await page.locator('.living-site-variant').first().waitFor({ state: 'visible', timeout: 12_000 });
@@ -65,34 +66,39 @@ async function main() {
     const creativeMode = page.getByLabel('Creative mode');
     await creativeMode.selectOption('balanced');
     await waitForLabeledSelectValue(page, 'Creative mode', 'balanced');
-    const composeButton = page.locator('.living-site-panel').last().getByRole('button', { name: 'Compose creative' });
+    const composeButton = selectedSkinPanel.getByRole('button', { name: 'Compose creative' });
     await waitForEnabledButton(page, 'Compose creative');
     await composeButton.click();
     await page.locator('.living-site-creative-receipt').waitFor({ state: 'visible', timeout: 45_000 });
-    await page.locator('.living-site-panel').last().getByRole('button', { name: 'Preview' }).click();
+    await selectedSkinPanel.getByRole('button', { name: 'Preview' }).click();
     const iframe = page.locator('iframe[title="Live preview"][src*="living-site-preview"]').first();
     await iframe.waitFor({ state: 'visible', timeout: 12_000 });
     const iframeSrc = await iframe.getAttribute('src');
     if (!iframeSrc) throw new Error('Living site preview iframe did not expose a src.');
-    const previewResponse = await fetch(iframeSrc);
+    const previewUrl = new URL(iframeSrc, `http://127.0.0.1:${started.guiPort}`).toString();
+    const previewResponse = await fetchWithTimeout(previewUrl, 12_000, 'living site preview');
     const frameText = await previewResponse.text();
     if (!previewResponse.ok || !frameText.includes('Website that keeps learning.')) {
       throw new Error(`Living site preview HTML did not verify: ${previewResponse.status}`);
     }
-    await page.locator('.living-site-panel').last().getByRole('button', { name: 'Deploy package' }).click();
+    await selectedSkinPanel.getByRole('button', { name: 'Deploy package' }).click();
     await page.locator('.living-site-deployment').waitFor({ state: 'visible', timeout: 12_000 });
     const installPreviewUrl = await page.locator('.living-site-deployment__link').getAttribute('href');
     if (!installPreviewUrl) throw new Error('Deployment install preview link was not visible.');
-    const installPreview = await fetch(installPreviewUrl);
+    const installPreview = await fetchWithTimeout(
+      new URL(installPreviewUrl, `http://127.0.0.1:${started.guiPort}`).toString(),
+      12_000,
+      'deployment install preview',
+    );
     const installPreviewText = await installPreview.text();
     if (!installPreview.ok || !installPreviewText.includes('data-liminal-sites')) {
       throw new Error(`Deployment install preview did not verify: ${installPreview.status}`);
     }
-    await page.locator('.living-site-panel').last().getByRole('button', { name: 'Rollback receipt' }).click();
+    await selectedSkinPanel.getByRole('button', { name: 'Rollback receipt' }).click();
     await page.locator('.living-site-rollback').waitFor({ state: 'visible', timeout: 12_000 });
     await page.locator('.living-site-panel--profile').getByRole('button', { name: 'Project dashboard' }).click();
     await page.locator('.living-site-dashboard').waitFor({ state: 'visible', timeout: 12_000 });
-    await page.locator('.living-site-panel').last().getByRole('button', { name: 'Operator runbook' }).click();
+    await selectedSkinPanel.getByRole('button', { name: 'Operator runbook' }).click();
     await page.locator('.living-site-runbook').waitFor({ state: 'visible', timeout: 12_000 });
     await page.waitForTimeout(700);
 
@@ -126,7 +132,10 @@ async function main() {
       runbookText: document.querySelector('.living-site-runbook')?.textContent ?? '',
       runbookCheckCount: document.querySelectorAll('.living-site-runbook__check').length,
       variantCount: document.querySelectorAll('.living-site-variant').length,
-      selectedSkinText: document.querySelector('.living-site-panel:last-of-type strong')?.textContent ?? '',
+      selectedSkinText: Array.from(document.querySelectorAll('.living-site-panel'))
+        .find((panel) => panel.textContent?.includes('Selected Skin'))
+        ?.querySelector('strong')
+        ?.textContent ?? '',
       iframeCount: document.querySelectorAll('iframe[title="Live preview"]').length,
       screenshotTextLength: document.body.innerText.length,
     }));
@@ -361,6 +370,16 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
     ]);
   } finally {
     if (timeout) clearTimeout(timeout);
+  }
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number, label: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
