@@ -5,6 +5,7 @@ import {
   extractSiteSignalVector,
   mapSignalsToAestheticIntent,
 } from '../../../src/sites/sensorium/SensoriumPipeline.js';
+import { renderSensoriumCss } from '../../../src/sites/sensorium/RuntimeSensoriumPackage.js';
 import type { RawSensoriumEvent } from '../../../src/sites/types.js';
 
 const fixtureEvents: RawSensoriumEvent[] = [
@@ -79,5 +80,12 @@ describe('SensoriumPipeline', () => {
     expect(config.guardrails.protectedSurfaces).toContain('seo');
     expect(config.provenance.sensor).toBe('posthog');
     expect(config.provenance.mode).toBe('fixture-first');
+  });
+
+  it('keeps skip links outside the sensorium stacking reset', () => {
+    const config = createSensoriumConfigFromEvents('kyanite-labs-site', { events: fixtureEvents });
+    const css = renderSensoriumCss(config);
+
+    expect(css).toContain('body.liminal-sites-sensorium-active > :not(#liminal-sites-sensorium-layer):not(.skip-link)');
   });
 });

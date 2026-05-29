@@ -126,7 +126,7 @@ ${variables}
   mix-blend-mode: overlay;
 }
 
-body.liminal-sites-sensorium-active > :not(#liminal-sites-sensorium-layer) {
+body.liminal-sites-sensorium-active > :not(#liminal-sites-sensorium-layer):not(.skip-link) {
   position: relative;
   z-index: 1;
 }
