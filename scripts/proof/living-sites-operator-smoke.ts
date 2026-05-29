@@ -94,6 +94,33 @@ async function main() {
     if (!installPreview.ok || !installPreviewText.includes('data-liminal-sites')) {
       throw new Error(`Deployment install preview did not verify: ${installPreview.status}`);
     }
+    await selectedSkinPanel.getByRole('button', { name: 'Prepare sensorium' }).click();
+    await page.locator('.living-site-sensorium__metrics').waitFor({ state: 'visible', timeout: 12_000 });
+    await waitForStatusContains(page, 'sensorium config');
+    await selectedSkinPanel.getByRole('button', { name: 'Package sensorium' }).click();
+    await page.locator('.living-site-sensorium__package').waitFor({ state: 'visible', timeout: 12_000 });
+    const sensoriumPreviewUrl = await page.locator('.living-site-sensorium__package .living-site-deployment__link').getAttribute('href');
+    if (!sensoriumPreviewUrl) throw new Error('Sensorium install preview link was not visible.');
+    const resolvedSensoriumPreviewUrl = new URL(sensoriumPreviewUrl, `http://127.0.0.1:${started.guiPort}`).toString();
+    const sensoriumPreview = await fetchWithTimeout(resolvedSensoriumPreviewUrl, 12_000, 'sensorium install preview');
+    const sensoriumPreviewText = await sensoriumPreview.text();
+    if (!sensoriumPreview.ok || !sensoriumPreviewText.includes('data-liminal-sites-sensorium')) {
+      throw new Error(`Sensorium install preview did not verify: ${sensoriumPreview.status}`);
+    }
+    const sensoriumPage = await browser.newPage({ viewport: { width: 1280, height: 820 } });
+    let sensoriumRuntimeReceipt: Record<string, unknown> = {};
+    try {
+      await sensoriumPage.goto(resolvedSensoriumPreviewUrl, { waitUntil: 'domcontentloaded' });
+      await sensoriumPage.waitForFunction(() => (window as any).__liminalSitesSensorium?.ready === true, undefined, { timeout: 12_000 });
+      sensoriumRuntimeReceipt = await sensoriumPage.evaluate(() => ({
+        ready: (window as any).__liminalSitesSensorium?.ready === true,
+        layerExists: Boolean(document.querySelector('#liminal-sites-sensorium-layer')),
+        pointerEvents: window.getComputedStyle(document.querySelector('#liminal-sites-sensorium-layer') as Element).pointerEvents,
+        protectedSurfaces: (window as any).__liminalSitesSensorium?.protectedSurfaces,
+      }));
+    } finally {
+      await sensoriumPage.close();
+    }
     await selectedSkinPanel.getByRole('button', { name: 'Rollback receipt' }).click();
     await page.locator('.living-site-rollback').waitFor({ state: 'visible', timeout: 12_000 });
     await page.locator('.living-site-panel--profile').getByRole('button', { name: 'Project dashboard' }).click();
@@ -120,6 +147,9 @@ async function main() {
       assessmentText: document.querySelector('.living-site-assessment')?.textContent ?? '',
       deploymentVisible: Boolean(document.querySelector('.living-site-deployment')),
       deploymentText: document.querySelector('.living-site-deployment')?.textContent ?? '',
+      sensoriumVisible: Boolean(document.querySelector('.living-site-sensorium')),
+      sensoriumText: document.querySelector('.living-site-sensorium')?.textContent ?? '',
+      sensoriumPackageVisible: Boolean(document.querySelector('.living-site-sensorium__package')),
       creativeVisible: Boolean(document.querySelector('.living-site-creative-receipt')),
       creativeText: document.querySelector('.living-site-creative-receipt')?.textContent ?? '',
       creativeCapabilityCount: document.querySelectorAll('.living-site-capability').length,
@@ -151,6 +181,9 @@ async function main() {
         && metrics.fullLiminalModeVisible
         && metrics.deploymentVisible
         && metrics.deploymentText.includes('data-liminal-sites')
+        && metrics.sensoriumVisible
+        && metrics.sensoriumText.includes('PostHog Sensorium')
+        && metrics.sensoriumPackageVisible
         && metrics.rollbackVisible
         && metrics.rollbackText.includes('Rollback Receipt')
         && metrics.dashboardVisible
@@ -160,10 +193,16 @@ async function main() {
         && metrics.runbookCheckCount >= 6
         && metrics.variantCount > 0
         && metrics.iframeCount === 1
-        && frameText.includes('Website that keeps learning.'),
+        && frameText.includes('Website that keeps learning.')
+        && sensoriumPreviewText.includes('data-liminal-sites-sensorium')
+        && sensoriumRuntimeReceipt.ready === true
+        && sensoriumRuntimeReceipt.layerExists === true
+        && sensoriumRuntimeReceipt.pointerEvents === 'none',
       metrics,
+      sensoriumRuntimeReceipt,
       frameTextLength: frameText.length,
       installPreviewTextLength: installPreviewText.length,
+      sensoriumPreviewTextLength: sensoriumPreviewText.length,
       screenshotPath,
       screenshotBytes: screenshot.length,
       apiPort: started.apiPort,
@@ -228,6 +267,12 @@ async function writeFailureReceipt(
 async function waitForStatus(page: Page, expected: string) {
   await page.waitForFunction((status) => (
     document.querySelector('.living-site-panel--profile small')?.textContent === status
+  ), expected, { timeout: 12_000 });
+}
+
+async function waitForStatusContains(page: Page, expected: string) {
+  await page.waitForFunction((status) => (
+    document.querySelector('.living-site-panel--profile small')?.textContent?.includes(status)
   ), expected, { timeout: 12_000 });
 }
 

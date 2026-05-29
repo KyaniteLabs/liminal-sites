@@ -2238,6 +2238,8 @@ body::before {
   .living-site-assessment-card,
   .living-site-creative-receipt,
   .living-site-deployment,
+.living-site-sensorium,
+.living-site-sensorium__package,
 .living-site-dashboard,
 .living-site-dashboard-card,
 .living-site-rollback,
@@ -2273,6 +2275,7 @@ body::before {
   .living-site-assessment-card span,
   .living-site-creative-receipt span,
   .living-site-deployment span,
+.living-site-sensorium span,
 .living-site-dashboard span,
 .living-site-dashboard-card span,
 .living-site-rollback span,
@@ -2292,6 +2295,7 @@ body::before {
   .living-site-assessment-card strong,
   .living-site-creative-receipt strong,
   .living-site-deployment strong,
+.living-site-sensorium strong,
 .living-site-dashboard strong,
 .living-site-dashboard-card strong,
 .living-site-rollback strong,
@@ -2308,6 +2312,7 @@ body::before {
   .living-site-assessment-card small,
   .living-site-creative-receipt small,
   .living-site-deployment small,
+.living-site-sensorium small,
 .living-site-dashboard small,
 .living-site-dashboard-card small,
 .living-site-rollback small,
@@ -2466,6 +2471,54 @@ body::before {
   padding: 12px;
   border-color: rgba(88, 199, 119, 0.34);
   background: rgba(88, 199, 119, 0.06);
+}
+
+.living-site-sensorium {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-color: rgba(89, 225, 255, 0.34);
+  background:
+    linear-gradient(135deg, rgba(89, 225, 255, 0.07), rgba(88, 199, 119, 0.045)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.living-site-sensorium__events {
+  min-height: 116px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.78rem;
+  resize: vertical;
+}
+
+.living-site-sensorium__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 6px;
+}
+
+.living-site-sensorium__metrics span {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.76rem;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: none;
+}
+
+.living-site-sensorium__metrics b {
+  color: var(--atelier-text);
+}
+
+.living-site-sensorium__package {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border-color: rgba(88, 199, 119, 0.34);
+  background: rgba(88, 199, 119, 0.055);
 }
 
 .living-site-creative-controls {
