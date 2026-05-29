@@ -235,6 +235,50 @@ describe('WebsiteEvolutionEngine', () => {
     expect(projects[0].receipts.map((receipt) => receipt.kind)).toEqual(expect.arrayContaining(['sensorium-config', 'sensorium-deployment']));
   });
 
+  it('does not treat stale sensorium deployments as ready for newer configs', async () => {
+    const rootDir = await tempRoot();
+    const sourcePath = await sourceFixture();
+    const engine = new WebsiteEvolutionEngine({ rootDir });
+    const profile = await engine.createProfile({
+      name: 'Stale Sensorium Guard',
+      sourcePath,
+      brandBrief: 'A launch site with ambient analytics receipts.',
+    });
+    await engine.ingestSource(profile.siteId, { captureVisual: false });
+    const run = await engine.generateVariants(profile.siteId, { prompt: 'Create an operator-safe direction.', count: 1 });
+    await engine.compareAesthetics(profile.siteId, { skinIds: [run.variants[0].skinId] });
+    const composition = await engine.composeCreativeSite(profile.siteId, { skinId: run.variants[0].skinId });
+    await engine.createDeploymentPackage(profile.siteId, {
+      skinId: run.variants[0].skinId,
+      compositionId: composition.compositionId,
+      publicBaseUrl: 'http://127.0.0.1:7777',
+    });
+    const firstConfig = await engine.createSensoriumConfig(profile.siteId, {
+      events: [{ event: '$pageview', distinctId: 'visitor-1', properties: { $pathname: '/' } }],
+    });
+    await engine.createSensoriumDeploymentPackage(profile.siteId, {
+      configId: firstConfig.configId,
+      publicBaseUrl: 'http://127.0.0.1:7777',
+    });
+    const latestConfig = await engine.createSensoriumConfig(profile.siteId, {
+      events: [{ event: '$dead_click', distinctId: 'visitor-2', properties: { $pathname: '/pricing' } }],
+    });
+
+    const runbook = await engine.createOperatorRunbook(profile.siteId, { skinId: run.variants[0].skinId });
+    const projects = await engine.listProjectSummaries();
+
+    expect(latestConfig.configId).not.toBe(firstConfig.configId);
+    expect(runbook.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'sensorium',
+        status: 'warning',
+        action: 'Create a sensorium deployment package for the saved config.',
+      }),
+    ]));
+    expect(runbook.recoveryPaths.join(' ')).not.toContain(firstConfig.configId);
+    expect(projects[0].nextOperatorAction).toContain('latest ambient config');
+  });
+
   it('summarizes saved project history and records rollback receipts', async () => {
     const rootDir = await tempRoot();
     const engine = new WebsiteEvolutionEngine({ rootDir });

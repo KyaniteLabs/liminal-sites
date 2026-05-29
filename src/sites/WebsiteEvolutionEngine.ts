@@ -421,7 +421,7 @@ export class WebsiteEvolutionEngine {
       : deployments.at(-1);
     const latestSensoriumConfig = sensoriumConfigs.at(-1);
     const latestSensoriumDeployment = latestSensoriumConfig
-      ? sensoriumDeployments.filter((deployment) => deployment.configId === latestSensoriumConfig.configId).at(-1) ?? sensoriumDeployments.at(-1)
+      ? sensoriumDeployments.filter((deployment) => deployment.configId === latestSensoriumConfig.configId).at(-1)
       : sensoriumDeployments.at(-1);
     const latestRollback = selectedSkinId
       ? rollbacks.filter((rollback) => rollback.skinId === selectedSkinId).at(-1) ?? rollbacks.at(-1)
@@ -600,6 +600,9 @@ export class WebsiteEvolutionEngine {
     const latestDeployment = deployments.at(-1);
     const latestSensoriumConfig = sensoriumConfigs.at(-1);
     const latestSensoriumDeployment = sensoriumDeployments.at(-1);
+    const latestSensoriumConfigHasDeployment = latestSensoriumConfig
+      ? sensoriumDeployments.some((deployment) => deployment.configId === latestSensoriumConfig.configId)
+      : false;
     const latestRollback = rollbacks.at(-1);
     const latestRunbook = operatorRunbooks.at(-1);
     const publishedSkinId = preferences.filter((event) => event.kind === 'publish').at(-1)?.skinId;
@@ -749,6 +752,7 @@ export class WebsiteEvolutionEngine {
         deployments: deployments.length,
         sensoriumConfigs: sensoriumConfigs.length,
         sensoriumDeployments: sensoriumDeployments.length,
+        latestSensoriumConfigHasDeployment,
         rollbacks: rollbacks.length,
         operatorRunbooks: operatorRunbooks.length,
       }),
@@ -802,6 +806,7 @@ function nextOperatorAction(counts: {
   deployments: number;
   sensoriumConfigs: number;
   sensoriumDeployments: number;
+  latestSensoriumConfigHasDeployment: boolean;
   rollbacks: number;
   operatorRunbooks: number;
 }): string {
@@ -810,7 +815,7 @@ function nextOperatorAction(counts: {
   if (counts.aestheticAssessments === 0) return 'Run the aesthetic comparison loop to rank the current directions.';
   if (counts.creativeCompositions === 0) return 'Compose the selected skin into a full creative composition layer.';
   if (counts.deployments === 0) return 'Create a deployment package for the selected direction.';
-  if (counts.sensoriumConfigs > 0 && counts.sensoriumDeployments === 0) return 'Create a sensorium deployment package so the ambient layer is reversible.';
+  if (counts.sensoriumConfigs > 0 && !counts.latestSensoriumConfigHasDeployment) return 'Create a sensorium deployment package for the latest ambient config so the layer is reversible.';
   if (counts.rollbacks === 0) return 'Record a rollback receipt before treating the install path as reversible.';
   if (counts.operatorRunbooks === 0) return 'Generate an operator runbook to see readiness checks and recovery paths.';
   return 'Continue evolving from taste memory, then publish or roll back with receipts.';
