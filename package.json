@@ -141,7 +141,7 @@
     "lodash": "^4.18.0",
     "neverthrow": "^8.2.0",
     "open": "^11.0.0",
-    "p5": "^2.2.3",
+    "p5": "^2.3.0",
     "path-to-regexp": "8.4.2",
     "picomatch": "4.0.4",
     "puppeteer": "^25.0.4",
