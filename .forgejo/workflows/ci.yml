@@ -9,10 +9,16 @@ jobs:
       image: node:22-slim
     steps:
       - uses: actions/checkout@v4
+      - name: Enable pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
       - name: Install dependencies
         run: |
-          if [ -f package.json ]; then
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile || pnpm install
+          elif [ -f package-lock.json ]; then
             npm ci || npm install
+          elif [ -f package.json ]; then
+            npm install
           fi
       - name: Lint
         run: |
