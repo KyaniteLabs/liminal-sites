@@ -5,16 +5,14 @@ on:
 jobs:
   test:
     runs-on: docker
-    container:
-      image: node:22-slim
     steps:
       - uses: actions/checkout@v4
-      - name: Enable pnpm
+      - name: Setup pnpm
         run: corepack enable && corepack prepare pnpm@latest --activate
       - name: Install dependencies
         run: |
           if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile || pnpm install
+            pnpm install 2>/dev/null || npm install
           elif [ -f package-lock.json ]; then
             npm ci || npm install
           elif [ -f package.json ]; then
