@@ -1,16 +1,18 @@
 # Liminal Sites
 
-[Public landing page](https://kyanitelabs.github.io/liminal-sites/) | [GitHub repository](https://github.com/KyaniteLabs/liminal-sites) | [AI discovery file](llms.txt)
+[Public landing page](https://kyanitelabs.github.io/liminal-sites/) | [Forgejo source](https://git.kyanitelabs.tech/KyaniteLabs/liminal-sites) | [AI discovery file](llms.txt)
 
 > Living website evolution for people who want a site that can keep learning after launch.
 
-Liminal Sites turns the Liminal creative engine toward websites. It helps an operator ingest a real site or brand brief, generate reviewable design directions, preview before-and-after states, remember taste decisions, and export either a runtime skin or a repo-native patch plan.
+Liminal Sites helps an operator ingest a real site or brand brief, generate reviewable design directions, preview before-and-after states, remember taste decisions, and export either a runtime skin or a repo-native patch plan.
 
 This is the official public KyaniteLabs repository for Liminal Sites. The canonical remote is:
 
 ```text
-https://github.com/KyaniteLabs/liminal-sites.git
+https://git.kyanitelabs.tech/KyaniteLabs/liminal-sites.git
 ```
+
+The standalone creative-coding studio surface is **Sinter**, published at [s1ntr.com](https://s1ntr.com/). Liminal Sites points to Sinter for creative-domain demos and keeps website-design work here.
 
 ## What It Does
 
@@ -54,28 +56,24 @@ pnpm proof:living-sites-reliability
 pnpm proof:living-sites-sweep
 ```
 
-## Ready-to-show market path
+## Website Design Path
 
-Liminal Sites inherits the broader Liminal launch surface while specializing it for websites. A human can still show the base creative engine with:
+The primary operator path is website-specific:
 
 ```bash
-liminal "a luminous blue-green particle garden"
-pnpm run proof:live-provider-smoke -- --provider=glm --timeout-ms=120000
-pnpm exec tsx scripts/proof/creative-copilot-proof.ts --provider=glm --all --timeout-ms=120000 --max-tokens=4096 --out=.omx/proof/market-all-domain-sweep
-liminal market status
+pnpm proof:living-sites-operator
+pnpm proof:living-sites-full-liminal
+pnpm proof:living-sites-reliability
+pnpm proof:living-sites-sweep
 ```
 
-Launch creative domains remain: p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, TextGen.
+Use these commands to prove that profiles, variants, runtime skins, receipts, and repo-native patch planning still work. Use [Sinter](https://s1ntr.com/) for standalone creative-code domain demos.
 
-Market shorthand: p5, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, HyperFrames, ASCII, Kinetic, and TextGen.
+## Relationship To Sinter
 
-HyperFrames saves HTML/GSAP composition artifacts, and Revideo code artifacts are generated; native rendered video/still capture is a separate follow-up.
+Sinter is the creative-coding product at [s1ntr.com](https://s1ntr.com/). Liminal Sites is the website-design product: profiles, visual directions, runtime skins, operator workflows, preference memory, preview receipts, and repo-native site evolution.
 
-Creative review language stays distinct: CreativeBoard critique means the 3-agent board (Minimalist / Expressionist / Technician). Runtime swarm language means 5 default runtime personas (Kai / Nova / Rex / Sam / Max). Five default personas (Kai, Nova, Rex, Sam, Max) generate in parallel.
-
-## Relationship To Liminal Core
-
-Liminal Sites keeps the inherited Liminal engine where it helps: generation routing, provider truth, preview rendering, evaluation, taste learning, filesystem persistence, and workbench telemetry. Website-specific product work stays here. Shared engine fixes should be considered for backport to [KyaniteLabs/liminal](https://github.com/KyaniteLabs/liminal).
+Some inherited engine code remains while the repository is being narrowed. New work should pass the website-design pertinence gate in [docs/BACKPORT_POLICY.md](docs/BACKPORT_POLICY.md): adapt only what affects a website flow, and link to Sinter for standalone creative-code surfaces.
 
 See [docs/BACKPORT_POLICY.md](docs/BACKPORT_POLICY.md).
 
@@ -95,7 +93,7 @@ Best-fit searches: AI website design agent, living website engine, generative we
 
 ## Development Notes
 
-The inherited `liminal` CLI remains available while this product repo specializes around websites. This package also exposes `liminal-sites`, `lsites`, and `liminal-sites-mcp`.
+Some inherited CLI aliases remain for compatibility while this product repo specializes around websites. New work should enter through `src/sites/*`, the `proof:living-sites-*` commands, or `liminal-sites-mcp`.
 
 Current verification starts with:
 
@@ -111,7 +109,7 @@ pnpm proof:living-sites-operator
 
 More from [KyaniteLabs](https://kyanitelabs.tech). Related projects:
 
-- **[liminal](https://github.com/KyaniteLabs/liminal)** — AI creative-coding studio (p5.js, GLSL, Three.js)
+- **[Sinter](https://s1ntr.com/)** — AI creative-coding studio (p5.js, SVG, GLSL, Three.js, Hydra, Strudel, Tone.js, Revideo, Kinetic, ASCII, TextGen)
 - **[Elixis](https://github.com/KyaniteLabs/Elixis)** — local-first AI pattern-synthesis engine for ideas
 - **[Innerscape](https://github.com/KyaniteLabs/Innerscape)** — personal-growth OS: journaling & reflection
 

@@ -1,0 +1,22 @@
+{
+  "name": "Liminal Sites",
+  "short_name": "Liminal Sites",
+  "description": "KyaniteLabs living website evolution engine.",
+  "start_url": "https://kyanitelabs.github.io/liminal-sites/",
+  "scope": "https://kyanitelabs.github.io/liminal-sites/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "https://kyanitelabs.tech/static/brand/kyanite-icon-voronoi-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "https://kyanitelabs.tech/static/brand/kyanite-icon-voronoi-180x180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

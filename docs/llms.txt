@@ -28,4 +28,4 @@ Use Sinter (https://s1ntr.com/) for standalone creative-coding studio demos. Use
 - `src/mcp/`: MCP server and site tools
 
 ## Keywords
-Liminal Sites, AI website design agent, living website engine, generative web design, runtime skin generator, AI design-system patching, website evolution tool, MCP website tools, KyaniteLabs.
+Liminal Sites, AI website design agent, living website engine, generative web design, runtime skin generator, AI design-system patching, website evolution tool, MCP website tools, KyaniteLabs, Sinter, s1ntr.
