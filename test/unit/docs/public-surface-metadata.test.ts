@@ -1,10 +1,17 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 
+function listFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((entry) => {
+    const path = `${dir}/${entry}`;
+    return statSync(path).isDirectory() ? listFiles(path) : [path];
+  });
+}
+
 describe('public Liminal Sites metadata', () => {
-  it('publishes Forgejo as the source of truth and Sinter as the inherited creative studio', () => {
+  it('publishes Forgejo as the source of truth and Sinter as the related creative studio', () => {
     const readme = read('README.md');
     const llms = read('llms.txt');
     const pkg = read('package.json');
@@ -31,5 +38,19 @@ describe('public Liminal Sites metadata', () => {
     expect(robots).toContain('Sitemap: https://kyanitelabs.github.io/liminal-sites/sitemap.xml');
     expect(sitemap).toContain('<loc>https://kyanitelabs.github.io/liminal-sites/</loc>');
     expect(manifest).toContain('"name": "Liminal Sites"');
+  });
+
+  it('keeps the legacy landing-live path as a website boundary bridge, not a copied creative gallery', () => {
+    const files = listFiles('landing-live').map((path) => path.replace(/^landing-live\//, ''));
+    const html = read('landing-live/index.html');
+
+    expect(files).toEqual(['index.html']);
+    expect(html).toContain('Website demos live here now.');
+    expect(html).toContain('pnpm proof:living-sites-reliability');
+    expect(html).toContain('https://s1ntr.com/');
+    expect(html).not.toContain('Dogfood Gallery');
+    expect(html).not.toContain('<iframe');
+    expect(html).not.toContain('gallery-data.js');
+    expect(html).not.toMatch(/\b(p5|glsl|hydra|strudel|tone|revideo)\b/i);
   });
 });
