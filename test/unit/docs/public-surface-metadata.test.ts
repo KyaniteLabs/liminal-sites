@@ -53,4 +53,21 @@ describe('public Liminal Sites metadata', () => {
     expect(html).not.toContain('gallery-data.js');
     expect(html).not.toMatch(/\b(p5|glsl|hydra|strudel|tone|revideo)\b/i);
   });
+
+  it('does not expose inherited creative-code dogfood gallery tooling as website scripts', () => {
+    const pkg = JSON.parse(read('package.json')) as {
+      keywords?: string[];
+      scripts?: Record<string, string>;
+    };
+    const scriptSources = listFiles('scripts')
+      .filter((path) => /\.(?:cjs|js|mjs|sh|ts|tsx)$/.test(path))
+      .map((path) => ({ path, source: read(path) }));
+
+    expect(pkg.scripts).not.toHaveProperty('dogfood:report');
+    expect(pkg.keywords).not.toContain('creative-coding');
+    expect(pkg.keywords).toContain('website-design');
+    expect(scriptSources.filter(({ source }) => source.includes('landing-live')).map(({ path }) => path)).toEqual([]);
+    expect(scriptSources.filter(({ source }) => source.includes('Dogfood Gallery')).map(({ path }) => path)).toEqual([]);
+    expect(scriptSources.filter(({ source }) => source.includes('gallery-data.js')).map(({ path }) => path)).toEqual([]);
+  });
 });

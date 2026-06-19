@@ -17,6 +17,16 @@ surface.
 | `landing-live/` | 198 tracked generated gallery files across p5, GLSL, Hydra, Strudel, Tone, Revideo, ASCII, HTML, provider/model variants, and recovered dogfood archives. | One small `index.html` bridge that points website demos to `docs/LIVING_SITES_DEMO_GALLERY.md` and standalone creative-code demos to Sinter. |
 | `test/unit/landing-live-gallery.test.ts` | Locked gallery-card behavior for the copied creative-code gallery. | Removed. The public metadata test now locks `landing-live/` to a single bridge page with no iframe/gallery data payload. |
 
+## Remediated In Dogfood Script Cleanup
+
+| Surface | Previous state | New state |
+| --- | --- | --- |
+| `scripts/dogfood*`, `scripts/dogfood/*`, and old landing gallery builders | Provider/domain dogfood scripts generated standalone creative-code gallery HTML into `landing-live/`. | Removed from the website repo. Sinter owns standalone creative-code demo generation. |
+| Old `scripts/analysis/*` and `scripts/testing/*` gallery helpers | Internal helper scripts still wrote Agent A/B or local model outputs to `landing-live/`. | Removed where their only public artifact target was the deleted gallery surface. |
+| `dogfood:report` package command and dogfood-script tests | Public npm metadata still advertised/report-tested the inherited gallery dogfood flow. | Removed. `proof:living-sites-*` remains the website-design dogfood path. |
+| Package keyword `creative-coding` | Published package metadata still framed Liminal Sites as a creative-coding repo. | Replaced with `website-design`. |
+| `docs/internal/DOGFOOD_READINESS_AUDIT_REPORT.md` | Live internal docs still described deleted dogfood scripts as production-ready tooling. | Moved to `docs/archive/internal-audits/` as historical provenance. |
+
 ## Keep For Now
 
 | Surface | Reason |
@@ -30,7 +40,7 @@ surface.
 
 | Surface | Likely action | Notes |
 | --- | --- | --- |
-| `scripts/dogfood*`, `scripts/landing/*`, `scripts/testing/*` references to `landing-live/` | Remove or move behind Sinter/upstream tooling unless a website demo flow still calls them. | This PR avoids editing broad scripts because they may still be referenced by archival/internal docs and old proofs. |
+| Remaining archived dogfood docs and historical audit logs | Move under clearer archive/Sinter labels or remove from public docs navigation. | The executable gallery dogfood path is gone; historical notes still contain old paths for provenance. |
 | `docs/architecture.html`, `docs/CREATIVE_DOMAIN_TYPES.md`, `docs/FINISH_LINE.md`, model/domain research docs | Reclassify as archive, Sinter docs, or remove from public docs index. | Many still describe creative-domain lock status instead of website-design operation. |
 | `artifacts/dogfood`, `dogfood-campaign*`, `dogfood-telemetry`, `examples/generated`, creative domain plugins | Decide whether any are fixtures for website demos; otherwise move out of the website repo. | Large artifact cleanup should be its own PR with size and test receipts. |
 | `src/generators/*`, `src/core/*`, `src/gallery/*`, `src/composition/*` | Trace active site call paths before deleting. | These are too broad to remove in a public-surface cleanup PR without breaking inherited site workflows. |

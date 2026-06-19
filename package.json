@@ -56,7 +56,6 @@
     "typecheck": "tsc --noEmit",
     "docs": "typedoc --out docs src/",
     "tui": "npm run build && node scripts/start-bubbletea-tui.mjs",
-    "dogfood:report": "npx tsx scripts/generate-dogfood-report.ts",
     "prepare": "node scripts/packaging/prepare-package.mjs",
     "git:hygiene": "bash scripts/utils/git-hygiene.sh",
     "git:hygiene:dry": "bash scripts/utils/git-hygiene.sh --dry-run",
@@ -93,7 +92,7 @@
   "keywords": [
     "website-evolution",
     "generative-design",
-    "creative-coding",
+    "website-design",
     "mcp",
     "agent"
   ],
