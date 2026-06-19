@@ -1,1 +1,0 @@
-osc(20, 0.5, () => time * 0.5).kaleid(4).color(1, 0.5, 0.2).rotate(time * 0.2).modulate(noise(3).color(0.5, 0.8, 1), 0.01).out(o0)

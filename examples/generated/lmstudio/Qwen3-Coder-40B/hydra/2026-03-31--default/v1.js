@@ -1,1 +1,0 @@
-osc(128, 64, 0.5, 0.2).rotate(() => time * 0.5).scale(0.8).feedback(0.9).color(() => [Math.sin(time) * 0.5 + 0.5, Math.cos(time * 0.7) * 0.5 + 0.5, Math.sin(time * 1.3) * 0.5 + 0.5]).out(o0)
