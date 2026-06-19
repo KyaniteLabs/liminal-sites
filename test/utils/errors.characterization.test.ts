@@ -136,7 +136,6 @@ describe('Error Formatting Patterns (Characterization)', () => {
         'src/harness/tools/ValidationGuard.ts:127',
         'src/harness/tools/RateLimiter.ts:108',
         'scripts/generate-single.ts:190',
-        'scripts/dogfood-all-domains.ts:161',
         'test/e2e/model-comparison.test.ts:178',
         'scripts/test-qwen-models.ts:161',
         'scripts/test-qwen-models.ts:165',
@@ -153,8 +152,8 @@ describe('Error Formatting Patterns (Characterization)', () => {
         'src/core/RalphLoop.ts:520',
       ];
       
-      // Verify we have documented all 24 locations
-      expect(locations.length).toBe(24);
+      // Verify we have documented all 23 remaining locations.
+      expect(locations.length).toBe(23);
       
       // All should follow the pattern (file path with line number)
       locations.forEach(location => {
