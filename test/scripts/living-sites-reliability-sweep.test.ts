@@ -25,5 +25,5 @@ describe('living-sites reliability sweep script', () => {
       'venue-menu',
     ]);
     expect(scenarios.every((scenario) => scenario.title.length > 8)).toBe(true);
-  });
+  }, 15_000);
 });

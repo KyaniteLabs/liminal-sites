@@ -15,7 +15,7 @@ describe('launch claim truth ledger', () => {
 
     const ledger = fs.readFileSync(claimLedgerPath, 'utf8');
     for (const auditedSurface of [
-      'docs/features.html',
+      'docs/index.html',
       'docs/launch/ml-feature-value-matrix.md',
       'docs/launch/test-ci-truth-matrix-2026-05-01.md',
       'docs/SECURITY.md',
@@ -27,18 +27,26 @@ describe('launch claim truth ledger', () => {
   });
 
   it('does not present partially proved launch claims as complete public proof', () => {
-    const features = readRepoFile('docs/features.html');
+    const index = readRepoFile('docs/index.html');
+    const ledger = readRepoFile('docs/launch/feature-claim-ledger-2026-05-06.md');
 
-    expect(features).toContain('feature-claim-ledger-2026-05-06.md');
-    expect(features).not.toContain('<tr><td>11 Generators</td><td><span class="badge badge-success">Complete</span></td>');
-    expect(features).not.toContain('<tr><td>Self-Improving Harness</td><td><span class="badge badge-success">Complete</span></td>');
-    expect(features).toContain('12 Creative Domains');
-    expect(features).toContain('Live-covered; release-rerun required');
+    expect(index).toContain('Liminal Sites');
+    expect(index).toContain('Living website evolution');
+    expect(index).toContain('runtime skins');
+    expect(index).toContain('repo-native patch plans');
+    expect(index).toContain('https://s1ntr.com/');
+    expect(index).not.toContain('12 Creative Domains');
+    expect(index).not.toContain('p5.js, SVG, GLSL');
+    expect(index).not.toContain('Self-Improving Harness');
+
+    expect(ledger).toContain('docs/index.html');
+    expect(ledger).toContain('Sinter owns the standalone creative-coding studio surface.');
+    expect(ledger).not.toContain('docs/features.html');
   });
 
   it('does not retain stale final-QA blocker copy after remediation is verified', () => {
     const publicLaunchDocs = [
-      readRepoFile('docs/features.html'),
+      readRepoFile('docs/index.html'),
       readRepoFile('docs/launch/feature-claim-ledger-2026-05-06.md'),
       readRepoFile('docs/launch/ml-feature-value-matrix.md'),
     ].join('\n');
