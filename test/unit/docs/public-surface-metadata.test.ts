@@ -54,6 +54,31 @@ describe('public Liminal Sites metadata', () => {
     expect(html).not.toMatch(/\b(p5|glsl|hydra|strudel|tone|revideo)\b/i);
   });
 
+  it('keeps inherited creative-product pages out of the active docs root', () => {
+    const rootDocs = readdirSync('docs', { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+    const docsReadme = read('docs/README.md');
+
+    for (const archivedPublicPage of [
+      'architecture.html',
+      'cli-reference.html',
+      'features.html',
+      'io-catalog.html',
+      'soul-system.html',
+      'CREATIVE_DOMAIN_TYPES.md',
+      'FINISH_LINE.md',
+      'GENERATOR_ARCHITECTURE_V2.md',
+    ]) {
+      expect(rootDocs).not.toContain(archivedPublicPage);
+    }
+
+    expect(docsReadme).toContain('website-design product');
+    expect(docsReadme).toContain('docs/archive/');
+    expect(docsReadme).not.toContain('marketing/launch-thread-ready.md');
+    expect(docsReadme).not.toContain('GENERATOR_ARCHITECTURE_V2.md');
+  });
+
   it('does not expose inherited creative-code dogfood gallery tooling as website scripts', () => {
     const pkg = JSON.parse(read('package.json')) as {
       keywords?: string[];

@@ -1,82 +1,52 @@
-# Liminal Documentation
+# Liminal Sites Documentation
 
----
+This docs root is for the website-design product: profiles, design directions,
+runtime skins, preview receipts, rollback, and repo-native website patch
+planning. Historical Liminal and Sinter creative-code material is kept under
+`docs/archive/` for provenance.
 
-## Quick Navigation
+## Start Here
 
-
-### Launch Candidate / User Surface
 | Document | Purpose |
-|----------|---------|
-| [USER_SURFACE_CONTRACT.md](./USER_SURFACE_CONTRACT.md) | Artist-facing Studio and operator TUI behavior contract |
-| [marketing/launch-thread-ready.md](./marketing/launch-thread-ready.md) | Current launch-candidate public copy |
-| [marketing/launch-day-checklist.md](./marketing/launch-day-checklist.md) | Launch-day execution checklist |
-| [launch/skipped-test-ledger.md](./launch/skipped-test-ledger.md) | Remaining skipped/slow proof obligations |
-| [launch/launch-candidate-2026-04-30.md](./launch/launch-candidate-2026-04-30.md) | Current tracked launch-candidate proof summary |
+| --- | --- |
+| [index.html](./index.html) | Public Liminal Sites landing page and search/AI discovery surface. |
+| [COLLABORATOR_QUICKSTART.md](./COLLABORATOR_QUICKSTART.md) | Operator quickstart for local use and collaboration. |
+| [LIVING_SITES_VERTICAL_SLICES.md](./LIVING_SITES_VERTICAL_SLICES.md) | Product journey, proof commands, receipts, and current vertical slices. |
+| [LIVING_SITES_DEMO_GALLERY.md](./LIVING_SITES_DEMO_GALLERY.md) | Website demo gallery expectations and artifacts. |
+| [BACKPORT_POLICY.md](./BACKPORT_POLICY.md) | Boundary for changes that belong here versus Sinter. |
+| [SECURITY.md](./SECURITY.md) | Security model and deployment checklist. |
 
-### Core Documentation
-| Document | Purpose |
-|----------|---------|
-| [ARCHITECTURE_AND_PHILOSOPHY.md](./ARCHITECTURE_AND_PHILOSOPHY.md) | System design principles |
-| [ARCHITECTURE_QUICKREF.md](./ARCHITECTURE_QUICKREF.md) | Visual architecture overview |
-| [GENERATOR_ARCHITECTURE_V2.md](./GENERATOR_ARCHITECTURE_V2.md) | Generator design |
-| [SECURITY.md](./SECURITY.md) | Security model and deployment checklist |
+## Website Proofs
 
-### Meta-Harness
-| Document | Purpose |
-|----------|---------|
-| [HARNESS_PREFLIGHT.md](./HARNESS_PREFLIGHT.md) | Pre-flight checklist |
-| [WHAT_TO_EXPECT.md](./WHAT_TO_EXPECT.md) | Expected test outcomes |
-| [META_HARNESS_SELF_EVALUATION.md](./META_HARNESS_SELF_EVALUATION.md) | Harness self-evaluation |
+| Command | Purpose |
+| --- | --- |
+| `pnpm proof:living-sites-sweep` | Complete Studio, MCP, docs, and handoff journey proof. |
+| `pnpm proof:living-sites-dogfood` | Strict created-site ingestion, mutation, deployment, rollback, and runbook proof. |
+| `pnpm proof:living-sites-reliability` | Multi-scenario reliability sweep across site archetypes. |
 
-### Guardrails & Validation
-| Document | Purpose |
-|----------|---------|
-| [GUARDRAIL_TAXONOMY.md](./GUARDRAIL_TAXONOMY.md) | Guardrail definitions |
-| [GUARDRAIL_EXHAUSTIVE.md](./GUARDRAIL_EXHAUSTIVE.md) | Complete guardrail analysis |
+Proof artifacts are written under `.omx/proof/` and are intentionally local
+receipts, not committed public gallery payloads.
 
-### Research & Design
-| Document | Purpose |
-|----------|---------|
-| [EMERGENT_LANGUAGE_ARCHITECTURE.md](./EMERGENT_LANGUAGE_ARCHITECTURE.md) | Emergent creative vocabulary |
-| [MODEL_ROLES_FRAMEWORK.md](./MODEL_ROLES_FRAMEWORK.md) | Generator/Evaluator/Harness roles |
-| [COMPOSITION_IMPLEMENTATION_PLAN.md](./internal/COMPOSITION_IMPLEMENTATION_PLAN.md) | Composition API |
-| [WORKTREE_SYSTEM.md](./WORKTREE_SYSTEM.md) | Multi-agent worktree guide |
+## Archive Boundary
 
-### System Planning
-| Document | Purpose |
-|----------|---------|
-| [MASTER_PLAN.md](./MASTER_PLAN.md) | Phased development plan |
-| [RECOVERY_LEDGER.md](./RECOVERY_LEDGER.md) | Recovery tracking |
+Standalone creative-code domain docs, old launch marketing, and copied dogfood
+gallery artifacts belong to Sinter or to historical archives. This repository's
+active public docs should demonstrate website profiles, design directions,
+runtime skins, preview receipts, rollback, and repo-native patch planning.
 
----
+## Directory Guide
 
-## Directory Structure
-
-```
+```text
 docs/
-├── README.md                          This file
-├── ARCHITECTURE_AND_PHILOSOPHY.md     Design principles
-├── ARCHITECTURE_QUICKREF.md           Quick visual overview
-├── GENERATOR_ARCHITECTURE_V2.md       Generator design
-├── GUARDRAIL_*.md                     Guardrail documentation
-├── HARNESS_*.md                       Meta-harness documentation
+├── index.html                         Public website surface
+├── COLLABORATOR_QUICKSTART.md         Operator quickstart
+├── LIVING_SITES_*.md                  Website product proof and demo docs
+├── BACKPORT_POLICY.md                 Liminal Sites vs. Sinter boundary
 ├── SECURITY.md                        Security model
-├── WORKTREE_SYSTEM.md                 Multi-agent worktree guide
-├── MASTER_PLAN.md                     Phased development plan
-│
-├── architecture/                      Architecture diagrams
-├── features/                          Feature specifications
-├── internal/                          Internal audit reports and historical docs
-├── archive/                           Archived documentation
-├── plans/                             Implementation plans
-├── research/                          Research notes and analysis
-├── styles/                            CSS for HTML docs
-└── tutorials/                         Tutorials (planned)
+├── launch/                            Historical launch proof ledgers
+├── archive/                           Historical Liminal/Sinter provenance
+├── audits/                            Cleanup and verification records
+└── styles/                            CSS for public HTML docs
 ```
 
----
-
-## Status
-
-See the main [README.md](../README.md) for current project status, CI badges, and quick start.
+See the main [README.md](../README.md) for repository setup and current status.

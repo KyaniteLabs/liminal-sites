@@ -2,13 +2,13 @@
 
 ## Verdict
 
-Liminal Sites still contains inherited Liminal/Sinter product surfaces. The
-website-design boundary from `docs/BACKPORT_POLICY.md` is correct, but the repo
-needs staged cleanup rather than one large deletion PR.
+Liminal Sites still contains inherited Liminal/Sinter engine code, historical
+audits, and internal planning docs, but the active public website surface is now
+narrowed to the website-design product boundary from `docs/BACKPORT_POLICY.md`.
 
-This pass removes the clearest public mismatch: `landing-live/` was a tracked
-creative-code dogfood gallery. That is not a Liminal Sites website-design
-surface.
+The cleanup was staged across small PRs instead of one broad source deletion:
+first the copied `landing-live/` gallery, then executable dogfood gallery
+scripts, then public docs and committed generated artifacts.
 
 ## Remediated In This PR
 
@@ -27,6 +27,17 @@ surface.
 | Package keyword `creative-coding` | Published package metadata still framed Liminal Sites as a creative-coding repo. | Replaced with `website-design`. |
 | `docs/internal/DOGFOOD_READINESS_AUDIT_REPORT.md` | Live internal docs still described deleted dogfood scripts as production-ready tooling. | Moved to `docs/archive/internal-audits/` as historical provenance. |
 
+## Remediated In Public Docs And Artifact Cleanup
+
+| Surface | Previous state | New state |
+| --- | --- | --- |
+| `docs/features.html`, `docs/architecture.html`, `docs/cli-reference.html`, `docs/io-catalog.html`, `docs/soul-system.html` | Active docs root still exposed old Liminal/Sinter creative product pages. | Moved to `docs/archive/liminal-product-pages/`. |
+| `docs/CREATIVE_DOMAIN_TYPES.md`, `docs/FINISH_LINE.md`, generator/model research docs, and old textgen docs | Active docs root still described creative-domain lock status, model experiments, and Sinter generator contracts as current Liminal Sites docs. | Moved to `docs/archive/sinter-lineage/` with historical provenance preserved. |
+| `docs/marketing/*` | Active docs root retained old launch-thread and content-calendar drafts for Liminal/Sinter creative-coding launch copy. | Moved to `docs/archive/sinter-lineage/marketing/`. |
+| `artifacts/` | Repository tracked generated dogfood galleries, screenshots, archives, and local result payloads. | Removed from tracked source. Current proof receipts are local under `.omx/proof/`. |
+| `docs/README.md` and `docs/launch/feature-claim-ledger-2026-05-06.md` | Linked and audited the archived `docs/features.html` creative-domain surface. | Updated to the website-design public surface, `docs/index.html`, and living-sites proof paths. |
+| Public docs regression tests | Locked old market/creative launch copy and the archived feature page. | Replaced with website-boundary assertions for active docs. |
+
 ## Keep For Now
 
 | Surface | Reason |
@@ -40,9 +51,8 @@ surface.
 
 | Surface | Likely action | Notes |
 | --- | --- | --- |
-| Remaining archived dogfood docs and historical audit logs | Move under clearer archive/Sinter labels or remove from public docs navigation. | The executable gallery dogfood path is gone; historical notes still contain old paths for provenance. |
-| `docs/architecture.html`, `docs/CREATIVE_DOMAIN_TYPES.md`, `docs/FINISH_LINE.md`, model/domain research docs | Reclassify as archive, Sinter docs, or remove from public docs index. | Many still describe creative-domain lock status instead of website-design operation. |
-| `artifacts/dogfood`, `dogfood-campaign*`, `dogfood-telemetry`, `examples/generated`, creative domain plugins | Decide whether any are fixtures for website demos; otherwise move out of the website repo. | Large artifact cleanup should be its own PR with size and test receipts. |
+| Remaining historical audit logs and internal docs | Keep archived or move under clearer archive/Sinter labels as ownership gets clearer. | They are no longer linked as current public website docs, but they still contain old paths for provenance. |
+| `examples/generated` and creative-domain plugins | Decide whether any are fixtures for website demos; otherwise move out of the website repo. | This pass removed committed `artifacts/`; fixture/plugin extraction should be trace-based. |
 | `src/generators/*`, `src/core/*`, `src/gallery/*`, `src/composition/*` | Trace active site call paths before deleting. | These are too broad to remove in a public-surface cleanup PR without breaking inherited site workflows. |
 
 ## Boundary Rule

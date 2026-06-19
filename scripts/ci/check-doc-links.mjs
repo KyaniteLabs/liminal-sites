@@ -7,7 +7,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const DEFAULT_DOCS = [
   'README.md',
   'docs/README.md',
-  'docs/features.html',
+  'docs/index.html',
+  'docs/COLLABORATOR_QUICKSTART.md',
+  'docs/LIVING_SITES_VERTICAL_SLICES.md',
+  'docs/LIVING_SITES_DEMO_GALLERY.md',
+  'docs/BACKPORT_POLICY.md',
 ];
 
 function launchDocs() {
