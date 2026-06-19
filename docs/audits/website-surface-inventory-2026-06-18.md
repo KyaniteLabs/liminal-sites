@@ -38,6 +38,14 @@ scripts, then public docs and committed generated artifacts.
 | `docs/README.md` and `docs/launch/feature-claim-ledger-2026-05-06.md` | Linked and audited the archived `docs/features.html` creative-domain surface. | Updated to the website-design public surface, `docs/index.html`, and living-sites proof paths. |
 | Public docs regression tests | Locked old market/creative launch copy and the archived feature page. | Replaced with website-boundary assertions for active docs. |
 
+## Remediated In Plugin And Example Surface Cleanup
+
+| Surface | Previous state | New state |
+| --- | --- | --- |
+| `plugins/*` root generator stubs | Checked-in creative-domain plugin folders made the repo look like a standalone creative-code plugin host. The active generator registry already has built-in static entries and falls back cleanly when the root plugin directory is absent. | Removed from the active repo surface. Plugin loader unit fixtures remain under `test/fixtures/plugins/` for loader behavior coverage. |
+| `docs/dynamic-domain-registration.md` | Active docs root described dynamic creative-domain plugin registration as current product guidance. | Moved to `docs/archive/sinter-lineage/` as historical Liminal/Sinter plugin-system provenance. |
+| Generated creative examples under `examples/batches`, `examples/results`, `examples/p5`, `examples/glsl`, `examples/three`, `examples/generated-fireworks.js`, and `examples/parallel-results.json` | Tracked generated or standalone creative-code examples that were not website-design operator examples. | Removed from tracked source and ignored for future local generation outputs. Maintained example coverage now stays on the two composition API examples used by `pnpm check:examples`. |
+
 ## Keep For Now
 
 | Surface | Reason |
@@ -52,7 +60,7 @@ scripts, then public docs and committed generated artifacts.
 | Surface | Likely action | Notes |
 | --- | --- | --- |
 | Remaining historical audit logs and internal docs | Keep archived or move under clearer archive/Sinter labels as ownership gets clearer. | They are no longer linked as current public website docs, but they still contain old paths for provenance. |
-| `examples/generated` and creative-domain plugins | Decide whether any are fixtures for website demos; otherwise move out of the website repo. | This pass removed committed `artifacts/`; fixture/plugin extraction should be trace-based. |
+| Remaining source-level creative engine modules | Keep until call-path tracing proves they are not needed by living-site generation, preview, MCP, or proof paths. | `src/sites/creative/LiminalCapabilityMatrix.ts` and living-sites proof fixtures still use the generator registry and composition adapters. |
 | `src/generators/*`, `src/core/*`, `src/gallery/*`, `src/composition/*` | Trace active site call paths before deleting. | These are too broad to remove in a public-surface cleanup PR without breaking inherited site workflows. |
 
 ## Boundary Rule

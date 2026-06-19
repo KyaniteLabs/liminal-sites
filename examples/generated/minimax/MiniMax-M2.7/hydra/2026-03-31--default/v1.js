@@ -1,8 +1,0 @@
-src(s0).repeat().color(0.2,0.5,0.8).kaleid(4).rotate(0.5,0.1).out(o0)
-src(o0).scale(1.02).rotate(0.01).out(o1)
-src(o1).diff(s0).out(o2)
-osc(3,0.1,0.5).shape(6,0.5,0.1).color(1,0.3,0.7).rotate(0.3).scale(0.8).modulate(o2,0.5).out(o3)
-src(o3).color(1.2,0.8,0.4).out(o0)
-shape(4,0.6,0.5).color(0.4,0.7,1.0).rotate(0.7,0.2).kaleid(3).modulate(noise(0.1),0.3).out(o4)
-src(o0).modulate(o4,0.4).color(0.9,0.6,1.2).out(o0)
-render(o0)

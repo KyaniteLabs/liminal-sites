@@ -1,4 +1,5 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -8,6 +9,13 @@ function listFiles(dir: string): string[] {
     const path = `${dir}/${entry}`;
     return statSync(path).isDirectory() ? listFiles(path) : [path];
   });
+}
+
+function listTrackedFiles(dir: string): string[] {
+  return execFileSync('git', ['ls-files', dir], { encoding: 'utf8' })
+    .trim()
+    .split('\n')
+    .filter(Boolean);
 }
 
 describe('public Liminal Sites metadata', () => {
@@ -77,6 +85,17 @@ describe('public Liminal Sites metadata', () => {
     expect(docsReadme).toContain('docs/archive/');
     expect(docsReadme).not.toContain('marketing/launch-thread-ready.md');
     expect(docsReadme).not.toContain('GENERATOR_ARCHITECTURE_V2.md');
+  });
+
+  it('keeps inherited generator plugin stubs and generated examples out of the active repo surface', () => {
+    const examples = listTrackedFiles('examples').map((path) => path.replace(/^examples\//, '')).sort();
+
+    expect(existsSync('plugins')).toBe(false);
+    expect(existsSync('docs/dynamic-domain-registration.md')).toBe(false);
+    expect(examples).toEqual([
+      'composition-basic.ts',
+      'composition-programmatic.ts',
+    ]);
   });
 
   it('does not expose inherited creative-code dogfood gallery tooling as website scripts', () => {

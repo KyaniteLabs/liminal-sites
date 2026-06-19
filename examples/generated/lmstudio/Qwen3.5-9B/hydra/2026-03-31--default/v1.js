@@ -1,1 +1,0 @@
-osc(128).gain(1.0).color("#ff006e").kaleid(3, 45).rotate(60).noise(0.8).voronoi(4).scale(1.2).feedback(0.9).out(o0)

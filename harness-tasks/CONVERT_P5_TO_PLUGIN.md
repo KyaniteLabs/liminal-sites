@@ -450,4 +450,4 @@ console.log('P5GeneratorV2 instantiated successfully');
 - `src/plugins/PluginLoader.ts` - How plugins are loaded
 - `src/generators/TierBasedGenerator.ts` - Base class to extend
 - `src/generators/p5/P5GeneratorV2.ts` - Original implementation to port
-- `docs/dynamic-domain-registration.md` - Plugin architecture docs
+- `docs/archive/sinter-lineage/dynamic-domain-registration.md` - Historical plugin architecture docs

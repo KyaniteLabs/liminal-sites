@@ -60,6 +60,10 @@ yarn-error.log*
 /gallery/
 /output/
 /test-output/
+examples/batches/
+examples/generated/
+examples/results/
+examples/parallel-results.json
 
 # Test session logs
 test-stream/
