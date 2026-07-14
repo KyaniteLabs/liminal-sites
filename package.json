@@ -180,7 +180,7 @@
     "@hyperframes/producer": "^0.6.46",
     "@revideo/2d": "^0.10.4",
     "@revideo/core": "^0.10.4",
-    "@revideo/ffmpeg": "^0.10.4",
+    "@revideo/ffmpeg": "^0.11.0",
     "@revideo/renderer": "^0.10.4",
     "@revideo/ui": "^0.10.4",
     "@revideo/vite-plugin": "^0.10.4",
