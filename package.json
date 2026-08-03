@@ -116,7 +116,7 @@
     "eslint": "^8.57.1",
     "jsdom": "^29.0.1",
     "playwright": "^1.59.1",
-    "vite": "8.0.16",
+    "vite": "8.2.0",
     "vitest": "^4.1.2"
   },
   "dependencies": {
@@ -163,7 +163,7 @@
     "ip-address": "10.2.0",
     "picomatch": "4.0.4",
     "protobufjs": "^7.5.8",
-    "vite": "8.0.16",
+    "vite": "8.2.0",
     "@protobufjs/utf8": "1.1.1",
     "axios": "1.17.0",
     "qs": "6.15.2",
@@ -210,7 +210,7 @@
       "hono": "4.12.25",
       "ip-address": "10.2.0",
       "protobufjs": "^7.5.8",
-      "vite": "8.0.16",
+      "vite": "8.2.0",
       "uuid": "^14.0.0",
       "@protobufjs/utf8": "1.1.1",
       "axios": "1.17.0",
