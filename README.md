@@ -1,5 +1,7 @@
 # Liminal
 
+**TL;DR:** liminal-sites — site surfaces and public faces for the Liminal / Sinter stack. Best for operators shipping Liminal product sites.
+
 [![CI](https://github.com/KyaniteLabs/liminal/actions/workflows/ci.yml/badge.svg)](https://github.com/KyaniteLabs/liminal/actions/workflows/ci.yml)
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](./LICENSE)
 
@@ -275,3 +277,64 @@ Business Source License 1.1. Source code is available for viewing, learning, and
 ---
 
 **Liminal** — The code evolves. You curate. The system learns.
+
+<!-- s-plus-geo:start -->
+
+## What is liminal-sites?
+
+**liminal-sites** is a **site surfaces and public faces for the Liminal / Sinter stack** that helps **operators shipping Liminal product sites** **maintain coherent public site surfaces for the creative stack**.
+
+| | |
+| --- | --- |
+| **Product** | liminal-sites |
+| **Category** | site surfaces and public faces for the Liminal / Sinter stack |
+| **Best for** | operators shipping Liminal product sites |
+| **Not** | the core generation runtime (see liminal) |
+| **Source** | [GitHub](https://github.com/KyaniteLabs/liminal-sites) · [Forgejo](https://git.kyanitelabs.tech/KyaniteLabs/liminal-sites) |
+| **Keywords** | Liminal sites, Sinter public face, creative product website |
+
+## Who it's for
+
+- Primary: operators shipping Liminal product sites
+- Use when you need to maintain coherent public site surfaces for the creative stack
+- Skip if you need the core generation runtime (see liminal)
+
+## FAQ
+
+### What is liminal-sites?
+
+liminal-sites is a site surfaces and public faces for the Liminal / Sinter stack. It helps operators shipping Liminal product sites maintain coherent public site surfaces for the creative stack.
+
+### Who should use liminal-sites?
+
+operators shipping Liminal product sites.
+
+### How is liminal-sites different?
+
+This is the site layer; core runtime lives in liminal.
+
+### Is liminal-sites production software?
+
+Treat the README status and release tags as source of truth for maturity. Validate against your own requirements before production use.
+
+## Status
+
+- Maintained as of 2026 on the default branch
+- Prefer release tags when pinning dependencies
+- Report issues on the canonical remote listed above
+
+## Agent surface
+
+- Coding agents: read this README first, then repo docs/`AGENTS.md` if present
+- Prefer machine-readable briefs (`llms.txt`) when the repo ships one
+- MCP or skill entrypoints are documented in-repo when applicable
+
+## Contributing
+
+Issues and PRs welcome on the canonical remote. Keep public docs free of secrets and machine-local paths.
+
+## License
+
+See [LICENSE](LICENSE) in this repository (or package metadata if license is package-only).
+
+<!-- s-plus-geo:end -->
