@@ -33,7 +33,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_profile_create',
     {
       title: 'Create Living Site Profile',
-      description: 'Create a source-of-truth profile for a living website that Liminal can evolve.',
+      description: 'Create a source-of-truth profile for a living website that Liminal can evolve. Returns a profile object containing the new siteId. Use when starting a brand-new living site before generating variants. Pass the returned siteId into liminal_site_generate_variants or liminal_site_ingest_source.',
       inputSchema: {
         name: z.string().min(1).max(90),
         sourceUrl: z.string().url().optional(),
@@ -51,7 +51,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_generate_variants',
     {
       title: 'Generate Living Site Variants',
-      description: 'Generate reviewable aesthetic/runtime directions for an existing living-site profile.',
+      description: 'Generate reviewable aesthetic/runtime direction variants for an existing living-site profile. Returns a run object containing the generated skinIds. Use when you have a profile and want a first round of design directions. Pass siteId from liminal_site_profile_create; pass a chosen skinId into liminal_site_compare_aesthetics or liminal_site_export_runtime_skin.',
       inputSchema: {
         siteId: z.string().min(1),
         prompt: z.string().min(1).max(4000),
@@ -66,7 +66,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_ingest_source',
     {
       title: 'Ingest Website Source',
-      description: 'Capture a real website URL or local source path into a visual/design receipt for grounded evolution.',
+      description: 'Capture a real website URL or local source path into a visual/design receipt that grounds future evolution in the existing live site. Returns an ingestion receipt object. Use when an existing live site should inform taste memory and variant ranking. Pass siteId from liminal_site_profile_create; pass sourceUrl or sourcePath describing the site to capture.',
       inputSchema: {
         siteId: z.string().min(1),
         sourceUrl: z.string().url().optional(),
@@ -85,7 +85,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_record_preference',
     {
       title: 'Record Living Site Preference',
-      description: 'Record an operator preference so the next generated direction can evolve from taste memory.',
+      description: 'Record an operator preference (favorite, reject, more-like-this, less-like-this, or publish) against a variant so the next generated direction can evolve from taste memory. Returns the stored preference object. Use when the operator reacts to compared variants. Pass siteId and skinId from liminal_site_compare_aesthetics results; the preference then informs liminal_site_evolve.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1),
@@ -100,7 +100,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_compare_aesthetics',
     {
       title: 'Compare Living Site Aesthetics',
-      description: 'Rank current living-site variants against ingestion signals and operator taste memory.',
+      description: 'Rank current living-site variants against ingestion signals and operator taste memory. Returns an assessment object with an ordered ranking and a winner. Use when you need to pick a direction from several generated skins. Pass siteId from the profile; optionally pass skinIds from liminal_site_generate_variants or liminal_site_evolve.',
       inputSchema: {
         siteId: z.string().min(1),
         skinIds: z.array(z.string().min(1)).min(1).max(12).optional(),
@@ -114,7 +114,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_evolve',
     {
       title: 'Evolve Living Site',
-      description: 'Generate the next living-site variants from recorded preference memory.',
+      description: 'Generate the next round of living-site variants from recorded preference memory. Returns a run object with new skinIds. Use when iterating on a direction after recording preferences. Pass siteId from the profile; prior preferences come from liminal_site_record_preference.',
       inputSchema: {
         siteId: z.string().min(1),
         prompt: z.string().max(4000).optional(),
@@ -128,7 +128,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_export_runtime_skin',
     {
       title: 'Export Runtime Skin',
-      description: 'Export a selected living-site skin into CSS, JS, and manifest files.',
+      description: 'Export a selected living-site skin into CSS, JS, and manifest files. Returns an export receipt with the written file paths. Use when a chosen skin is ready to ship as runtime assets. Pass siteId and skinId from liminal_site_compare_aesthetics or liminal_site_evolve; optionally set outputDir.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1),
@@ -142,7 +142,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_compose_creative',
     {
       title: 'Compose Living Site Creative Layer',
-      description: 'Compose a selected living-site skin into balanced or full-liminal cross-domain runtime assets with validation and capability receipts.',
+      description: 'Compose a selected living-site skin into balanced or full-liminal cross-domain runtime assets with validation and capability receipts. Returns a composition object with its compositionId. Use when adding audio, video, or multi-domain creative assets on top of a skin. Pass siteId and skinId from liminal_site_evolve or liminal_site_compare_aesthetics; pass the returned compositionId into liminal_site_export_creative_composition.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1).optional(),
@@ -163,7 +163,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_export_creative_composition',
     {
       title: 'Export Creative Composition',
-      description: 'Export a living-site creative composition into CSS, JS, and manifest files.',
+      description: 'Export a living-site creative composition into CSS, JS, and manifest files. Returns an export receipt with the written file paths. Use when a composed creative layer is ready to ship. Pass siteId and compositionId from liminal_site_compose_creative; optionally set outputDir.',
       inputSchema: {
         siteId: z.string().min(1),
         compositionId: z.string().min(1),
@@ -177,7 +177,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_create_deployment_package',
     {
       title: 'Create Runtime Deployment Package',
-      description: 'Create installable CSS/JS snippets and hosted runtime assets for a selected living-site skin.',
+      description: 'Create installable CSS/JS snippets and hosted runtime assets for a selected living-site skin. Returns a deployment package object. Use when a skin or composition is ready for production hosting. Pass siteId and skinId from liminal_site_export_runtime_skin; optionally pass compositionId from liminal_site_compose_creative.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1),
@@ -192,7 +192,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_rollback_to_skin',
     {
       title: 'Create Living Site Rollback Receipt',
-      description: 'Record a reversible rollback receipt and mark a saved skin as the current published direction.',
+      description: 'Record a reversible rollback receipt and mark a saved skin as the current published direction. Returns a rollback receipt object. Use when an operator wants to revert to a prior skin. Pass siteId and skinId from a previous export or evolve run; optionally include a reason.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1),
@@ -206,7 +206,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_create_operator_runbook',
     {
       title: 'Create Living Site Operator Runbook',
-      description: 'Generate readiness checks, operator journey steps, and recovery paths for a living-site skin.',
+      description: 'Generate readiness checks, operator journey steps, and recovery paths for a living-site skin. Returns a runbook object. Use when handing off a skin for operator review or production readiness. Pass siteId from the profile and optionally skinId from liminal_site_export_runtime_skin.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1).optional(),
@@ -219,7 +219,7 @@ export function createLiminalSitesMcpServer(options: LiminalSitesMcpOptions = {}
     'liminal_site_plan_repo_patch',
     {
       title: 'Plan Repo-Native Patch',
-      description: 'Inspect a website repo and produce a reviewable patch plan for installing a selected living-site skin.',
+      description: 'Inspect a website repo and produce a reviewable patch plan for installing a selected living-site skin. Returns a patch-plan object. Use when the delivery mode is repo-native-pr rather than a runtime skin. Pass siteId and skinId from liminal_site_export_runtime_skin or liminal_site_compose_creative; pass repoRoot for the target repository.',
       inputSchema: {
         siteId: z.string().min(1),
         skinId: z.string().min(1),
