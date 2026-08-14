@@ -168,7 +168,7 @@ describe('detectProvider', () => {
   it('detects Z.ai Anthropic-compatible coding endpoint as anthropic', () => {
     const config = makeConfig({
       baseUrl: 'https://api.z.ai/api/anthropic',
-      model: 'glm-5.1',
+      model: 'glm-5.3',
     });
     expect(detectProvider(config)).toBe('anthropic');
   });

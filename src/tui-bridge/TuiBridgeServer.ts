@@ -383,7 +383,7 @@ data: ${JSON.stringify(stored.event)}
       lines.push(`${String(index + 1).padStart(2, ' ')}. ${PROVIDER_DEFAULTS[choice.provider].label.padEnd(10)} ${choice.label.padEnd(18)} ${choice.model}${marker}`);
     });
     lines.push('');
-    lines.push('Examples: /model 1, /model glm 5v, /model openai gpt-5.4-mini, /model lmstudio, /model ollama llama3.2, /model minimax m27');
+    lines.push('Examples: /model 1, /model glm 5.3, /model openai gpt-5.4-mini, /model lmstudio, /model ollama llama3.2, /model minimax m27');
     return lines.join('\n');
   }
 

@@ -32,10 +32,10 @@ describe('ProviderRuntime', () => {
   });
 
   it('detects status labels separately from provider adapters', () => {
-    expect(detectProviderLabel('https://api.z.ai/api/anthropic', 'glm-5.1')).toBe('glm');
+    expect(detectProviderLabel('https://api.z.ai/api/anthropic', 'glm-5.3')).toBe('glm');
     expect(detectProviderLabel('http://127.0.0.1:11434', 'llama3.2')).toBe('ollama');
-    expect(detectProviderAdapter({ baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5.1' })).toBe('anthropic');
-    expect(detectRoleProviderType('https://api.z.ai/api/anthropic', 'glm-5.1')).toBe('anthropic');
+    expect(detectProviderAdapter({ baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5.3' })).toBe('anthropic');
+    expect(detectRoleProviderType('https://api.z.ai/api/anthropic', 'glm-5.3')).toBe('anthropic');
   });
 
   it('keeps API key env order provider-specific', () => {
@@ -66,7 +66,7 @@ describe('ProviderRuntime', () => {
 
   it('reports GLM 5V as vision-capable but ordinary GLM as text-only', () => {
     expect(inferProviderVisionSupport('glm', 'GLM-5v-turbo')).toBe('yes');
-    expect(inferProviderVisionSupport('glm', 'glm-5.1')).toBe('no');
+    expect(inferProviderVisionSupport('glm', 'glm-5.3')).toBe('no');
   });
 
   it('resolves runtime selection with usable current keys and status labels', () => {

@@ -296,7 +296,7 @@ describe('OpenAIProvider', () => {
           ],
         },
       }],
-      model: 'glm-5.1',
+      model: 'glm-5.3',
     });
 
     const result = await provider.generate(makeRequest());
@@ -695,7 +695,7 @@ describe('OpenRouterProvider', () => {
   it('returns success=false with a diagnostic error when content is empty', async () => {
     mockFetchResponse({
       choices: [{ message: { content: '' }, finish_reason: 'stop' }],
-      model: 'z-ai/glm-5.1:nitro',
+      model: 'z-ai/glm-5.3:nitro',
     });
 
     const result = await provider.generate(makeRequest());

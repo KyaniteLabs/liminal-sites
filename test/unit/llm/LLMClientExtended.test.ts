@@ -328,7 +328,7 @@ describe('LLMClient constructor and config', () => {
     process.env.MINIMAX_API_KEY = 'minimax-key';
     process.env.LIMINAL_LLM_API_KEY = 'generic-minimax-key';
 
-    const client = new LLMClient({ baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5.1' });
+    const client = new LLMClient({ baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5.3' });
     const config = client.getConfig();
 
     expect(config.apiKey).toBe('glm-key');

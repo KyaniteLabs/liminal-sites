@@ -27,8 +27,8 @@ export const OPENROUTER_MODEL_CATALOG: OpenRouterModelAlias[] = [
   },
   {
     alias: 'glm',
-    model: 'z-ai/glm-5.1',
-    label: 'GLM 5.1',
+    model: 'z-ai/glm-5.3',
+    label: 'GLM 5.3',
   },
 ];
 
