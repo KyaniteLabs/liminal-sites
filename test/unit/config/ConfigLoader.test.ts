@@ -127,7 +127,7 @@ describe('saveConfig', () => {
     const config = {
       defaultProvider: 'glm',
       providers: {
-        glm: { baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5.1' },
+        glm: { baseUrl: 'https://api.z.ai/api/anthropic', model: 'glm-5.3' },
       },
       roles: {
         evaluator: {

@@ -60,7 +60,7 @@ describe('StudioAgent', () => {
         async () => ({
           content: 'function setup() {}',
           artifactRefs: ['sketch.js'],
-          model: 'glm-5.1',
+          model: 'glm-5.3',
         }),
       );
 
@@ -71,7 +71,7 @@ describe('StudioAgent', () => {
       expect(response.metadata.intent).toBe('creative');
       expect(response.metadata.delegatedTo).toBe('ralph-loop');
       expect(response.metadata.artifactRefs).toEqual(['sketch.js']);
-      expect(response.metadata.model).toBe('glm-5.1');
+      expect(response.metadata.model).toBe('glm-5.3');
     });
 
     it('falls back to chat when creativeDelegate is missing', async () => {
@@ -88,7 +88,7 @@ describe('StudioAgent', () => {
         async () => ({
           content: 'Fixed the test',
           taskRefs: ['T-001'],
-          model: 'glm-5.1',
+          model: 'glm-5.3',
           executor: 'conveyor-runner',
         }),
       );
