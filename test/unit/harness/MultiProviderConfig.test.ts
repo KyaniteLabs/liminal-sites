@@ -498,13 +498,13 @@ describe('getHarnessProviderConfig', () => {
 
   it('uses GLM_API_KEY and Anthropic style for Z.ai harness Anthropic endpoint', () => {
     process.env.LIMINAL_HARNESS_BASE_URL = 'https://api.z.ai/api/anthropic';
-    process.env.LIMINAL_HARNESS_MODEL = 'glm-5.1';
+    process.env.LIMINAL_HARNESS_MODEL = 'glm-5.3';
     process.env.GLM_API_KEY = 'glm-key';
 
     const config = getHarnessProviderConfig();
     expect(config).not.toBeNull();
     expect(config!.baseUrl).toBe('https://api.z.ai/api/anthropic');
-    expect(config!.model).toBe('glm-5.1');
+    expect(config!.model).toBe('glm-5.3');
     expect(config!.apiKey).toBe('glm-key');
     expect(config!.apiStyle).toBe('anthropic');
   });

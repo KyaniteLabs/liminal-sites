@@ -327,7 +327,7 @@ describe('TuiBridgeServer model picker', () => {
         providers: {
           glm: {
             baseUrl: 'https://api.z.ai/api/coding/paas/v4',
-            model: 'glm-5.1',
+            model: 'glm-5.3',
             apiKey: 'glm-key',
           },
         },
@@ -352,7 +352,7 @@ describe('TuiBridgeServer model picker', () => {
       await fetch(`http://127.0.0.1:${port}/api/tui/session/${session.sessionId}/input`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'chat', clientIntent: 'chat', text: '/model glm glm-5.1' }),
+        body: JSON.stringify({ mode: 'chat', clientIntent: 'chat', text: '/model glm glm-5.3' }),
       });
 
       expect(mockSaveConfig).toHaveBeenCalledWith(expect.objectContaining({
@@ -360,19 +360,19 @@ describe('TuiBridgeServer model picker', () => {
         providers: expect.objectContaining({
           glm: expect.objectContaining({
             baseUrl: 'https://api.z.ai/api/anthropic',
-            model: 'glm-5.1',
+            model: 'glm-5.3',
             apiKey: 'glm-key',
           }),
         }),
       }));
       expect(mockLLMClientCtor).toHaveBeenCalledWith(expect.objectContaining({
         baseUrl: 'https://api.z.ai/api/anthropic',
-        model: 'glm-5.1',
+        model: 'glm-5.3',
         apiKey: 'glm-key',
       }));
       expect(service.getStatus(session.sessionId)).toMatchObject({
         provider: 'glm',
-        model: 'glm-5.1',
+        model: 'glm-5.3',
       });
     } finally {
       await server.stop();

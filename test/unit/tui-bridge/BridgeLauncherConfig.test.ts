@@ -95,12 +95,12 @@ describe('BridgeLauncherConfig', () => {
     applyBridgeProviderEnv(env, {
       provider: 'glm',
       baseUrl: 'https://api.z.ai/api/anthropic',
-      model: 'glm-5.1',
+      model: 'glm-5.3',
       apiKey: 'glm-key',
     });
 
-    expect(env.LIMINAL_LLM_MODEL).toBe('glm-5.1');
-    expect(env.LIMINAL_HARNESS_MODEL).toBe('glm-5.1');
+    expect(env.LIMINAL_LLM_MODEL).toBe('glm-5.3');
+    expect(env.LIMINAL_HARNESS_MODEL).toBe('glm-5.3');
     expect(env.LIMINAL_EVALUATOR_MODEL).toBe('google/gemini-2.5-flash');
     expect(env.LIMINAL_EVALUATOR_API_KEY).toBe('vision-key');
   });
@@ -109,9 +109,9 @@ describe('BridgeLauncherConfig', () => {
     const env: NodeJS.ProcessEnv = {
       LIMINAL_LLM_PROVIDER: 'glm',
       LIMINAL_LLM_BASE_URL: 'https://api.z.ai/api/anthropic',
-      LIMINAL_LLM_MODEL: 'glm-5.1',
+      LIMINAL_LLM_MODEL: 'glm-5.3',
       LIMINAL_HARNESS_BASE_URL: 'https://api.z.ai/api/anthropic',
-      LIMINAL_HARNESS_MODEL: 'glm-5.1',
+      LIMINAL_HARNESS_MODEL: 'glm-5.3',
       LIMINAL_EVALUATOR_BASE_URL: 'https://openrouter.ai/api/v1',
       LIMINAL_EVALUATOR_MODEL: 'google/gemini-2.5-flash',
       LIMINAL_EVALUATOR_API_KEY: 'vision-key',
@@ -119,8 +119,8 @@ describe('BridgeLauncherConfig', () => {
 
     const summary = summarizeBridgeRuntime(env);
 
-    expect(summary.roles.generator.model).toBe('glm-5.1');
-    expect(summary.roles.harness.model).toBe('glm-5.1');
+    expect(summary.roles.generator.model).toBe('glm-5.3');
+    expect(summary.roles.harness.model).toBe('glm-5.3');
     expect(summary.roles.evaluator.model).toBe('google/gemini-2.5-flash');
     expect(summary.roles.evaluator.provider).toBe('openrouter');
     expect(summary.evaluation.multimodal).toBe('yes');
@@ -164,7 +164,7 @@ describe('BridgeLauncherConfig', () => {
       providers: {
         glm: {
           baseUrl: 'https://api.z.ai/api/anthropic',
-          model: 'glm-5.1',
+          model: 'glm-5.3',
           apiKey: 'glm-key',
         },
       },
@@ -183,7 +183,7 @@ describe('BridgeLauncherConfig', () => {
     const config = resolveBridgeProviderConfig();
     applyBridgeProviderEnv(env, config);
 
-    expect(env.LIMINAL_LLM_MODEL).toBe('glm-5.1');
+    expect(env.LIMINAL_LLM_MODEL).toBe('glm-5.3');
     expect(env.LIMINAL_EVALUATOR_BASE_URL).toBe('https://openrouter.ai/api/v1');
     expect(env.LIMINAL_EVALUATOR_MODEL).toBe('google/gemini-2.5-flash');
     expect(env.LIMINAL_EVALUATOR_API_KEY).toBe('vision-key');
@@ -234,7 +234,7 @@ describe('BridgeLauncherConfig', () => {
     applyBridgeProviderEnv(env, {
       provider: 'glm',
       baseUrl: 'https://api.z.ai/api/anthropic',
-      model: 'glm-5.1',
+      model: 'glm-5.3',
       apiKey: 'glm-key',
     });
 

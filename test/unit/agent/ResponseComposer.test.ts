@@ -22,8 +22,8 @@ describe('ResponseComposer', () => {
     });
 
     it('includes model when provided', () => {
-      const response = composer.directResponse('Hi', 'turn-2', 50, 'glm-5.1');
-      expect(response.metadata.model).toBe('glm-5.1');
+      const response = composer.directResponse('Hi', 'turn-2', 50, 'glm-5.3');
+      expect(response.metadata.model).toBe('glm-5.3');
     });
   });
 
@@ -73,14 +73,14 @@ describe('ResponseComposer', () => {
         8000,
         ['artifacts/gen-1.js'],
         ['T-002'],
-        'glm-5.1',
+        'glm-5.3',
       );
 
       expect(response.metadata.intent).toBe('hybrid');
       expect(response.metadata.delegatedTo).toBe('ralph-loop');
       expect(response.metadata.artifactRefs).toEqual(['artifacts/gen-1.js']);
       expect(response.metadata.taskRefs).toEqual(['T-002']);
-      expect(response.metadata.model).toBe('glm-5.1');
+      expect(response.metadata.model).toBe('glm-5.3');
     });
   });
 

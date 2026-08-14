@@ -22,7 +22,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('preserves bounded packet contracts across runtime-core and runstate preparations', () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
     const cases = [
       {
         description: 'Tighten the bounded runtime-core self-improvement facade',
@@ -73,7 +73,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
   it('runs self-improvement requests with the bounded runtime task policy', async () => {
     const runtime = new LLMModeSelfImprovementRuntime();
     const llm = {
-      getConfig: vi.fn(() => ({ model: 'glm-5.1' })),
+      getConfig: vi.fn(() => ({ model: 'glm-5.3' })),
     } as any;
     const session = {
       status: Status.SUCCESS,
@@ -107,7 +107,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
       completionPolicy: 'stop_after_verification',
     }));
     expect(result).toEqual({
-      modelName: 'glm-5.1',
+      modelName: 'glm-5.3',
       maxSteps: 20,
       session,
       taskId: expect.stringMatching(/^tui-self-/),
@@ -127,7 +127,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('preloads checkpoint/resume runs with a deterministic working set', async () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
     const session = {
       status: 'success',
       startTime: '2026-04-11T18:00:00.000Z',
@@ -159,7 +159,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('prepares RepoIndexLite-first packets for localization-focused bounded-runtime work', async () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
     const session = {
       status: 'success',
       startTime: '2026-04-11T18:00:00.000Z',
@@ -215,7 +215,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('prepares repeatable bounded checkpoint-resume task packets for the same description', async () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
     const session = {
       status: 'success',
       startTime: '2026-04-11T18:00:00.000Z',
@@ -263,7 +263,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('prepares repeatable bounded runtime-core task packets for the same description', () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
     const description = 'Tighten the bounded runtime-core self-improvement facade';
 
     vi.spyOn(Date, 'now')
@@ -293,7 +293,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('prepares a concrete bounded runtime task packet once and reuses it for execution', async () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
     const session = {
       status: 'success',
       startTime: '2026-04-11T18:00:00.000Z',
@@ -382,7 +382,7 @@ describe('LLMModeSelfImprovementRuntime', () => {
 
   it('falls back to the default max steps when the env override is invalid', () => {
     const runtime = new LLMModeSelfImprovementRuntime();
-    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.1' })) } as any;
+    const llm = { getConfig: vi.fn(() => ({ model: 'glm-5.3' })) } as any;
 
     const originalMaxSteps = process.env.LIMINAL_TUI_AGENT_MAX_STEPS;
     process.env.LIMINAL_TUI_AGENT_MAX_STEPS = 'not-a-number';
