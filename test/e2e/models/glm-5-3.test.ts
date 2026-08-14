@@ -1,5 +1,5 @@
 /**
- * GLM-5.1 Test Suite (ZhipuAI)
+ * GLM-5.3 Test Suite (ZhipuAI)
  * Cloud model — coding-focused flagship
  * Gate: RUN_CLOUD_MODEL_TESTS=1
  */

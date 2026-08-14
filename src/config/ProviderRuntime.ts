@@ -96,9 +96,9 @@ export const PROVIDER_DEFAULTS: Record<RuntimeProviderKey, ProviderRuntimeDefaul
   },
   glm: {
     baseUrl: 'https://api.z.ai/api/anthropic',
-    model: 'GLM-5v-turbo',
+    model: 'GLM-5.3',
     label: 'GLM',
-    description: 'GLM International API (GLM-5v-turbo multimodal, Anthropic-compatible)',
+    description: 'GLM International API (GLM-5.3 multimodal, Anthropic-compatible)',
     requiresKey: true,
     apiStyle: 'anthropic',
     temperature: 0.7,
