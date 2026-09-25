@@ -1,5 +1,5 @@
 
-> liminal-studio-gui@ build /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506/gui
+> liminal-studio-gui@ build ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506/gui
 > vite build
 
 vite v8.0.9 building client environment for production...
