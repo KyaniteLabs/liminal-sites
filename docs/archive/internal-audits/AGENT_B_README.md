@@ -5,7 +5,7 @@
 ## Quick Start
 
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 
 # Run all Agent B tests (63 tests)
 npx tsx scripts/run-agent-b.ts
