@@ -14,7 +14,7 @@ Check EVERYTHING. Be paranoid. Report all issues, even minor ones.
 
 ## AUDIT SCOPE
 
-Check the following in /Users/simongonzalezdecruz/workspaces/liminal:
+Check the following in ~/workspaces/liminal:
 
 ### 1. BUILD STATUS (Critical)
 - Run `npm run build`
@@ -185,7 +185,7 @@ Begin audit now. Be thorough. The user is counting on you.
 1. **Copy the prompt above**
 2. **Paste into your auditing agent** (Claude, GPT-4, etc.)
 3. **Provide the agent with:**
-   - Read access to `/Users/simongonzalezdecruz/workspaces/liminal`
+   - Read access to `~/workspaces/liminal`
    - Permission to run shell commands
    - Permission to read files
 
