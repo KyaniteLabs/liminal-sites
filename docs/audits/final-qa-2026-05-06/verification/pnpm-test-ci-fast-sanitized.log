@@ -1,9 +1,9 @@
 
-> liminal-ai@2.1.0 test:ci:fast /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
+> liminal-ai@2.1.0 test:ci:fast ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
 > LIMINAL_CI_FAST=1 vitest run --coverage --pool=forks
 
 
- RUN  v4.1.2 /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
+ RUN  v4.1.2 ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
       Coverage enabled with v8
 
 stderr | test/integration/ralph-loop.test.js > RalphLoop Integration Tests > Basic Loop Functionality > should terminate on max iterations
