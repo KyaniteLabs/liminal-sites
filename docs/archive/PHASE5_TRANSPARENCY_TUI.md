@@ -6,7 +6,7 @@ This document describes the integration of the TransparencyViewer into the Limin
 
 ## Files Created
 
-### 1. `/Users/simongonzalezdecruz/workspaces/liminal/src/tui/components/TransparencyPanel.tsx`
+### 1. `~/workspaces/liminal/src/tui/components/TransparencyPanel.tsx`
 
 A React component that renders process events from TransparencyViewer in the terminal UI.
 
@@ -27,7 +27,7 @@ A React component that renders process events from TransparencyViewer in the ter
 - `height?: number` - Panel height (default: 20)
 - `maxWidth?: number` - Maximum width for content truncation (default: 80)
 
-### 2. `/Users/simongonzalezdecruz/workspaces/liminal/test/tui/TransparencyPanel.test.tsx`
+### 2. `~/workspaces/liminal/test/tui/TransparencyPanel.test.tsx`
 
 React component tests using @testing-library/react.
 
@@ -42,7 +42,7 @@ React component tests using @testing-library/react.
 - Edge cases (empty content, no model, no title)
 - Multiple phase ordering
 
-### 3. `/Users/simongonzalezdecruz/workspaces/liminal/test/tui/TransparencyPanel.test.js`
+### 3. `~/workspaces/liminal/test/tui/TransparencyPanel.test.js`
 
 Pure JavaScript unit tests for core rendering logic (no React dependencies).
 
@@ -56,7 +56,7 @@ Pure JavaScript unit tests for core rendering logic (no React dependencies).
 
 ## Files Modified
 
-### `/Users/simongonzalezdecruz/workspaces/liminal/src/tui/index.tsx`
+### `~/workspaces/liminal/src/tui/index.tsx`
 
 **Changes:**
 1. Added imports:

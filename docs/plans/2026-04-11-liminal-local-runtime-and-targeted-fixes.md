@@ -38,7 +38,7 @@ Suggested branch names:
 From repo root:
 
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 
 git fetch origin
 
@@ -57,14 +57,14 @@ git worktree add .worktrees/liminal-promote -b fix/liminal-promote origin/main
 In runtime lane:
 
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal/.worktrees/liminal-runtime
+cd ~/workspaces/liminal/.worktrees/liminal-runtime
 git log --oneline -n 20
 ```
 
 In promotion lane:
 
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal/.worktrees/liminal-promote
+cd ~/workspaces/liminal/.worktrees/liminal-promote
 git cherry-pick <runtime-commit-sha>
 npm run build
 # run focused tests
@@ -269,20 +269,20 @@ Start with Priority 1 unless current evidence shows a different blocker is more 
 
 ### Create runtime lane
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 git fetch origin
 git worktree add .worktrees/liminal-runtime -b local/liminal-runtime origin/main
 ```
 
 ### Run Liminal there
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal/.worktrees/liminal-runtime
+cd ~/workspaces/liminal/.worktrees/liminal-runtime
 pnpm tui
 ```
 
 ### Promote later
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 git worktree add .worktrees/liminal-promote -b fix/liminal-promote origin/main
 cd .worktrees/liminal-promote
 git cherry-pick <good-runtime-commit>
