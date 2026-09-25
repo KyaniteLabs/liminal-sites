@@ -1,7 +1,7 @@
 #!/bin/bash
 # Regenerate all failing examples through improved Liminal pipeline
 
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 
 OUTPUT_DIR="landing-assets/regenerated"
 mkdir -p $OUTPUT_DIR
