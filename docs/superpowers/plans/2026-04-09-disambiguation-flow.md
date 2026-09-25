@@ -438,7 +438,7 @@ This may break other files that import `GenerationResult`. Check for usages:
 
 - [ ] **Step 4b: Check what imports GenerationResult and update accordingly**
 
-Run: `grep -r "GenerationResult" /Users/simongonzalezdecruz/workspaces/liminal/src --include="*.ts" -l`
+Run: `grep -r "GenerationResult" ~/workspaces/liminal/src --include="*.ts" -l`
 
 Expected files that need updating (they'll get TypeScript errors on the union type):
 - Check each file and update to handle both shapes
@@ -476,7 +476,7 @@ Add disambiguation test to existing test file or create new one. First check if 
 
 - [ ] **Step 1b: Check for existing NaturalInterface test**
 
-Run: `ls /Users/simongonzalezdecruz/workspaces/liminal/test/unit/tui/ 2>/dev/null || echo "no tui test dir"`
+Run: `ls ~/workspaces/liminal/test/unit/tui/ 2>/dev/null || echo "no tui test dir"`
 Expected: may not exist — create if needed
 
 Create `test/unit/tui/NaturalInterface.test.ts` with mock harness:
@@ -698,7 +698,7 @@ Replace the entire `handleAgentRequest` method (lines 187-242) with:
 
 Check `src/harness/agent/LLMModeAgent.ts`:
 
-Run: `grep -n "executeTask\|interface.*Task\|type.*Task" /Users/simongonzalezdecruz/workspaces/liminal/src/harness/agent/LLMModeAgent.ts | head -20`
+Run: `grep -n "executeTask\|interface.*Task\|type.*Task" ~/workspaces/liminal/src/harness/agent/LLMModeAgent.ts | head -20`
 
 The `LLMTask` interface and `executeTask` return type need to carry the clarification signal. Update `LLMTask` result type:
 
