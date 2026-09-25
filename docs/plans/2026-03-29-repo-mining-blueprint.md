@@ -9,7 +9,7 @@
 
 ## What Is Liminal
 
-Liminal is a self-recursive creative coding agent at `/Users/simongonzalezdecruz/workspaces/liminal/`. It generates emergent generative art through iterative LLM-driven refinement via a **Ralph-Wiggum Loop**: the same prompt runs repeatedly, but context accumulates (artistic knowledge, compost DNA, evaluation history, archive examples). The agent generates code, evaluates its own output, and progressively improves until a quality gate is met.
+Liminal is a self-recursive creative coding agent at `~/workspaces/liminal/`. It generates emergent generative art through iterative LLM-driven refinement via a **Ralph-Wiggum Loop**: the same prompt runs repeatedly, but context accumulates (artistic knowledge, compost DNA, evaluation history, archive examples). The agent generates code, evaluates its own output, and progressively improves until a quality gate is met.
 
 **Stack**: TypeScript, Node.js, ESM, `tsc` build to `dist/`, pnpm, 187 test files, MIT license.
 

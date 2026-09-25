@@ -23,7 +23,7 @@ See **IMPACT_ANALYSIS.md** for full impact summary, test counts, and remaining k
 ## 1. Jcodemunch index result
 
 - **Tool:** `user-jcodemunch` → `index_folder`
-- **Path:** `/Users/simongonzalezdecruz/liminal`
+- **Path:** `~/liminal`
 - **Options:** `extra_ignore_patterns`: gallery, node_modules, dist, test-output, benchmark-output; `use_ai_summaries`: false; `incremental`: false
 - **Result:** Success. Repo id: `local/liminal`. Indexed **39 files**, **249 symbols**, **38 file summaries**. Languages: JS 11, TS 24, TSX 4.
 - **Discovery skip counts:** skip_pattern 17263, gitignore 87, extra_ignore 1306, wrong_extension 31; no path_traversal/symlink/secret issues.
