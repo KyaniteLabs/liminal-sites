@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Agent A Test Runner for remaining models and domains
-# Work directory: /Users/simongonzalezdecruz/workspaces/liminal
+# Work directory: ~/workspaces/liminal
 
 set -e
 
-WORK_DIR="/Users/simongonzalezdecruz/workspaces/liminal"
+WORK_DIR="~/workspaces/liminal"
 OUTPUT_DIR="$WORK_DIR/landing-live"
 TELEMETRY_LOG="$WORK_DIR/dogfood-telemetry.log"
 
