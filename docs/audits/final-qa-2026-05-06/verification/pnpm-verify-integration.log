@@ -1,5 +1,5 @@
 
-> liminal-ai@2.1.0 verify:integration /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
+> liminal-ai@2.1.0 verify:integration ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
 > npm run build && vitest run test/integration --coverage=false
 
 npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm.
@@ -12,7 +12,7 @@ npm warn Unknown global config "only-built-dependencies". This will stop working
 > tsc --incremental false
 
 
- RUN  v4.1.2 /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
+ RUN  v4.1.2 ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
 
 stderr | test/integration/generator-renderer.test.js > Generator-Renderer Integration Tests > Complete Generation-Render Workflow > should generate p5.js sketch and render via PreviewServer
 [P5Generator] Using LLM-based generation. Ensure LIMINAL_LLM_BASE_URL and LIMINAL_LLM_MODEL are set.
