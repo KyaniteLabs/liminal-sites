@@ -6,7 +6,7 @@ echo "🔍 Liminal Harness Pre-Flight Audit"
 echo "===================================="
 echo ""
 
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 
 # Colors
 RED='\033[0;31m'
