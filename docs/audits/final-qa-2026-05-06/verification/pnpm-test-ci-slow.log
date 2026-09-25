@@ -1,9 +1,9 @@
 
-> liminal-ai@2.1.0 test:ci:slow /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
+> liminal-ai@2.1.0 test:ci:slow ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
 > LIMINAL_CI_SLOW=1 vitest run --pool=forks
 
 
- RUN  v4.1.2 /Users/simongonzalezdecruz/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
+ RUN  v4.1.2 ~/workspaces/kyanite-labs/liminal/.worktrees/final-qa-persona-cluster-audit-20260506
 
 stderr | test/integration/generator-renderer.test.js > Generator-Renderer Integration Tests > Complete Generation-Render Workflow > should generate p5.js sketch and render via PreviewServer
 [P5Generator] Using LLM-based generation. Ensure LIMINAL_LLM_BASE_URL and LIMINAL_LLM_MODEL are set.
