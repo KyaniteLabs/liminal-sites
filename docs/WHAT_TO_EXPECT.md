@@ -93,7 +93,7 @@ Duration: 2.3s
 
 In a **separate terminal**:
 ```bash
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 npm run build          # Should pass
 git diff               # Should show the change
 ```
@@ -196,7 +196,7 @@ After each task, verify:
 
 ```bash
 # In separate terminal:
-cd /Users/simongonzalezdecruz/workspaces/liminal
+cd ~/workspaces/liminal
 
 # 1. Build passes
 npm run build
