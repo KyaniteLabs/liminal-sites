@@ -123,7 +123,7 @@ function loadReasoningFiles(): Map<string, string> {
 function loadThinkingTraces(): ThinkingTrace[] {
   const traces: ThinkingTrace[] = [];
   const jsonlPath = join(
-    process.env.HOME || '/Users/simongonzalezdecruz',
+    process.env.HOME || '~',
     '.liminal/thinking-traces/generator/2026-04-03.jsonl',
   );
   if (!existsSync(jsonlPath)) return traces;
