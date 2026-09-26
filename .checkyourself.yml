@@ -20,7 +20,7 @@ suppress:
       - scripts/dogfood-glm.ts
       - scripts/dogfood-kimi.ts
       - scripts/dogfood-role-eval.ts
-      - scripts/dogfood-telemetry-focused.ts
+      - scripts/dogfood-telemetry_focused.ts
       - scripts/dogfood-with-telemetry.ts
       - scripts/dogfood/dogfood-minimax-m27.ts
       - scripts/proof/live-provider-smoke.ts
