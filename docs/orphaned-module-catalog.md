@@ -115,5 +115,5 @@ Filesystem adapter for operation tracing. Records filesystem operations for debu
 
 ## Config & Telemetry
 
-### `src/config/telemetry-seed.ts` (545 lines)
+### `src/config/telemetry_seed.ts` (545 lines)
 Seed data for the telemetry system — pre-populated metrics, baseline thresholds, and calibration values. Large file with hardcoded reference data for the observability layer.
