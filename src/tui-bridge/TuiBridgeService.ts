@@ -96,7 +96,7 @@ const OPERATOR_INSPECTION_PATTERNS = [
   /\bdo not commit\b/,
   /\bdo not push\b/,
   /\buse tool calls only\b/,
-  /\btelemetry-friendly\b/,
+  /\btelemetry_friendly\b/,
   /\bdogfood checkpoint\b/,
   /\brepository state\b/,
   /\bprovider\/model truth\b/,
